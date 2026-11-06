@@ -15,6 +15,7 @@ Compose the existing RSS/Atom library, source collectors and synthetic social ad
 - A failed write rolls back the complete batch; the result reports success only after commit.
 - No schema creation or dashboard configuration side effects occur when importing the library.
 - The dashboard's real Flyway migration, authenticated HTTP collection and item queries pass integration tests against PostgreSQL.
+- AI-Init workflow files remain ignored and uncommitted.
 
 ## Boundaries
 
