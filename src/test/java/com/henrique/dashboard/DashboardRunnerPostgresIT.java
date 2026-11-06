@@ -8,6 +8,7 @@ import com.henrique.collector.feed.RssFeedParser;
 import com.henrique.collector.source.*;
 import com.henrique.dashboard.repository.CollectedItemRepository;
 import java.net.InetAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,6 +69,25 @@ class DashboardRunnerPostgresIT {
                 new HttpEntity<>(Map.of("source", source.name(), "input", input), headers), String.class);
     }
 
+    private JsonNode awaitRun(ResponseEntity<String> accepted, String token) throws Exception {
+        String location = accepted.getHeaders().getFirst(HttpHeaders.LOCATION);
+        assertNotNull(location, "202 response must carry a Location header");
+        JsonNode run = null;
+        for (int attempt = 0; attempt < 200; attempt++) {
+            var headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+            run = json.readTree(http.exchange(URI.create(location).getPath(), HttpMethod.GET,
+                    new HttpEntity<>(headers), String.class).getBody());
+            String status = run.path("status").asText();
+            if ("SUCCEEDED".equals(status) || "FAILED".equals(status)) {
+                return run;
+            }
+            Thread.sleep(50);
+        }
+        fail("collection run did not finish: " + run);
+        return run;
+    }
+
     @ParameterizedTest
     @EnumSource(value = CollectionSource.class, names = {"ALPHA", "BETA", "RSS", "GOOGLE_NEWS", "GOOGLE_ALERTS", "WORDPRESS"})
     void collectsParsesPersistsDeduplicatesAndQueriesOverHttp(CollectionSource source) throws Exception {
@@ -86,12 +106,16 @@ class DashboardRunnerPostgresIT {
         };
         String token = login();
         var first = collect(source, input, token);
-        assertEquals(HttpStatus.OK, first.getStatusCode(), first.getBody());
-        assertEquals(1, json.readTree(first.getBody()).path("inserted").asInt());
+        assertEquals(HttpStatus.ACCEPTED, first.getStatusCode(), first.getBody());
+        JsonNode firstRun = awaitRun(first, token);
+        assertEquals("SUCCEEDED", firstRun.path("status").asText(), firstRun.toString());
+        assertEquals(1, firstRun.path("inserted").asInt());
         var repeated = collect(source, input, token);
-        assertEquals(HttpStatus.OK, repeated.getStatusCode());
-        assertEquals(0, json.readTree(repeated.getBody()).path("inserted").asInt());
-        assertEquals(1, json.readTree(repeated.getBody()).path("duplicates").asInt());
+        assertEquals(HttpStatus.ACCEPTED, repeated.getStatusCode());
+        JsonNode repeatedRun = awaitRun(repeated, token);
+        assertEquals("SUCCEEDED", repeatedRun.path("status").asText(), repeatedRun.toString());
+        assertEquals(0, repeatedRun.path("inserted").asInt());
+        assertEquals(1, repeatedRun.path("duplicates").asInt());
         assertEquals(1, items.count());
 
         var headers = new HttpHeaders();
@@ -113,9 +137,14 @@ class DashboardRunnerPostgresIT {
     @Test
     void disabledSourcesNeverPersistAndPrivateRssUrlsAreRejected() throws Exception {
         String token = login();
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, collect(CollectionSource.REDDIT, "java", token).getStatusCode());
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, collect(CollectionSource.ISSUU, "demo", token).getStatusCode());
-        assertEquals(HttpStatus.BAD_REQUEST, collect(CollectionSource.RSS, "http://127.0.0.1/private", token).getStatusCode());
+        var reddit = awaitRun(collect(CollectionSource.REDDIT, "java", token), token);
+        assertEquals("FAILED", reddit.path("status").asText());
+        assertEquals("Source unavailable; check approval and runtime configuration", reddit.path("errorMessage").asText());
+        var issuu = awaitRun(collect(CollectionSource.ISSUU, "demo", token), token);
+        assertEquals("FAILED", issuu.path("status").asText());
+        var privateRss = awaitRun(collect(CollectionSource.RSS, "http://127.0.0.1/private", token), token);
+        assertEquals("FAILED", privateRss.path("status").asText());
+        assertEquals("Invalid source input or unsupported item fields", privateRss.path("errorMessage").asText());
         assertEquals(0, items.count());
     }
 

@@ -39,7 +39,7 @@ Coletas agendadas ficam fora desta fase. Alertas de novidade também.
 
 - **RF1 — Listar itens:** `GET /v1/items` com paginação e filtros por fonte, palavra-chave (texto do título) e intervalo de datas.
 - **RF2 — Detalhar item:** `GET /v1/items/{id}` com fonte, id externo, título, link original e datas.
-- **RF3 — Disparar coleta:** `POST /v1/collections` recebe fonte e entrada (palavra-chave, URL ou subreddit) e chama o `collector-runner-mini`. Devolve quantos itens foram gravados e quantos eram novos.
+- **RF3 — Disparar coleta:** `POST /v1/collections` recebe fonte e entrada (palavra-chave, URL ou subreddit), grava uma execução com status `PENDING` e responde `202 Accepted` com o `Location` da execução. A coleta roda em segundo plano pelo `collector-runner-mini`. `GET /v1/collections/{id}` mostra o status (`PENDING`, `RUNNING`, `SUCCEEDED`, `FAILED`) e a contagem de buscados, inseridos e duplicados. `GET /v1/collections` lista as execuções mais recentes.
 - **RF4 — Login:** `POST /v1/auth/login` com e-mail e senha. Devolve um JWT. Um usuário administrador inicial é criado por variável de ambiente.
 - **RF5 — Acesso por API key:** `GET /v1/items` aceita o header `X-API-Key`, configurado por variável de ambiente, para consumo por sistemas externos.
 - **RF6 — Painel Vue:** telas de login, lista de itens com filtros, detalhe do item e disparo manual de coleta.
@@ -62,6 +62,14 @@ Criado pelo hub, com Flyway:
 - `app_user`: planned persistent user administration only; this slice uses one runtime administrator and creates no user table.
 
 O `collector-runner-mini` grava em `collected_item` usando o mesmo esquema, sem criar tabelas. Its legacy standalone `social_posts` API remains independent; historical rows are not migrated.
+
+## 5.1 Execução de coletas
+
+- Cada pedido de coleta vira uma linha em `collection_run` (migração V2), com origem, status, datas, contagens e uma mensagem de erro curta.
+- A entrada informada (palavra-chave, URL ou subreddit) **não é guardada**. Ela existe só em memória durante a execução, porque pode conter segredo (por exemplo, a URL de um Google Alerts).
+- Falhas são traduzidas para mensagens fixas. Nenhum texto vindo da fonte chega à resposta da API.
+- Execuções que ficaram `PENDING` ou `RUNNING` quando a aplicação reiniciou são marcadas como `FAILED` com o motivo "Interrupted by application restart".
+- O pool de execução tem 2 threads. Não há fila persistida nem broker nesta fase. Se for preciso agendamento ou worker separado, a tabela `collection_run` já serve como fila.
 
 ## 6. Autenticação
 

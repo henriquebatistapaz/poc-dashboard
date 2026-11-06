@@ -52,7 +52,7 @@ class CollectionApiTest {
                 .andExpect(status().isForbidden());
         String token = login();
         mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token).contentType("application/json").content(body))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.inserted").value(1)).andExpect(jsonPath("$.duplicates").value(1));
+                .andExpect(status().isAccepted()).andExpect(jsonPath("$.status").value("PENDING"));
         mvc.perform(get("/v1/items").header("Authorization", "Bearer " + token)).andExpect(status().isOk());
     }
 
@@ -85,23 +85,15 @@ class CollectionApiTest {
     }
 
     @Test
-    void mapsFailuresWithoutExposingSecretFeedUrl() throws Exception {
+    void startDoesNotExposeSecretFeedUrlInResponse() throws Exception {
+        // Failure mapping now happens per run (see CollectionRunApiTest and CollectionRunServiceTest).
         String token = login();
         String secret = "https://www.google.com/alerts/feeds/user/secret";
         String body = json.writeValueAsString(new CollectionControllerBody("GOOGLE_ALERTS", secret));
         doThrow(new IllegalStateException(secret)).when(runner).run(CollectionSource.GOOGLE_ALERTS, secret);
         var result = mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
-                .contentType("application/json").content(body)).andExpect(status().isBadGateway()).andReturn();
+                .contentType("application/json").content(body)).andExpect(status().isAccepted()).andReturn();
         assertFalse(result.getResponse().getContentAsString().contains(secret));
-        doThrow(new SQLException(secret)).when(runner).run(CollectionSource.GOOGLE_ALERTS, secret);
-        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token).contentType("application/json").content(body))
-                .andExpect(status().isServiceUnavailable());
-        doThrow(new SourceAccessException(secret)).when(runner).run(CollectionSource.GOOGLE_ALERTS, secret);
-        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token).contentType("application/json").content(body))
-                .andExpect(status().isUnprocessableEntity());
-        doThrow(new IllegalArgumentException(secret)).when(runner).run(CollectionSource.GOOGLE_ALERTS, secret);
-        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token).contentType("application/json").content(body))
-                .andExpect(status().isBadRequest());
     }
 
     record CollectionControllerBody(String source, String input) { }
