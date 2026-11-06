@@ -3,14 +3,14 @@
 # collector-runner-mini) ficam em libs/ (atualize com scripts/sync-libs.sh). Nao precisa de token.
 FROM maven:3.9-eclipse-temurin-21 AS build
 COPY libs /opt/libs
-RUN --mount=type=cache,target=/root/.m2 \
+RUN \
     for repo in collector-mini rss-collector-mini collector-runner-mini; do \
       mvn -B -q -f "/opt/libs/${repo}/pom.xml" -DskipTests install ; \
     done
 WORKDIR /app
 COPY pom.xml /app/pom.xml
 COPY src /app/src
-RUN --mount=type=cache,target=/root/.m2 mvn -B -q -DskipTests package
+RUN mvn -B -q -DskipTests package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
