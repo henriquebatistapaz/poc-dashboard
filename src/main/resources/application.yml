@@ -11,3 +11,5 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+dashboard:
+  api-key: ${DASHBOARD_API_KEY:}
