@@ -29,22 +29,19 @@ O serviço web encaminha `/v1/*`, `/swagger-ui` e `/v3/api-docs` para a API. No 
 | `DB_PASSWORD` | `${{Postgres.PGPASSWORD}}` |
 | `DASHBOARD_API_KEY` | chave longa e aleatória (`openssl rand -hex 24`) |
 | `DASHBOARD_ADMIN_EMAIL` | e-mail do administrador |
-| `DASHBOARD_ADMIN_PASSWORD_HASH` | hash BCrypt (`scripts/hash-admin-password.sh`) |
+| `DASHBOARD_ADMIN_PASSWORD` | senha do admin (no Railway: `${{secret(24)}}`); ou `DASHBOARD_ADMIN_PASSWORD_HASH` com hash BCrypt |
 | `DASHBOARD_JWT_SECRET` | segredo de 32+ bytes (`openssl rand -hex 32`), diferente em cada ambiente |
 | `REDDIT_API_ACCESS_APPROVED` | `false` até a aprovação do Reddit |
-| `GITHUB_TOKEN` | token com leitura nos repos `collector-mini`, `rss-collector-mini`, `collector-runner-mini` (usado só no build) |
 
 Para `production`, use valores diferentes dos de `develop`, principalmente `DASHBOARD_JWT_SECRET` e `DASHBOARD_API_KEY`.
 
 ## 3. Build dos coletores
 
-O Dockerfile clona e instala as três bibliotecas durante o build, com `GITHUB_TOKEN` como argumento de build. O token fica só na etapa intermediária de build; a imagem final não o contém. Teste local:
+O código das bibliotecas privadas (`collector-mini`, `rss-collector-mini`, `collector-runner-mini`) fica em `libs/`. O Dockerfile instala as três a partir dali, então o build não precisa de token. Para atualizar `libs/` com o `main` das bibliotecas:
 
 ```bash
-docker build --build-arg GITHUB_TOKEN=$(gh auth token) -t dashboard-mini:local .
+scripts/sync-libs.sh
 ```
-
-> Recomendação: use um token fine-grained somente leitura, restrito aos três repos de bibliotecas, em vez do token do `gh` (que tem escopo amplo). O token fica em cache da etapa intermediária do builder do Railway; a alternativa definitiva é publicar as bibliotecas no GitHub Packages.
 
 ## 4. Deploy
 
