@@ -1,6 +1,13 @@
 # Dashboard Mini — Especificação inicial
 
-**Status:** Rascunho para revisão. Nenhum código implementado.
+**Status:** Target specification with a partial backend implementation. The sections below describe the full intended phase, not completed functionality.
+
+## Implementation status (reviewed)
+
+Implemented: Java/Maven Spring backend, PostgreSQL/Flyway read schema, paginated item list/detail, source/title/collection-date filters, read-only API key authentication and Swagger/OpenAPI. An absent API key configuration denies access. Tests run with H2; live PostgreSQL compatibility and collector-runner interoperability still require integration verification.
+
+Pending: JWT login, administrator provisioning, Vue frontend, manual collection endpoint, collector-runner library integration and Docker Compose. The README documents the actual run commands. No public deployment is approved by this partial implementation. The database ownership and integration rules below remain a target contract until validated against collector-runner-mini.
+
 **Repositório:** Privado
 **Fase desta spec:** 1 — backend (Spring Boot, PostgreSQL, Swagger, JWT) e painel Vue separado, com coleta sob demanda.
 
