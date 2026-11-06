@@ -14,3 +14,9 @@ mvn -f "$collector_repo/pom.xml" install
 mvn -f "$rss_repo/pom.xml" install
 mvn -f "$runner_repo/pom.xml" clean install
 mvn -f "$project_dir/pom.xml" clean package
+(
+    cd "$project_dir/frontend"
+    npm ci
+    npm test
+    npm run build
+)

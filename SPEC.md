@@ -4,11 +4,11 @@
 
 ## Implementation status (reviewed)
 
-Implemented: Java/Maven Spring backend; Lombok entity/constructor boilerplate; PostgreSQL/Flyway canonical item schema; paginated/filterable read API; read-only API key; runtime administrator with BCrypt password hash and 15-minute issuer/signature/expiry-validated JWT; authenticated synchronous manual collection through the embedded runner; source/RSS/social library integration; Swagger and local Docker Compose. The runner does not own canonical migrations. Standalone runner configuration is isolated from dashboard configuration.
+Implemented: Java/Maven Spring backend; Lombok entity/constructor boilerplate; PostgreSQL/Flyway canonical item schema; paginated/filterable read API; read-only API key; runtime administrator with BCrypt password hash and 15-minute issuer/signature/expiry-validated JWT; authenticated synchronous manual collection through the embedded runner; source/RSS/social library integration; Swagger and local Docker Compose. The Vue/TypeScript panel adds login, manual source/RSS testing, filters, pagination and details, with complete Portuguese/English/Spanish localization (`pt-BR`, `en`, `es`). The runner does not own canonical migrations. Standalone runner configuration is isolated from dashboard configuration.
 
 The authenticated collection path covers RSS 2.0/Atom 1.0, Google News, user-owned Google Alerts feeds, WordPress and synthetic Alpha/Beta adapters. Reddit still requires official approval and runtime OAuth credentials; Issuu remains unavailable. Collection inputs are not logged or stored. PostgreSQL tests exercise actual Flyway/HTTP/runner/parser behavior with fixture upstream fetches, including duplicate collection and queries. See README for reproducible commands and detailed limits.
 
-Pending: Vue frontend, durable run history/scheduling, persistent user administration and historical social-row migration. The single runtime administrator uses `DASHBOARD_ADMIN_EMAIL` and `DASHBOARD_ADMIN_PASSWORD_HASH`; no `app_user` table or registration is implemented. These runtime values replace the need to seed a user row in this slice. Public deployment remains pending review.
+Pending: durable run history/scheduling, persistent user administration and historical social-row migration. The single runtime administrator uses `DASHBOARD_ADMIN_EMAIL` and `DASHBOARD_ADMIN_PASSWORD_HASH`; no `app_user` table or registration is implemented. These runtime values replace the need to seed a user row in this slice. Public deployment remains pending review.
 
 **Repositório:** Privado
 **Fase desta spec:** 1 — backend (Spring Boot, PostgreSQL, Swagger, JWT) e painel Vue separado, com coleta sob demanda.
@@ -39,7 +39,7 @@ Coletas agendadas ficam fora desta fase. Alertas de novidade também.
 
 - **RF1 — Listar itens:** `GET /v1/items` com paginação e filtros por fonte, palavra-chave (texto do título) e intervalo de datas.
 - **RF2 — Detalhar item:** `GET /v1/items/{id}` com fonte, id externo, título, link original e datas.
-- **RF3 — Disparar coleta:** `POST /v1/collections` recebe fonte e entrada (palavra-chave, URL ou subreddit) e chama o `collector-runner-mini`. Devolve quantos itens foram gravados e quantos eram novos.
+- **RF3 — Disparar coleta:** `POST /v1/collections` recebe fonte e entrada (palavra-chave, URL ou subreddit), grava uma execução com status `PENDING` e responde `202 Accepted` com o `Location` da execução. A coleta roda em segundo plano pelo `collector-runner-mini`. `GET /v1/collections/{id}` mostra o status (`PENDING`, `RUNNING`, `SUCCEEDED`, `FAILED`) e a contagem de buscados, inseridos e duplicados. `GET /v1/collections` lista as execuções mais recentes.
 - **RF4 — Login:** `POST /v1/auth/login` com e-mail e senha. Devolve um JWT. Um usuário administrador inicial é criado por variável de ambiente.
 - **RF5 — Acesso por API key:** `GET /v1/items` aceita o header `X-API-Key`, configurado por variável de ambiente, para consumo por sistemas externos.
 - **RF6 — Painel Vue:** telas de login, lista de itens com filtros, detalhe do item e disparo manual de coleta.
@@ -63,12 +63,25 @@ Criado pelo hub, com Flyway:
 
 O `collector-runner-mini` grava em `collected_item` usando o mesmo esquema, sem criar tabelas. Its legacy standalone `social_posts` API remains independent; historical rows are not migrated.
 
+## 5.1 Execução de coletas
+
+- Cada pedido de coleta vira uma linha em `collection_run` (migração V2), com origem, status, datas, contagens e uma mensagem de erro curta.
+- A entrada informada (palavra-chave, URL ou subreddit) **não é guardada**. Ela existe só em memória durante a execução, porque pode conter segredo (por exemplo, a URL de um Google Alerts).
+- Falhas são traduzidas para mensagens fixas. Nenhum texto vindo da fonte chega à resposta da API.
+- Execuções que ficaram `PENDING` ou `RUNNING` quando a aplicação reiniciou são marcadas como `FAILED` com o motivo "Interrupted by application restart".
+- O pool de execução tem 2 threads. Não há fila persistida nem broker nesta fase. Se for preciso agendamento ou worker separado, a tabela `collection_run` já serve como fila.
+
 ## 6. Autenticação
 
-- Painel e rotas de escrita (`POST /v1/collections`): JWT emitido no login, com expiração curta.
-- Consumo externo de leitura (`GET /v1/items`): JWT ou `X-API-Key`.
-- A comparação da chave de API é feita em tempo constante.
-- Senhas guardadas só como hash forte.
+Implementada no `develop` (PR #6). Esta seção descreve o estado atual.
+
+- **Login:** `POST /v1/auth/login` com e-mail e senha devolve um JWT (Bearer), válido por 15 minutos, com escopos `items:read` e `collections:write`. O administrador inicial é criado a partir de variáveis de ambiente.
+- **Leitura de itens:** `GET /v1/items` e `GET /v1/items/{id}` aceitam JWT com escopo `items:read` ou o header `X-API-Key`, que concede o papel `ROLE_API_READER`.
+- **Disparo de coleta:** `POST /v1/collections` exige JWT com escopo `collections:write`. A chave de API não serve para essa rota.
+- **Demais rotas:** negadas por padrão. Sem credencial válida, a resposta é 401.
+- **Chave de API:** comparada em tempo constante.
+- **Senhas:** guardadas apenas como hash.
+- **Pendências:** cadastro de usuários além do administrador inicial e painel Vue ainda não implementados.
 
 ## 6.1 Retenção
 
@@ -97,6 +110,18 @@ O `collector-runner-mini` grava em `collected_item` usando o mesmo esquema, sem 
 - Painel Vue faz login, lista itens com filtros e dispara uma coleta.
 - Swagger publicado e acessível.
 - Testes passam com `mvn test`, e `npm run build` passa no frontend.
+
+## Frontend acceptance criteria
+
+- Administrator login uses the existing JWT endpoint; no token or password is saved in browser storage.
+- Locale selection is available both before and after login, supports `pt-BR`, `en` and `es`, persists only that preference and updates `html.lang`.
+- Every visible label, validation/error message, date and number follows the active locale. Catalog parity is tested.
+- A user can paste a feed URL or select a real RSS/Atom example, trigger an authenticated run and see fetched/new/duplicate counts plus refreshed items.
+- Source, title and collection-date filters, pagination, item details and safe HTTP(S) original links work through the existing API.
+- Empty/loading/failure/expired-session states are implemented; duplicate-only collection is reported explicitly.
+- Responsive mobile and desktop layouts support keyboard navigation and a native focus-trapping detail dialog.
+- The frontend uses same-origin Vite/Nginx API proxies. Compose binds the UI to loopback by default.
+- Unit, browser and production build checks pass; the complete flow is also exercised against the running Compose stack and real Atom input.
 
 ## 10. Perguntas em aberto
 
