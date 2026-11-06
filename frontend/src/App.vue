@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronRight, FileText, Layers, Library, LogOut, Plus, RefreshCw, Search, ShieldCheck, X } from '@lucide/vue'
+import { ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronRight, Clock3, FileText, Layers, Library, LogOut, Plus, RefreshCw, Search, ShieldCheck, X } from '@lucide/vue'
 import LoginView from './components/LoginView.vue'
 import CollectionPanel from './components/CollectionPanel.vue'
 import LanguagePicker from './components/LanguagePicker.vue'
 import ItemDetails from './components/ItemDetails.vue'
+import CollectionHistory from './components/CollectionHistory.vue'
 import { ApiError, errorMessage, request, waitForRun } from './lib/api'
 import { displayDate, hostLabel, sourceLabel } from './lib/format'
 import type { CollectionRun, CollectionSource, Filters, Item, ItemPage, LoginResponse } from './types'
@@ -20,6 +21,9 @@ const listBusy = ref(false)
 const listFailure = ref<unknown>(null)
 const collectionFailure = ref<unknown>(null)
 const collectionBusy = ref(false)
+const collectionRuns = ref<CollectionRun[]>([])
+const historyBusy = ref(false)
+const historyFailure = ref<unknown>(null)
 const result = ref<CollectionRun | null>(null)
 const items = ref<Item[]>([])
 const total = ref(0)
@@ -37,13 +41,15 @@ const detailFailure = ref<unknown>(null)
 let expiryTimer: ReturnType<typeof setTimeout> | undefined
 let listController: AbortController | undefined
 let detailController: AbortController | undefined
+let historyController: AbortController | undefined
+let runController: AbortController | undefined
 
 function logout(expired = false) {
   clearTimeout(expiryTimer)
-  listController?.abort(); detailController?.abort()
+  listController?.abort(); detailController?.abort(); historyController?.abort(); runController?.abort(); runController = undefined
   token.value = ''; email.value = ''; items.value = []; total.value = 0; page.value = 0
-  result.value = null; collectionBusy.value = false; listBusy.value = false; dialogOpen.value = false
-  listFailure.value = null; collectionFailure.value = null; loginFailure.value = null; filterError.value = ''
+  result.value = null; collectionRuns.value = []; collectionBusy.value = false; listBusy.value = false; historyBusy.value = false; dialogOpen.value = false
+  listFailure.value = null; historyFailure.value = null; collectionFailure.value = null; loginFailure.value = null; filterError.value = ''
   loginErrorKey.value = expired ? 'login.expired' : ''
   Object.assign(filters, { source: '', q: '', from: '', to: '' }); applied.value = { ...filters }
 }
@@ -58,7 +64,7 @@ async function login(submittedEmail: string, password: string) {
     const response = await request<LoginResponse>('/v1/auth/login', undefined, { email: submittedEmail, password })
     token.value = response.accessToken; email.value = submittedEmail
     expiryTimer = setTimeout(() => logout(true), response.expiresIn * 1000)
-    await loadItems()
+    await Promise.all([loadItems(), loadHistory()])
   } catch (error) {
     if (error instanceof ApiError && [401, 503].includes(error.status)) loginErrorKey.value = error.status === 401 ? 'login.invalid' : 'login.unconfigured'
     else loginFailure.value = error
@@ -83,6 +89,19 @@ async function loadItems() {
     if (!isExpired(error)) listFailure.value = error
   } finally { if (listController === controller) listBusy.value = false }
 }
+async function loadHistory() {
+  if (!token.value) return
+  historyController?.abort()
+  const controller = new AbortController(); historyController = controller
+  const session = token.value
+  historyBusy.value = true; historyFailure.value = null
+  try {
+    const response = await request<CollectionRun[]>('/v1/collections?page=0&size=10', session, undefined, controller.signal)
+    if (!controller.signal.aborted && token.value === session) collectionRuns.value = response
+  } catch (error) {
+    if (!controller.signal.aborted && token.value === session && !isExpired(error)) historyFailure.value = error
+  } finally { if (historyController === controller) historyBusy.value = false }
+}
 function applyFilters() {
   filterError.value = ''
   if (filters.from && filters.to && new Date(filters.from) > new Date(filters.to)) { filterError.value = 'validation.range'; return }
@@ -95,17 +114,41 @@ async function collect(source: CollectionSource, input: string) {
   const session = token.value
   collectionBusy.value = true; collectionFailure.value = null; result.value = null
   try {
-    const started = await request<CollectionRun>('/v1/collections', session, { source, input })
+    runController?.abort()
+    const controller = new AbortController(); runController = controller
+    const started = await request<CollectionRun>('/v1/collections', session, { source, input }, controller.signal)
     if (token.value !== session) return
-    const response = await waitForRun(started.id, session)
+    void loadHistory()
+    const response = await waitForRun(started.id, session, controller.signal)
     if (token.value !== session) return
     result.value = response
+    void loadHistory()
     Object.assign(filters, { source: source.toLowerCase().replaceAll('_', '-'), q: '', from: '', to: '' })
     applyFilters()
   } catch (error) {
+    if (runController?.signal.aborted) return
     if (token.value !== session) return
     if (!isExpired(error)) collectionFailure.value = error
-  } finally { if (token.value === session) collectionBusy.value = false }
+    void loadHistory()
+  } finally { if (token.value === session) { collectionBusy.value = false; runController = undefined } }
+}
+async function resumeRun(run: CollectionRun) {
+  if (collectionBusy.value || !token.value || !['PENDING', 'RUNNING'].includes(run.status)) return
+  const session = token.value
+  const controller = new AbortController(); runController = controller
+  collectionBusy.value = true; collectionFailure.value = null; result.value = null
+  try {
+    const completed = await waitForRun(run.id, session, controller.signal)
+    if (token.value !== session) return
+    result.value = completed
+    Object.assign(filters, { source: completed.source.toLowerCase().replaceAll('_', '-'), q: '', from: '', to: '' })
+    applyFilters()
+  } catch (error) {
+    if (controller.signal.aborted || token.value !== session) return
+    if (!isExpired(error)) collectionFailure.value = error
+  } finally {
+    if (token.value === session) { collectionBusy.value = false; runController = undefined; void loadHistory() }
+  }
 }
 function closeDetail() { detailController?.abort(); dialogOpen.value = false; detail.value = null }
 async function openDetail(id: number) {
@@ -121,7 +164,7 @@ async function openDetail(id: number) {
   } finally { if (detailController === controller) detailBusy.value = false }
 }
 function scrollTo(id: string) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
-onBeforeUnmount(() => { clearTimeout(expiryTimer); listController?.abort(); detailController?.abort() })
+onBeforeUnmount(() => { clearTimeout(expiryTimer); listController?.abort(); detailController?.abort(); historyController?.abort(); runController?.abort() })
 </script>
 
 <template>
@@ -131,7 +174,7 @@ onBeforeUnmount(() => { clearTimeout(expiryTimer); listController?.abort(); deta
       <a class="brand" href="#library"><span class="brand-icon"><Layers :size="21" /></span>coleta<span class="brand-dot">.</span></a>
       <div class="workspace-switch"><span class="workspace-avatar">{{ email.charAt(0).toUpperCase() }}</span><div><strong>Dashboard Mini</strong><small><span class="live-dot"></span>{{ t('common.private') }}</small></div></div>
       <span class="nav-label">{{ t('dashboard.workspace') }}</span>
-      <nav :aria-label="t('common.workspace')"><a class="nav-item active" href="#library"><Library :size="18" />{{ t('dashboard.contents') }}<span class="nav-count">{{ n(total) }}</span></a><a class="nav-item" href="#collect"><Plus :size="18" />{{ t('dashboard.newCollection') }}</a></nav>
+      <nav :aria-label="t('common.workspace')"><a class="nav-item active" href="#library"><Library :size="18" />{{ t('dashboard.contents') }}<span class="nav-count">{{ n(total) }}</span></a><a class="nav-item" href="#collect"><Plus :size="18" />{{ t('dashboard.newCollection') }}</a><a class="nav-item" href="#activity"><Clock3 :size="18" />{{ t('history.title') }}</a></nav>
       <div class="sidebar-bottom"><a class="nav-item" href="/swagger-ui.html" target="_blank" rel="noopener noreferrer"><BookOpen :size="17" />{{ t('dashboard.apiDocs') }}<ArrowUpRight :size="13" /></a><div class="private-note"><ShieldCheck :size="15" /><span>{{ t('dashboard.local') }}</span></div></div>
     </aside>
     <div class="workspace-main">
@@ -140,6 +183,7 @@ onBeforeUnmount(() => { clearTimeout(expiryTimer); listController?.abort(); deta
         <div class="page-heading"><div><div class="section-kicker">{{ t('common.private') }}</div><h1>{{ t('dashboard.title') }}</h1><p class="muted">{{ t('dashboard.subtitle') }}</p></div><button class="button secondary" @click="scrollTo('collect')"><Plus :size="17" />{{ t('dashboard.newCollection') }}</button></div>
         <div class="stats-grid"><div class="stat-card"><span class="stat-icon blue"><FileText :size="19" /></span><span class="stat-label">{{ t('dashboard.items') }}</span><strong>{{ n(total) }}</strong><small>{{ t('dashboard.filtered') }}</small></div><div class="stat-card"><span class="stat-icon green"><ArrowDownToLine :size="19" /></span><span class="stat-label">{{ t('dashboard.newItems') }}</span><strong>{{ result ? n(result.inserted ?? 0) : '—' }}</strong><small>{{ t(result ? 'dashboard.lastCollection' : 'dashboard.noCollection') }}</small></div><div class="stat-card"><span class="stat-icon violet"><Check :size="19" /></span><span class="stat-label">{{ t('dashboard.duplicates') }}</span><strong>{{ result ? n(result.duplicates ?? 0) : '—' }}</strong><small>{{ t(result ? 'dashboard.lastCollection' : 'dashboard.noCollection') }}</small></div></div>
         <CollectionPanel :busy="collectionBusy" :result="result" :error="collectionFailure ? errorMessage(collectionFailure) : ''" @collect="collect" @view="scrollTo('library')" />
+        <CollectionHistory id="activity" :runs="collectionRuns" :busy="historyBusy" :error="historyFailure ? errorMessage(historyFailure) : ''" :tracking="collectionBusy" @refresh="loadHistory" @resume="resumeRun" />
         <section id="library" class="library-card" aria-labelledby="library-title">
           <div class="library-heading"><div><h2 id="library-title">{{ t('items.title') }}<span class="pill neutral">{{ t('items.count', { count: n(total) }) }}</span></h2><p class="muted">{{ t('items.subtitle') }}</p></div><button class="button quiet" :disabled="listBusy" @click="loadItems"><RefreshCw :size="15" :class="{ spinning: listBusy }" />{{ t('dashboard.refresh') }}</button></div>
           <form class="filters" @submit.prevent="applyFilters"><div class="field search-field"><label for="filter-query">{{ t('filters.search') }}</label><div class="input-with-icon"><Search :size="16" /><input id="filter-query" v-model="filters.q" class="with-icon" :placeholder="t('filters.searchPlaceholder')" maxlength="500" /></div></div><div class="field"><label for="filter-source">{{ t('filters.source') }}</label><select id="filter-source" v-model="filters.source"><option value="">{{ t('filters.allSources') }}</option><option v-for="source in sources" :key="source" :value="source">{{ sourceLabel(source) }}</option></select></div><div class="field date-field"><label for="filter-from">{{ t('filters.from') }}</label><input id="filter-from" v-model="filters.from" type="datetime-local" /></div><div class="field date-field"><label for="filter-to">{{ t('filters.to') }}</label><input id="filter-to" v-model="filters.to" type="datetime-local" /></div><button class="button secondary filter-submit" type="submit" :disabled="listBusy">{{ t('filters.apply') }}</button><button class="icon-button clear-filters" type="button" :title="t('filters.clear')" :aria-label="t('filters.clear')" @click="clearFilters"><X :size="16" /></button><small class="timezone-note">{{ t('filters.timezone') }}</small></form>
