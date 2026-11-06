@@ -1,0 +1,4 @@
+**
+!target/
+!target/dashboard-mini-0.1.0-SNAPSHOT.jar
+!Dockerfile
