@@ -28,3 +28,10 @@ target/
 
 # Project documentation workspace is intentionally local for now
 /docs/
+
+# Vue build, dependencies and browser test artifacts
+/frontend/node_modules/
+/frontend/dist/
+/frontend/test-results/
+/frontend/playwright-report/
+*.tsbuildinfo
