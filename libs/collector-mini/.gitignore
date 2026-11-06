@@ -1,0 +1,28 @@
+# Java build outputs (for the future implementation)
+target/
+*.class
+
+# Local secrets and environment
+.env
+.env.*
+!.env.example
+
+# Local IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/CODEX.md
+/.github/copilot-instructions.md
+/.github/prompts/
+/.github/agents/
+/.github/instructions/
+/.github/skills/
+/.ua/
+
+# Project documentation workspace is intentionally local for now
+/docs/

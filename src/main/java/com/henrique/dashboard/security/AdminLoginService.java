@@ -20,10 +20,12 @@ public class AdminLoginService {
 
     public AdminLoginService(@Value("${dashboard.admin-email:}") String email,
                              @Value("${dashboard.admin-password-hash:}") String passwordHash,
+                             @Value("${dashboard.admin-password:}") String plainPassword,
                              @Value("${dashboard.jwt-secret:}") String jwtSecret, JwtEncoder encoder) {
         this.email = email;
-        this.passwordHash = passwordHash;
-        this.enabled = !email.isBlank() && !passwordHash.isBlank() && !jwtSecret.isBlank();
+        // Sem hash, aceita a senha em texto (ex.: gerada pelo Railway) e gera o hash na subida.
+        this.passwordHash = !passwordHash.isBlank() || plainPassword.isBlank() ? passwordHash : passwords.encode(plainPassword);
+        this.enabled = !email.isBlank() && !this.passwordHash.isBlank() && !jwtSecret.isBlank();
         this.encoder = encoder;
     }
 
