@@ -81,6 +81,17 @@
     "view": "Ver itens",
     "dismiss": "Fechar resultado"
   },
+  "history": {
+    "title": "Coletas recentes",
+    "subtitle": "Acompanhe execuções iniciadas nesta conta, mesmo depois de voltar ao painel.",
+    "empty": "Nenhuma coleta recente.",
+    "run": "Execução #{id}",
+    "counts": "{fetched} encontrados · {inserted} novos · {duplicates} duplicados",
+    "failed": "A coleta falhou. O detalhe foi ocultado por segurança.",
+    "resume": "Acompanhar",
+    "tracking": "Acompanhando coleta…",
+    "status": { "pending": "Na fila", "running": "Em andamento", "succeeded": "Concluída", "failed": "Falhou" }
+  },
   "sources": {
     "rss": "RSS / Atom",
     "google-news": "Google News",
