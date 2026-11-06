@@ -81,6 +81,17 @@
     "view": "Ver elementos",
     "dismiss": "Cerrar resultado"
   },
+  "history": {
+    "title": "Recopilaciones recientes",
+    "subtitle": "Sigue las ejecuciones de esta cuenta, incluso al volver al panel.",
+    "empty": "No hay recopilaciones recientes.",
+    "run": "Ejecución n.º {id}",
+    "counts": "{fetched} encontrados · {inserted} nuevos · {duplicates} duplicados",
+    "failed": "La recopilación falló. Los detalles se ocultan por seguridad.",
+    "resume": "Seguir ejecución",
+    "tracking": "Siguiendo la recopilación…",
+    "status": { "pending": "En cola", "running": "En curso", "succeeded": "Completada", "failed": "Fallida" }
+  },
   "sources": {
     "rss": "RSS / Atom",
     "google-news": "Google News",
