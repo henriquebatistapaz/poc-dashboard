@@ -2,6 +2,7 @@ package com.henrique.dashboard.api;
 
 import com.henrique.dashboard.domain.CollectedItem;
 import com.henrique.dashboard.repository.CollectedItemRepository;
+import com.henrique.dashboard.service.ItemRemovalService;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -9,10 +10,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,9 +31,11 @@ public class ItemController {
     static final int MAX_PAGE_SIZE = 100;
 
     private final CollectedItemRepository repository;
+    private final ItemRemovalService removal;
 
-    public ItemController(CollectedItemRepository repository) {
+    public ItemController(CollectedItemRepository repository, ItemRemovalService removal) {
         this.repository = repository;
+        this.removal = removal;
     }
 
     @GetMapping
@@ -55,6 +62,15 @@ public class ItemController {
         return repository.findById(id)
                 .map(ItemResponse::from)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
+    }
+
+    /** Remoção sob pedido, só para administrador (escopo items:delete). Motivo obrigatório. */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void remove(@PathVariable Long id, @RequestBody(required = false) ItemRemovalRequest body,
+                       Authentication authentication) {
+        String reason = body == null ? null : body.reason();
+        removal.remove(id, reason, authentication.getName());
     }
 
     static Specification<CollectedItem> filter(String source, String q, Instant from, Instant to) {
