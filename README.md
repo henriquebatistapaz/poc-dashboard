@@ -2,6 +2,14 @@
 
 Private Java 21 / Maven backend that embeds `collector-runner-mini` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
 
+## Vue panel — Portuguese, English and Spanish
+
+The local panel at `http://localhost:8085` includes administrator login, a feed test form, source selection, real RSS/Atom examples, new/duplicate counts, filtered/paginated items and a detail dialog linking to the original. Paste a public RSS/Atom URL and select **Collect now**: the Vue app calls the authenticated Dashboard endpoint, which embeds the runner and uses the existing `rss-collector-mini` library. Successful collection refreshes the list automatically.
+
+All user-facing labels, validation, errors, dates and counts support `pt-BR`, `en` and `es`. Change language on the login screen or in the workspace without reloading. Only the selected locale is saved in browser storage. JWT and login credentials remain in memory; reloading, signing out or session expiration requires a new login. Google Alerts URLs are masked and cleared after success/source change; source inputs are not persisted in the browser.
+
+See [frontend/README.md](frontend/README.md) for development, browser tests and translation conventions. The backend remains Java/Maven; Node.js 22.12+ is needed only for frontend development/builds. Compose builds the UI with Node 24 and serves it through Nginx, proxying API calls on the same origin without a permissive CORS rule.
+
 ## Working flow
 
 1. Log in through `POST /v1/auth/login` using the runtime-configured administrator.
@@ -61,7 +69,7 @@ After building the jar and setting local `.env` values:
 docker compose up --build -d
 ```
 
-Open `http://localhost:8084/swagger-ui.html`. Compose starts PostgreSQL 16 and the Dashboard with the embedded runner. Database and API ports bind to loopback; ports default to 15432 and 8084. A named database volume preserves collected items. `docker compose down` stops the stack without deleting that volume.
+Open the Vue panel at `http://localhost:8085` or Swagger at `http://localhost:8084/swagger-ui.html`. Compose starts PostgreSQL 16, the Dashboard with the embedded runner, and the Vue/Nginx frontend. Database and API ports bind to loopback; ports default to 15432 (database), 8084 (API) and 8085 (panel). Set `FRONTEND_PORT` to change the panel port. A named database volume preserves collected items. `docker compose down` stops the stack without deleting that volume.
 
 Alternatively start only PostgreSQL with `docker compose up -d postgres`; export `DB_URL=jdbc:postgresql://localhost:15432/dashboard`, `DB_USER=dashboard`, `DB_PASSWORD` and the dashboard credential variables, then run `mvn spring-boot:run`. Maven does not load `.env` automatically. The Java application defaults to listening on loopback.
 
@@ -81,4 +89,4 @@ For Colima set `DOCKER_HOST` to its socket and `TESTCONTAINERS_DOCKER_SOCKET_OVE
 
 ## Pending
 
-Vue UI, durable run history, scheduling, historical social-row migration and public deployment review. The current single administrator is configured by environment; persistent user management is future work. The repositories stay private. AI-Ready assets and generated `/docs/` are excluded from Git.
+Durable run history, scheduling, historical social-row migration and public deployment review. The current single administrator is configured by environment; persistent user management is future work. The repositories stay private. AI-Ready assets and generated `/docs/` are excluded from Git.
