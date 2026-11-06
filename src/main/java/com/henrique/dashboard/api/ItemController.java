@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "apiKey")
 @RestController
 @RequestMapping("/v1/items")
 public class ItemController {
@@ -34,11 +35,14 @@ public class ItemController {
                                  @RequestParam(required = false) Instant to,
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "20") int size) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from must be before or equal to to");
+        }
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
         Specification<CollectedItem> spec = filter(source, q, from, to);
         Page<CollectedItem> result = repository.findAll(spec,
-                PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "collectedAt")));
+                PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "collectedAt", "id")));
         List<ItemResponse> items = result.getContent().stream().map(ItemResponse::from).toList();
         return new ItemPageResponse(items, result.getTotalElements(), safePage, safeSize);
     }
