@@ -4,7 +4,7 @@
 
 ## Implementation status (reviewed)
 
-Implemented: Java/Maven Spring backend; Lombok entity/constructor boilerplate; PostgreSQL/Flyway canonical item schema; paginated/filterable read API; read-only API key; runtime administrator with BCrypt password hash and 15-minute issuer/signature/expiry-validated JWT; authenticated synchronous manual collection through the embedded runner; source/RSS/social library integration; Swagger and local Docker Compose. The Vue/TypeScript panel adds login, manual source/RSS testing, filters, pagination and details, with complete Portuguese/English/Spanish localization (`pt-BR`, `en`, `es`). The runner does not own canonical migrations. Standalone runner configuration is isolated from dashboard configuration.
+Implemented: Java/Maven Spring backend with Lombok; PostgreSQL schema managed by Flyway (`collected_item` V1, `collection_run` V2); paginated and filterable read API capped at 100 items per page; read-only API key for item reads; administrator from environment with BCrypt hash and JWT (15 minutes); asynchronous collection runs (`POST /v1/collections` returns `202` and is polled through `GET /v1/collections/{id}`); run history; startup recovery of interrupted runs; Swagger; local Docker Compose. Vue/TypeScript panel with login, collection, filters, pagination, details and full Portuguese, English and Spanish localization, polling the asynchronous runs. Tests: 28 backend tests on H2 and 7 Testcontainers PostgreSQL integration tests; Vitest and Playwright suites for the panel.
 
 The authenticated collection path covers RSS 2.0/Atom 1.0, Google News, user-owned Google Alerts feeds, WordPress and synthetic Alpha/Beta adapters. Reddit still requires official approval and runtime OAuth credentials; Issuu remains unavailable. Collection inputs are not logged or stored. PostgreSQL tests exercise actual Flyway/HTTP/runner/parser behavior with fixture upstream fetches, including duplicate collection and queries. See README for reproducible commands and detailed limits.
 
@@ -125,9 +125,13 @@ Implementada no `develop` (PR #6). Esta seção descreve o estado atual.
 
 ## 10. Perguntas em aberto
 
-1. O painel terá cadastro de usuários pela interface, ou só o administrador inicial criado por variável de ambiente? Esta spec assume só o administrador inicial.
+1. Cadastro de usuários pela interface ou só o administrador inicial por variável de ambiente? A spec assume só o administrador inicial.
+2. Como será a remoção de um item sob pedido (seção 6.1)? Ainda não há endpoint para isso; a proposta é um `DELETE /v1/items/{id}` restrito a administrador, com registro do motivo.
 
 ## 11. Fases
 
-- **Fase 1 (esta spec):** backend com API, JWT, Swagger e migrações; painel Vue; Docker Compose local.
+- **Fase 1 (concluída no `develop`):** backend com API, JWT, API key, Swagger, migrações, coleta assíncrona com histórico; painel Vue com i18n; Docker Compose local.
+- **Remoção sob pedido:** `DELETE /v1/items/{id}`, restrito ao admin (escopo `items:delete`), com motivo obrigatório e registro em `item_removal`. A coleta descarta itens removidos antes da gravação, então eles não voltam.
+- **Validado com Compose:** backend, PostgreSQL e frontend sobem; coleta RSS real grava itens; remoção sob pedido impede a volta do item.
 - **Fase 2:** deploy no Railway, depois de revisar a autenticação e as perguntas em aberto.
+- **Fora de escopo:** agendamento de coletas e worker separado, que só entram se houver necessidade comprovada; a tabela `collection_run` já serve como fila.

@@ -20,10 +20,12 @@ public class AdminLoginService {
 
     public AdminLoginService(@Value("${dashboard.admin-email:}") String email,
                              @Value("${dashboard.admin-password-hash:}") String passwordHash,
+                             @Value("${dashboard.admin-password:}") String plainPassword,
                              @Value("${dashboard.jwt-secret:}") String jwtSecret, JwtEncoder encoder) {
         this.email = email;
-        this.passwordHash = passwordHash;
-        this.enabled = !email.isBlank() && !passwordHash.isBlank() && !jwtSecret.isBlank();
+        // Sem hash, aceita a senha em texto (ex.: gerada pelo Railway) e gera o hash na subida.
+        this.passwordHash = !passwordHash.isBlank() || plainPassword.isBlank() ? passwordHash : passwords.encode(plainPassword);
+        this.enabled = !email.isBlank() && !this.passwordHash.isBlank() && !jwtSecret.isBlank();
         this.encoder = encoder;
     }
 
@@ -37,7 +39,7 @@ public class AdminLoginService {
         if (!validPassword || !email.equals(submittedEmail)) throw unauthorized();
         Instant now = Instant.now();
         var claims = JwtClaimsSet.builder().issuer(JwtConfiguration.ISSUER).subject(email)
-                .issuedAt(now).expiresAt(now.plusSeconds(900)).claim("scope", "items:read collections:write").build();
+                .issuedAt(now).expiresAt(now.plusSeconds(900)).claim("scope", "items:read items:delete collections:write").build();
         String token = encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
         return new LoginResponse(token, "Bearer", 900);
     }

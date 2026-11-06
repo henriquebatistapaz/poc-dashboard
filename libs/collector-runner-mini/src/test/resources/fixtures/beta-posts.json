@@ -1,0 +1,11 @@
+{
+  "items": [
+    {
+      "postId": "beta-001",
+      "authorName": "Sample Author",
+      "body": "Synthetic post from Beta",
+      "publishedAt": "2026-01-16T11:45:00Z",
+      "link": "https://beta.example.test/posts/beta-001"
+    }
+  ]
+}

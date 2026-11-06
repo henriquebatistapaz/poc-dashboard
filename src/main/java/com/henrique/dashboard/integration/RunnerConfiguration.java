@@ -1,6 +1,7 @@
 package com.henrique.dashboard.integration;
 
 import com.example.collectorrunner.integration.*;
+import com.henrique.dashboard.repository.ItemRemovalRepository;
 import javax.sql.DataSource;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +14,9 @@ public class RunnerConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(CollectionGateway.class)
-    CollectionGateway collectionGateway() { return DefaultCollectionGateway.fromEnvironment(System.getenv()); }
+    CollectionGateway collectionGateway(ItemRemovalRepository removals) {
+        return new RemovalAwareCollectionGateway(DefaultCollectionGateway.fromEnvironment(System.getenv()), removals);
+    }
 
     @Bean
     CollectionRunner collectionRunner(CollectionGateway gateway, CollectedItemWriter writer) {
