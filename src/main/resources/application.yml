@@ -18,3 +18,4 @@ dashboard:
   jwt-secret: ${DASHBOARD_JWT_SECRET:}
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${PORT:8080}
