@@ -5,6 +5,7 @@ import com.example.collectorrunner.integration.CollectionSource;
 import com.henrique.collector.source.SourceAccessException;
 import com.henrique.dashboard.domain.CollectionRun;
 import com.henrique.dashboard.repository.CollectionRunRepository;
+import lombok.extern.slf4j.Slf4j;
 import java.sql.SQLException;
 import java.util.List;
 import java.time.Instant;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CollectionRunService {
     static final int MAX_PAGE_SIZE = 100;
 
@@ -50,6 +52,13 @@ public class CollectionRunService {
             run.markSucceeded(Instant.now(), result.fetched(), result.inserted(), result.duplicates());
         } catch (Exception exception) {
             // Upstream text can contain a secret feed URL, so only fixed messages are stored.
+            // Logs carry only exception class names (never messages or inputs) to aid diagnosis.
+            Throwable root = exception;
+            while (root.getCause() != null && root.getCause() != root) {
+                root = root.getCause();
+            }
+            log.warn("Collection run {} failed: {} (root cause: {})", id,
+                    exception.getClass().getName(), root.getClass().getName());
             run.markFailed(Instant.now(), safeMessage(exception));
         }
         repository.save(run);
