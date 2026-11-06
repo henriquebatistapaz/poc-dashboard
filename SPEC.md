@@ -2,7 +2,7 @@
 
 **Status:** Rascunho para revisão. Nenhum código implementado.
 **Repositório:** Privado
-**Fase desta spec:** 1 — backend mínimo (Spring Boot, PostgreSQL, Swagger, autenticação) e painel Vue separado, com coleta agendada e sob demanda.
+**Fase desta spec:** proposta para discussão — backend (Spring Boot, PostgreSQL, Swagger, autenticação) e painel Vue separado, com coleta agendada e sob demanda. Nenhuma decisão arquitetural foi aprovada.
 
 ## 1. Objetivo
 
@@ -23,9 +23,9 @@ O resultado é para leitura pessoal e para consumo por outro sistema via API. Al
 | `collector-runner-mini` | Chama os coletores, normaliza, deduplica e grava no PostgreSQL. Biblioteca Maven e serviço. |
 | `dashboard-mini` (este) | Lê o banco, expõe a API, dispara coletas pelo `collector-runner-mini` e serve o painel. |
 
-**Decisão:** integração por biblioteca. O hub declara o `collector-runner-mini` como dependência Maven e chama os serviços dele dentro do mesmo processo. Não há chamada HTTP entre os projetos nesta fase.
+**Proposta para discussão, não decisão aprovada:** integração por biblioteca. O hub declararia o `collector-runner-mini` como dependência Maven e chamaria os serviços dele dentro do mesmo processo. A alternativa de integração via HTTP ainda precisa ser avaliada.
 
-**Dono do esquema do banco:** o `collector-runner-mini` define as tabelas e as migrações Flyway, porque é ele quem grava os itens. O hub lê essas tabelas e só cria as próprias tabelas de usuários e de agendamentos.
+**Proposta para discussão, não decisão aprovada:** o `collector-runner-mini` definiria as tabelas e migrações Flyway dos itens, e o hub as leria. A propriedade dos dados e do esquema precisa ser confirmada antes da implementação.
 
 ## 3. Requisitos funcionais
 
