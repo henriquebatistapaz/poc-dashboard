@@ -2,6 +2,7 @@ package com.henrique.dashboard.api;
 
 import com.henrique.dashboard.domain.CollectedItem;
 import com.henrique.dashboard.repository.CollectedItemRepository;
+import com.henrique.dashboard.service.ItemRemovalService;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -9,10 +10,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,9 +31,11 @@ public class ItemController {
     static final int MAX_PAGE_SIZE = 100;
 
     private final CollectedItemRepository repository;
+    private final ItemRemovalService removal;
 
-    public ItemController(CollectedItemRepository repository) {
+    public ItemController(CollectedItemRepository repository, ItemRemovalService removal) {
         this.repository = repository;
+        this.removal = removal;
     }
 
     @GetMapping
@@ -57,11 +64,32 @@ public class ItemController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
     }
 
+    /** Remoção sob pedido, só para administrador (escopo items:delete). Motivo obrigatório. */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void remove(@PathVariable Long id, @RequestBody(required = false) ItemRemovalRequest body,
+                       Authentication authentication) {
+        String reason = body == null ? null : body.reason();
+        removal.remove(id, reason, authentication.getName());
+    }
+
+    /**
+     * Aceita o nome do enum usado na coleta (ex.: RSS, GOOGLE_NEWS) ou o valor gravado (rss, google-news).
+     * Ambos viram o valor gravado: minúsculas, com "_" trocado por "-".
+     */
+    public static String normalizeSource(String source) {
+        if (source == null || source.isBlank()) {
+            return null;
+        }
+        return source.trim().toLowerCase(java.util.Locale.ROOT).replace('_', '-');
+    }
+
     static Specification<CollectedItem> filter(String source, String q, Instant from, Instant to) {
         return (root, query, cb) -> {
             var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
-            if (source != null && !source.isBlank()) {
-                predicates.add(cb.equal(root.get("source"), source.trim()));
+            String normalized = normalizeSource(source);
+            if (normalized != null) {
+                predicates.add(cb.equal(root.get("source"), normalized));
             }
             if (q != null && !q.isBlank()) {
                 predicates.add(cb.like(cb.lower(root.get("title")), "%" + q.trim().toLowerCase(java.util.Locale.ROOT) + "%"));
