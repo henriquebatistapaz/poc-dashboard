@@ -16,23 +16,24 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
 public class SecurityConfiguration {
     @Bean
-    SecurityFilterChain security(HttpSecurity http, @Value("${dashboard.api-key:}") String apiKey) throws Exception {
+    SecurityFilterChain security(HttpSecurity http, @Value("${dashboard.api-key:}") String apiKey, JwtDecoder jwtDecoder) throws Exception {
         byte[] expected = apiKey.getBytes(StandardCharsets.UTF_8);
         var filter = new OncePerRequestFilter() {
             @Override
             protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain) throws ServletException, IOException {
                 String supplied = request.getHeader("X-API-Key");
-                if (expected.length > 0 && supplied != null
+                if (SecurityContextHolder.getContext().getAuthentication() == null && expected.length > 0 && supplied != null
                         && MessageDigest.isEqual(expected, supplied.getBytes(StandardCharsets.UTF_8))) {
                     var context = SecurityContextHolder.createEmptyContext();
-                    context.setAuthentication(new UsernamePasswordAuthenticationToken("api-reader", null, java.util.List.of()));
+                    context.setAuthentication(new UsernamePasswordAuthenticationToken("api-reader", null, java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_API_READER"))));
                     SecurityContextHolder.setContext(context);
                 }
                 chain.doFilter(request, response);
@@ -42,9 +43,13 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .requestCache(cache -> cache.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v1/items", "/v1/items/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/collections").hasAuthority("SCOPE_collections:write")
+                        .requestMatchers(HttpMethod.GET, "/v1/items", "/v1/items/**").hasAnyAuthority("ROLE_API_READER", "SCOPE_items:read")
                         .anyRequest().denyAll())
+                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.decoder(jwtDecoder)))
                 .exceptionHandling(errors -> errors.authenticationEntryPoint((request, response, error) -> response.sendError(401)))
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
                 .build();

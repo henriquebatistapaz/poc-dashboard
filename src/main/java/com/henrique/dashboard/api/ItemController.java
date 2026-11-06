@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "apiKey")
+@io.swagger.v3.oas.annotations.security.SecurityRequirements({
+    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "apiKey"),
+    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
+})
 @RestController
 @RequestMapping("/v1/items")
 public class ItemController {
