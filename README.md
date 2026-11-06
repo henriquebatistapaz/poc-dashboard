@@ -89,4 +89,4 @@ For Colima set `DOCKER_HOST` to its socket and `TESTCONTAINERS_DOCKER_SOCKET_OVE
 
 ## Pending
 
-Scheduling, persistent user management, historical social-row migration and public deployment review. The current single administrator is configured by environment; persistent user management is future work. The repositories stay private. AI-Ready assets and generated `/docs/` are excluded from Git.
+Scheduling, persistent user management, historical social-row migration and public deployment review. The current single administrator is configured by environment; persistent user management is future work. The repositories stay private. AI-Init assets and generated `/docs/` are excluded from Git.

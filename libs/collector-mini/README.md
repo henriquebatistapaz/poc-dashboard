@@ -48,7 +48,7 @@ The program prints a JSON array of normalized feed items to stdout. Google Alert
 - **Reddit:** official OAuth/Data API adapter; disabled until Reddit access approval and valid local credentials are configured. No HTML scraping.
 - **Issuu:** unavailable until an official permitted tokenless feed/API contract is verified.
 
-See [SPEC.md](SPEC.md) for the source evidence, access limits, and implementation scope. AI-Ready files and `/docs/` remain local and ignored.
+See [SPEC.md](SPEC.md) for the source evidence, access limits, and implementation scope. AI-Init files and `/docs/` remain local and ignored.
 
 ## Integration planning
 
