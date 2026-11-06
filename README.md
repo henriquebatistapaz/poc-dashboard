@@ -1,9 +1,9 @@
-# Content Collection Hub Mini
+# Dashboard Mini
 
 Private discovery project for a future integration between three existing private Java projects:
 
 - `rss-link-collector-mini` — validates and parses RSS 2.0 and Atom 1.0 feeds.
-- `social-api-adapter-mini` — normalizes, deduplicates, and persists social posts.
+- `collector-runner-mini` — normalizes, deduplicates, and persists social posts.
 - `multi-source-collector-mini` — collects Google News, Google Alerts, WordPress feeds, and Reddit through approved OAuth access.
 
 ## Current status
