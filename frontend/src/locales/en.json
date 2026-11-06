@@ -81,6 +81,17 @@
     "view": "View items",
     "dismiss": "Dismiss result"
   },
+  "history": {
+    "title": "Recent collections",
+    "subtitle": "Track runs started from this account, even after returning to the dashboard.",
+    "empty": "No recent collections.",
+    "run": "Run #{id}",
+    "counts": "{fetched} found · {inserted} new · {duplicates} duplicates",
+    "failed": "The collection failed. Details are hidden for safety.",
+    "resume": "Track run",
+    "tracking": "Tracking collection…",
+    "status": { "pending": "Queued", "running": "In progress", "succeeded": "Complete", "failed": "Failed" }
+  },
   "sources": {
     "rss": "RSS / Atom",
     "google-news": "Google News",

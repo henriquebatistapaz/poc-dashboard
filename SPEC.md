@@ -4,11 +4,11 @@
 
 ## Implementation status (reviewed)
 
-Implemented: Java/Maven Spring backend with Lombok; PostgreSQL schema managed by Flyway (`collected_item` V1, `collection_run` V2); paginated and filterable read API capped at 100 items per page; read-only API key for item reads; administrator from environment with BCrypt hash and JWT (15 minutes); asynchronous collection runs (`POST /v1/collections` returns `202` and is polled through `GET /v1/collections/{id}`); run history; startup recovery of interrupted runs; Swagger; local Docker Compose. Vue/TypeScript panel with login, collection, filters, pagination, details and full Portuguese, English and Spanish localization, polling the asynchronous runs. Tests: 28 backend tests on H2 and 7 Testcontainers PostgreSQL integration tests; Vitest and Playwright suites for the panel.
+Implemented: Java/Maven Spring backend with Lombok; PostgreSQL schema managed by Flyway (`collected_item` V1, `collection_run` V2); paginated and filterable read API capped at 100 items per page; read-only API key for item reads; administrator from environment with BCrypt hash and JWT (15 minutes); asynchronous collection runs (`POST /v1/collections` returns `202` and is polled through `GET /v1/collections/{id}`); run history; startup recovery of interrupted runs; Swagger; local Docker Compose. Vue/TypeScript panel with login, collection, filters, pagination, details, recent asynchronous run history and resume tracking, plus Portuguese, English and Spanish localization. Current verification: `mvn test` — 39 backend tests on H2; `npm test` — 15 panel tests; Playwright — 6 deterministic browser tests passed. The optional Testcontainers PostgreSQL integration profile and live Compose browser test are separate.
 
 The authenticated collection path covers RSS 2.0/Atom 1.0, Google News, user-owned Google Alerts feeds, WordPress and synthetic Alpha/Beta adapters. Reddit still requires official approval and runtime OAuth credentials; Issuu remains unavailable. Collection inputs are not logged or stored. PostgreSQL tests exercise actual Flyway/HTTP/runner/parser behavior with fixture upstream fetches, including duplicate collection and queries. See README for reproducible commands and detailed limits.
 
-Pending: durable run history/scheduling, persistent user administration and historical social-row migration. The single runtime administrator uses `DASHBOARD_ADMIN_EMAIL` and `DASHBOARD_ADMIN_PASSWORD_HASH`; no `app_user` table or registration is implemented. These runtime values replace the need to seed a user row in this slice. Public deployment remains pending review.
+Pending: scheduling, persistent user administration and historical social-row migration. The single runtime administrator uses `DASHBOARD_ADMIN_EMAIL` and `DASHBOARD_ADMIN_PASSWORD_HASH`; no `app_user` table or registration is implemented. These runtime values replace the need to seed a user row in this slice. Public deployment remains pending review.
 
 **Repositório:** Privado
 **Fase desta spec:** 1 — backend (Spring Boot, PostgreSQL, Swagger, JWT) e painel Vue separado, com coleta sob demanda.
@@ -77,11 +77,11 @@ Implementada no `develop` (PR #6). Esta seção descreve o estado atual.
 
 - **Login:** `POST /v1/auth/login` com e-mail e senha devolve um JWT (Bearer), válido por 15 minutos, com escopos `items:read` e `collections:write`. O administrador inicial é criado a partir de variáveis de ambiente.
 - **Leitura de itens:** `GET /v1/items` e `GET /v1/items/{id}` aceitam JWT com escopo `items:read` ou o header `X-API-Key`, que concede o papel `ROLE_API_READER`.
-- **Disparo de coleta:** `POST /v1/collections` exige JWT com escopo `collections:write`. A chave de API não serve para essa rota.
+- **Disparo de coleta:** `POST /v1/collections` exige JWT com escopo `collections:write`. A chave de API não serve para essa rota. O painel mantém as dez execuções recentes e permite acompanhar novamente uma execução pendente após o login.
 - **Demais rotas:** negadas por padrão. Sem credencial válida, a resposta é 401.
 - **Chave de API:** comparada em tempo constante.
 - **Senhas:** guardadas apenas como hash.
-- **Pendências:** cadastro de usuários além do administrador inicial e painel Vue ainda não implementados.
+- **Pendências:** cadastro de usuários além do administrador inicial e agendamento de coletas.
 
 ## 6.1 Retenção
 
