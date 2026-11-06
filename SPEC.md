@@ -132,6 +132,6 @@ Implementada no `develop` (PR #6). Esta seção descreve o estado atual.
 
 - **Fase 1 (concluída no `develop`):** backend com API, JWT, API key, Swagger, migrações, coleta assíncrona com histórico; painel Vue com i18n; Docker Compose local.
 - **Remoção sob pedido:** `DELETE /v1/items/{id}`, restrito ao admin (escopo `items:delete`), com motivo obrigatório e registro em `item_removal`. A coleta descarta itens removidos antes da gravação, então eles não voltam.
-- **Pendente da Fase 1:** validação ponta a ponta do Compose (Vue, backend e PostgreSQL) com uma coleta real.
+- **Validado com Compose:** backend, PostgreSQL e frontend sobem; coleta RSS real grava itens; remoção sob pedido impede a volta do item.
 - **Fase 2:** deploy no Railway, depois de revisar a autenticação e as perguntas em aberto.
 - **Fora de escopo:** agendamento de coletas e worker separado, que só entram se houver necessidade comprovada; a tabela `collection_run` já serve como fila.
