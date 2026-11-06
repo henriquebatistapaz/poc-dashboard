@@ -38,13 +38,13 @@ Para `production`, use valores diferentes dos de `develop`, principalmente `DASH
 
 ## 3. Build dos coletores
 
-O Dockerfile clona e instala as três bibliotecas durante o build, com `GITHUB_TOKEN`. O token é passado como **BuildKit secret**, então não fica gravado nas camadas da imagem. Teste local:
+O Dockerfile clona e instala as três bibliotecas durante o build, com `GITHUB_TOKEN` como argumento de build. O token fica só na etapa intermediária de build; a imagem final não o contém. Teste local:
 
 ```bash
-GITHUB_TOKEN=$(gh auth token) docker build --secret id=github_token,env=GITHUB_TOKEN -t dashboard-mini:local .
+docker build --build-arg GITHUB_TOKEN=$(gh auth token) -t dashboard-mini:local .
 ```
 
-> Ponto a confirmar no Railway: se o builder do Railway não expuser o segredo como BuildKit secret, o build falha com `cannot read /run/secrets/github_token`. Nesse caso, a alternativa é publicar as bibliotecas no GitHub Packages.
+> Recomendação: use um token fine-grained somente leitura, restrito aos três repos de bibliotecas, em vez do token do `gh` (que tem escopo amplo). O token fica em cache da etapa intermediária do builder do Railway; a alternativa definitiva é publicar as bibliotecas no GitHub Packages.
 
 ## 4. Deploy
 
