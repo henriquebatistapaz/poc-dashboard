@@ -13,3 +13,8 @@ spring:
     enabled: true
 dashboard:
   api-key: ${DASHBOARD_API_KEY:}
+  admin-email: ${DASHBOARD_ADMIN_EMAIL:}
+  admin-password-hash: ${DASHBOARD_ADMIN_PASSWORD_HASH:}
+  jwt-secret: ${DASHBOARD_JWT_SECRET:}
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
