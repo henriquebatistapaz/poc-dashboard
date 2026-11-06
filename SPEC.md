@@ -65,10 +65,15 @@ O `collector-runner-mini` grava em `collected_item` usando o mesmo esquema, sem 
 
 ## 6. Autenticação
 
-- Painel e rotas de escrita (`POST /v1/collections`): JWT emitido no login, com expiração curta.
-- Consumo externo de leitura (`GET /v1/items`): JWT ou `X-API-Key`.
-- A comparação da chave de API é feita em tempo constante.
-- Senhas guardadas só como hash forte.
+Implementada no `develop` (PR #6). Esta seção descreve o estado atual.
+
+- **Login:** `POST /v1/auth/login` com e-mail e senha devolve um JWT (Bearer), válido por 15 minutos, com escopos `items:read` e `collections:write`. O administrador inicial é criado a partir de variáveis de ambiente.
+- **Leitura de itens:** `GET /v1/items` e `GET /v1/items/{id}` aceitam JWT com escopo `items:read` ou o header `X-API-Key`, que concede o papel `ROLE_API_READER`.
+- **Disparo de coleta:** `POST /v1/collections` exige JWT com escopo `collections:write`. A chave de API não serve para essa rota.
+- **Demais rotas:** negadas por padrão. Sem credencial válida, a resposta é 401.
+- **Chave de API:** comparada em tempo constante.
+- **Senhas:** guardadas apenas como hash.
+- **Pendências:** cadastro de usuários além do administrador inicial e painel Vue ainda não implementados.
 
 ## 6.1 Retenção
 
