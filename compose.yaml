@@ -1,0 +1,40 @@
+name: dashboard-mini
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: dashboard
+      POSTGRES_USER: dashboard
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD locally}
+    ports:
+      - "127.0.0.1:${DB_PORT:-15432}:5432"
+    volumes:
+      - dashboard_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dashboard -d dashboard"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  dashboard:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${DASHBOARD_PORT:-8084}:8080"
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      DB_URL: jdbc:postgresql://postgres:5432/dashboard
+      DB_USER: dashboard
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD locally}
+      DASHBOARD_API_KEY: ${DASHBOARD_API_KEY:?Set DASHBOARD_API_KEY locally}
+      DASHBOARD_ADMIN_EMAIL: ${DASHBOARD_ADMIN_EMAIL:-}
+      DASHBOARD_ADMIN_PASSWORD_HASH: ${DASHBOARD_ADMIN_PASSWORD_HASH:-}
+      DASHBOARD_JWT_SECRET: ${DASHBOARD_JWT_SECRET:-}
+      REDDIT_API_ACCESS_APPROVED: ${REDDIT_API_ACCESS_APPROVED:-false}
+      REDDIT_CLIENT_ID: ${REDDIT_CLIENT_ID:-}
+      REDDIT_CLIENT_SECRET: ${REDDIT_CLIENT_SECRET:-}
+      REDDIT_REFRESH_TOKEN: ${REDDIT_REFRESH_TOKEN:-}
+      REDDIT_USERNAME: ${REDDIT_USERNAME:-}
+volumes:
+  dashboard_postgres:
