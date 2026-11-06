@@ -121,8 +121,12 @@ class CollectionRunApiTest {
     @Test
     void listReturnsRunsNewestFirst() throws Exception {
         when(runner.run(any(), any())).thenReturn(new CollectionRunner.CollectionResult(CollectionSource.WORDPRESS, 1, 1, 0));
-        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token).contentType("application/json")
-                .content("{\"source\":\"WORDPRESS\",\"input\":\"https://wp.example/feed\"}")).andExpect(status().isAccepted());
+        MvcResult created = mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                .contentType("application/json")
+                .content("{\"source\":\"WORDPRESS\",\"input\":\"https://wp.example/feed\"}"))
+                .andExpect(status().isAccepted()).andReturn();
+        // Wait for the background run so it cannot leak into another test's mock.
+        awaitStatus(created.getResponse().getHeader("Location"), "SUCCEEDED");
         mvc.perform(get("/v1/collections").param("size", "500").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].source").isNotEmpty());
