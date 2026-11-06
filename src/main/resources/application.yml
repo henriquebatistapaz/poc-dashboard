@@ -15,6 +15,7 @@ dashboard:
   api-key: ${DASHBOARD_API_KEY:}
   admin-email: ${DASHBOARD_ADMIN_EMAIL:}
   admin-password-hash: ${DASHBOARD_ADMIN_PASSWORD_HASH:}
+  admin-password: ${DASHBOARD_ADMIN_PASSWORD:}
   jwt-secret: ${DASHBOARD_JWT_SECRET:}
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}
