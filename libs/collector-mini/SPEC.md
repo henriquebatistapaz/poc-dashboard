@@ -112,7 +112,7 @@ Define a small OpenAPI contract and persistence model only after collection beha
 - Reddit OAuth uses only approved, officially issued credentials and remains disabled until approval is configured.
 - No credentials or real private feed URL are included.
 - Local JUnit tests cover parsing, URL validation, collector query construction, secret URL redaction, and source gating.
-- The repository remains private; `/docs/` and AI-Ready generated files are ignored by Git.
+- The repository remains private; `/docs/` and AI-Init generated files are ignored by Git.
 - A first implementation slice cannot begin until source feasibility and scope are approved.
 
 ## 9. References
