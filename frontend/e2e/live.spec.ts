@@ -1,0 +1,31 @@
+import { expect, test } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+
+test('real login → RSS/Atom library → PostgreSQL → list/detail through Compose', async ({ page }, testInfo) => {
+  test.setTimeout(120000)
+  test.skip(!process.env.LIVE_CREDENTIALS_FILE, 'Opt in with an external, ignored credentials file and a running Compose stack')
+  const credentials = JSON.parse(readFileSync(process.env.LIVE_CREDENTIALS_FILE!, 'utf8')) as { email: string; password: string }
+  await expect.poll(async () => (await page.request.get('/v3/api-docs')).status(), { timeout: 45000 }).toBe(200)
+  await page.goto('/')
+  await page.getByLabel('Idioma', { exact: true }).selectOption('pt-BR')
+  await page.getByLabel('E-mail', { exact: true }).fill(credentials.email)
+  await page.getByLabel('Senha', { exact: true }).fill(credentials.password)
+  await page.getByRole('button', { name: 'Entrar no workspace' }).click()
+  await expect(page.getByRole('heading', { name: 'Seu radar de conteúdo.' })).toBeVisible({ timeout: 15000 })
+  await page.getByRole('button', { name: 'XKCD · Atom' }).click()
+  await page.getByRole('button', { name: 'Coletar agora' }).click()
+  await expect(page.locator('.collection-result')).toContainText('Coleta concluída', { timeout: 45000 })
+  await expect(page.locator('tbody tr').first()).toBeVisible()
+  await page.locator('.item-title').first().click()
+  await expect(page.getByRole('dialog')).toContainText('RSS / Atom')
+  await expect(page.getByRole('link', { name: 'Abrir original' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'XKCD · Atom' }).click()
+  await page.getByRole('button', { name: 'Coletar agora' }).click()
+  await expect(page.locator('.collection-result')).toContainText('Nenhuma duplicata foi criada', { timeout: 45000 })
+  await page.getByLabel('Idioma', { exact: true }).selectOption('en')
+  await expect(page.getByRole('heading', { name: 'Your content radar.' })).toBeVisible()
+  await page.getByLabel('Language', { exact: true }).selectOption('es')
+  await expect(page.getByRole('heading', { name: 'Tu radar de contenido.' })).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('dashboard-live.png'), fullPage: true })
+})
