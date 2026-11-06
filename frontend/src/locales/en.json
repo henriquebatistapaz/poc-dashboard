@@ -24,8 +24,8 @@
     "welcome": "WELCOME BACK",
     "title": "Sign in to your workspace",
     "subtitle": "Access your sources and keep up with your discoveries.",
-    "email": "Email",
-    "emailPlaceholder": "you{'@'}example.com",
+    "email": "Email or username",
+    "emailPlaceholder": "admin or you{'@'}example.com",
     "password": "Password",
     "passwordPlaceholder": "Your password",
     "submit": "Sign in",
@@ -108,7 +108,7 @@
     "length": "Input must contain at most 4,096 characters.",
     "range": "The start date must be before or equal to the end date.",
     "loginRequired": "Enter your email and password.",
-    "email": "Enter a valid email address."
+    "email": "Enter your email or username."
   },
   "items": {
     "title": "Your library",

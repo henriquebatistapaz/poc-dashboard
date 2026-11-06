@@ -24,8 +24,8 @@
     "welcome": "TE DAMOS LA BIENVENIDA",
     "title": "Entra en tu espacio",
     "subtitle": "Accede a tus fuentes y sigue tus descubrimientos.",
-    "email": "Correo electrónico",
-    "emailPlaceholder": "tu{'@'}ejemplo.com",
+    "email": "Correo o usuario",
+    "emailPlaceholder": "admin o tu{'@'}ejemplo.com",
     "password": "Contraseña",
     "passwordPlaceholder": "Tu contraseña",
     "submit": "Entrar",
@@ -108,7 +108,7 @@
     "length": "La entrada debe tener como máximo 4.096 caracteres.",
     "range": "La fecha inicial debe ser anterior o igual a la final.",
     "loginRequired": "Introduce tu correo y tu contraseña.",
-    "email": "Introduce un correo electrónico válido."
+    "email": "Introduce el correo o usuario."
   },
   "items": {
     "title": "Tu biblioteca",

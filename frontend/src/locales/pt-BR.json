@@ -24,8 +24,8 @@
     "welcome": "BEM-VINDO DE VOLTA",
     "title": "Entre no seu workspace",
     "subtitle": "Acesse suas fontes e acompanhe suas descobertas.",
-    "email": "E-mail",
-    "emailPlaceholder": "voce{'@'}exemplo.com",
+    "email": "E-mail ou usuário",
+    "emailPlaceholder": "admin ou voce{'@'}exemplo.com",
     "password": "Senha",
     "passwordPlaceholder": "Sua senha",
     "submit": "Entrar no workspace",
@@ -108,7 +108,7 @@
     "length": "A entrada deve ter no máximo 4.096 caracteres.",
     "range": "A data inicial deve ser anterior ou igual à data final.",
     "loginRequired": "Informe seu e-mail e sua senha.",
-    "email": "Informe um e-mail válido."
+    "email": "Informe o e-mail ou usuário."
   },
   "items": {
     "title": "Sua biblioteca",
