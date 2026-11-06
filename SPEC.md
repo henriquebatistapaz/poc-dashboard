@@ -4,9 +4,11 @@
 
 ## Implementation status (reviewed)
 
-Implemented: Java/Maven Spring backend, PostgreSQL/Flyway read schema, paginated item list/detail, source/title/collection-date filters, read-only API key authentication and Swagger/OpenAPI. An absent API key configuration denies access. Tests run with H2; live PostgreSQL compatibility and collector-runner interoperability still require integration verification.
+Implemented: Java/Maven Spring backend; Lombok entity/constructor boilerplate; PostgreSQL/Flyway canonical item schema; paginated/filterable read API; read-only API key; runtime administrator with BCrypt password hash and 15-minute issuer/signature/expiry-validated JWT; authenticated synchronous manual collection through the embedded runner; source/RSS/social library integration; Swagger and local Docker Compose. The runner does not own canonical migrations. Standalone runner configuration is isolated from dashboard configuration.
 
-Pending: JWT login, administrator provisioning, Vue frontend, manual collection endpoint, collector-runner library integration and Docker Compose. The README documents the actual run commands. No public deployment is approved by this partial implementation. The database ownership and integration rules below remain a target contract until validated against collector-runner-mini.
+The authenticated collection path covers RSS 2.0/Atom 1.0, Google News, user-owned Google Alerts feeds, WordPress and synthetic Alpha/Beta adapters. Reddit still requires official approval and runtime OAuth credentials; Issuu remains unavailable. Collection inputs are not logged or stored. PostgreSQL tests exercise actual Flyway/HTTP/runner/parser behavior with fixture upstream fetches, including duplicate collection and queries. See README for reproducible commands and detailed limits.
+
+Pending: Vue frontend, durable run history/scheduling, persistent user administration and historical social-row migration. The single runtime administrator uses `DASHBOARD_ADMIN_EMAIL` and `DASHBOARD_ADMIN_PASSWORD_HASH`; no `app_user` table or registration is implemented. These runtime values replace the need to seed a user row in this slice. Public deployment remains pending review.
 
 **Repositório:** Privado
 **Fase desta spec:** 1 — backend (Spring Boot, PostgreSQL, Swagger, JWT) e painel Vue separado, com coleta sob demanda.
@@ -57,9 +59,9 @@ Coletas agendadas ficam fora desta fase. Alertas de novidade também.
 
 Criado pelo hub, com Flyway:
 - `collected_item`: id interno, fonte, id externo (único por fonte), título, link original, data de publicação e data da coleta.
-- `app_user`: id, e-mail (único), hash da senha e papel.
+- `app_user`: planned persistent user administration only; this slice uses one runtime administrator and creates no user table.
 
-O `collector-runner-mini` grava em `collected_item` usando o mesmo esquema, sem criar tabelas.
+O `collector-runner-mini` grava em `collected_item` usando o mesmo esquema, sem criar tabelas. Its legacy standalone `social_posts` API remains independent; historical rows are not migrated.
 
 ## 6. Autenticação
 
