@@ -37,7 +37,7 @@ public class AdminLoginService {
         if (!validPassword || !email.equals(submittedEmail)) throw unauthorized();
         Instant now = Instant.now();
         var claims = JwtClaimsSet.builder().issuer(JwtConfiguration.ISSUER).subject(email)
-                .issuedAt(now).expiresAt(now.plusSeconds(900)).claim("scope", "items:read collections:write").build();
+                .issuedAt(now).expiresAt(now.plusSeconds(900)).claim("scope", "items:read items:delete collections:write").build();
         String token = encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
         return new LoginResponse(token, "Bearer", 900);
     }
