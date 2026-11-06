@@ -31,8 +31,19 @@ O serviço web encaminha `/v1/*`, `/swagger-ui` e `/v3/api-docs` para a API. No 
 | `DASHBOARD_ADMIN_EMAIL` | e-mail do administrador |
 | `DASHBOARD_ADMIN_PASSWORD_HASH` | hash BCrypt (`scripts/hash-admin-password.sh`) |
 | `DASHBOARD_JWT_SECRET` | segredo de 32+ bytes (`openssl rand -hex 32`), diferente em cada ambiente |
+| `SERVER_ADDRESS` | `0.0.0.0` (sem isso a aplicação só escuta em 127.0.0.1 e o Railway retorna 502) |
+| `PORT` | `8080` (alinhado ao `API_UPSTREAM` do web) |
 | `REDDIT_API_ACCESS_APPROVED` | `false` até a aprovação do Reddit |
 | `GITHUB_TOKEN` | token com leitura nos repos `collector-mini`, `rss-collector-mini`, `collector-runner-mini` (usado só no build) |
+
+## 2b. Variáveis do web (`dashboard-mini-web`)
+
+| Variável | Valor |
+|---|---|
+| `API_UPSTREAM` | `http://dashboard-mini-api.railway.internal:8080` |
+| `PORT` | `80` (o nginx escuta na 80; sem isso o domínio retorna 502) |
+
+> Ordem de deploy: o nginx resolve o endereço da API quando sobe. Depois de redeploy da **API**, faça também redeploy do **web** (`railway redeploy --service dashboard-mini-web -y`), senão o web pode continuar apontando para o endereço antigo e responder 502.
 
 Para `production`, use valores diferentes dos de `develop`, principalmente `DASHBOARD_JWT_SECRET` e `DASHBOARD_API_KEY`.
 
