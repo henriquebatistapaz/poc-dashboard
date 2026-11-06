@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: dashboard-mini
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/dashboard}
+    username: ${DB_USER:dashboard}
+    password: ${DB_PASSWORD:dashboard}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+dashboard:
+  api-key: ${DASHBOARD_API_KEY:}
