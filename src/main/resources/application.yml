@@ -15,8 +15,8 @@ dashboard:
   api-key: ${DASHBOARD_API_KEY:}
   admin-email: ${DASHBOARD_ADMIN_EMAIL:}
   admin-password-hash: ${DASHBOARD_ADMIN_PASSWORD_HASH:}
-  # Sem DASHBOARD_ADMIN_PASSWORD nem hash, a senha padrao e "admin" (usado no develop).
-  admin-password: ${DASHBOARD_ADMIN_PASSWORD:admin}
+  # Falha fechado: a senha só é definida explicitamente no ambiente local/serviço.
+  admin-password: ${DASHBOARD_ADMIN_PASSWORD:}
   jwt-secret: ${DASHBOARD_JWT_SECRET:}
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}

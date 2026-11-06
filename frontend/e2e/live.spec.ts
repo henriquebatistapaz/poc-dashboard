@@ -8,7 +8,7 @@ test('real login → RSS/Atom library → PostgreSQL → list/detail through Com
   await expect.poll(async () => (await page.request.get('/v3/api-docs')).status(), { timeout: 45000 }).toBe(200)
   await page.goto('/')
   await page.getByLabel('Idioma', { exact: true }).selectOption('pt-BR')
-  await page.getByLabel('E-mail', { exact: true }).fill(credentials.email)
+  await page.getByLabel('E-mail ou usuário', { exact: true }).fill(credentials.email)
   await page.getByLabel('Senha', { exact: true }).fill(credentials.password)
   await page.getByRole('button', { name: 'Entrar no workspace' }).click()
   await expect(page.getByRole('heading', { name: 'Seu radar de conteúdo.' })).toBeVisible({ timeout: 15000 })
