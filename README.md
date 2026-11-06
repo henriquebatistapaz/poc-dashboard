@@ -1,4 +1,4 @@
-# Content Collection Hub Mini
+# Dashboard Mini
 
 Private discovery project for a future integration between three existing private Java projects:
 
