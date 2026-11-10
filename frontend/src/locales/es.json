@@ -24,8 +24,8 @@
     "welcome": "TE DAMOS LA BIENVENIDA",
     "title": "Entra en tu espacio",
     "subtitle": "Accede a tus fuentes y sigue tus descubrimientos.",
-    "email": "Correo electrónico",
-    "emailPlaceholder": "tu{'@'}ejemplo.com",
+    "email": "Correo o usuario",
+    "emailPlaceholder": "admin o tu{'@'}ejemplo.com",
     "password": "Contraseña",
     "passwordPlaceholder": "Tu contraseña",
     "submit": "Entrar",
@@ -81,6 +81,17 @@
     "view": "Ver elementos",
     "dismiss": "Cerrar resultado"
   },
+  "history": {
+    "title": "Recopilaciones recientes",
+    "subtitle": "Sigue las ejecuciones de esta cuenta, incluso al volver al panel.",
+    "empty": "No hay recopilaciones recientes.",
+    "run": "Ejecución n.º {id}",
+    "counts": "{fetched} encontrados · {inserted} nuevos · {duplicates} duplicados",
+    "failed": "La recopilación falló. Los detalles se ocultan por seguridad.",
+    "resume": "Seguir ejecución",
+    "tracking": "Siguiendo la recopilación…",
+    "status": { "pending": "En cola", "running": "En curso", "succeeded": "Completada", "failed": "Fallida" }
+  },
   "sources": {
     "rss": "RSS / Atom",
     "google-news": "Google News",
@@ -108,7 +119,7 @@
     "length": "La entrada debe tener como máximo 4.096 caracteres.",
     "range": "La fecha inicial debe ser anterior o igual a la final.",
     "loginRequired": "Introduce tu correo y tu contraseña.",
-    "email": "Introduce un correo electrónico válido."
+    "email": "Introduce el correo o usuario."
   },
   "items": {
     "title": "Tu biblioteca",

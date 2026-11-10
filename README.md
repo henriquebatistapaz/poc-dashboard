@@ -4,7 +4,7 @@ Private Java 21 / Maven backend that embeds `collector-runner-mini` to collect R
 
 ## Vue panel — Portuguese, English and Spanish
 
-The local panel at `http://localhost:8085` includes administrator login, a feed test form, source selection, real RSS/Atom examples, new/duplicate counts, filtered/paginated items and a detail dialog linking to the original. Paste a public RSS/Atom URL and select **Collect now**: the Vue app calls the authenticated Dashboard endpoint, which embeds the runner and uses the existing `rss-collector-mini` library. Successful collection refreshes the list automatically.
+The local panel at `http://localhost:8085` includes administrator login, a feed test form, source selection, real RSS/Atom examples, new/duplicate counts, recent asynchronous collection history (including tracking a pending run again after login), filtered/paginated items and a detail dialog linking to the original. Paste a public RSS/Atom URL and select **Collect now**: the Vue app calls the authenticated Dashboard endpoint, which embeds the runner and uses the existing `rss-collector-mini` library. Successful collection refreshes the list automatically.
 
 All user-facing labels, validation, errors, dates and counts support `pt-BR`, `en` and `es`. Change language on the login screen or in the workspace without reloading. Only the selected locale is saved in browser storage. JWT and login credentials remain in memory; reloading, signing out or session expiration requires a new login. Google Alerts URLs are masked and cleared after success/source change; source inputs are not persisted in the browser.
 
@@ -89,4 +89,4 @@ For Colima set `DOCKER_HOST` to its socket and `TESTCONTAINERS_DOCKER_SOCKET_OVE
 
 ## Pending
 
-Durable run history, scheduling, historical social-row migration and public deployment review. The current single administrator is configured by environment; persistent user management is future work. The repositories stay private. AI-Ready assets and generated `/docs/` are excluded from Git.
+Scheduling, persistent user management, historical social-row migration and public deployment review. The current single administrator is configured by environment; persistent user management is future work. The repositories stay private. AI-Init assets and generated `/docs/` are excluded from Git.

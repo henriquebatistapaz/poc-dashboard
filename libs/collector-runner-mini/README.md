@@ -53,4 +53,4 @@ Defaults: database `social_adapter` on localhost:5432; override `DB_URL`, `DB_US
 
 ## Pending
 
-Scheduled/background execution, historical social-row migration, durable run history, retention operations and a user interface are future work. ActiveMQ Classic is the work-queue option if asynchronous execution is approved; Kafka is reserved for replay or multiple independent consumers. No AI-Ready assets or generated `/docs/` are committed.
+Scheduled/background execution, historical social-row migration, durable run history, retention operations and a user interface are future work. ActiveMQ Classic is the work-queue option if asynchronous execution is approved; Kafka is reserved for replay or multiple independent consumers. No AI-Init assets or generated `/docs/` are committed.
