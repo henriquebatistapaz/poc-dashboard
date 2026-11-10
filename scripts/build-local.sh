@@ -3,7 +3,7 @@ set -eu
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 collector_repo=${COLLECTOR_REPO:-"$project_dir/../collector-mini"}
 rss_repo=${RSS_REPO:-"$project_dir/../rss-collector-mini"}
-runner_repo=${RUNNER_REPO:-"$project_dir/../collector-runner-mini"}
+runner_repo=${RUNNER_REPO:-"$project_dir/../poc-collector-runner"}
 for repo_dir in "$collector_repo" "$rss_repo" "$runner_repo"; do
     if [ ! -f "$repo_dir/pom.xml" ]; then
         printf 'Missing Maven project: %s\n' "$repo_dir" >&2
