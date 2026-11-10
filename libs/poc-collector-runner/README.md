@@ -4,7 +4,7 @@ Private Java 21 / Maven library and standalone synthetic-post API. Lombok suppli
 
 ## Dashboard integration
 
-`CollectionRunner` composes the existing `collector-mini` and `rss-collector-mini` libraries with a PostgreSQL `CollectedItemWriter`. The dashboard embeds the runner in its own process; no HTTP call between projects or message broker is required.
+`CollectionRunner` composes the existing `poc-collector` and `poc-rss-collector` libraries with a PostgreSQL `CollectedItemWriter`. The dashboard embeds the runner in its own process; no HTTP call between projects or message broker is required.
 
 | Source | Input | Behavior |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ One manual run fetches, parses, validates and writes at most 1,000 items. It ret
 
 ### Database contract
 
-`dashboard-mini` owns Flyway migrations for `collected_item`. The runner only inserts through a supplied `DataSource`; it creates no canonical tables. Required fields: source (40 chars), external ID (2,000), link (2,000); optional title (1,000) and publication instant; collection time is assigned by the runner. Social text maps to title, permalink to link; author/full social text remain outside this dashboard read contract.
+`poc-dashboard` owns Flyway migrations for `collected_item`. The runner only inserts through a supplied `DataSource`; it creates no canonical tables. Required fields: source (40 chars), external ID (2,000), link (2,000); optional title (1,000) and publication instant; collection time is assigned by the runner. Social text maps to title, permalink to link; author/full social text remain outside this dashboard read contract.
 
 A unique `(source, external_id)` key and PostgreSQL `ON CONFLICT DO NOTHING` ensure first-write-wins deduplication, including concurrent writers. A repeated item never overwrites its original content. Each batch commits in its own JDBC transaction and rolls back completely on failure. Do not call it expecting participation in an outer Spring transaction. RSS IDs include a SHA-256 namespace of the trimmed feed URL so separate feeds can reuse the same GUID; changing that URL creates a different namespace.
 
@@ -28,7 +28,7 @@ The existing standalone `social_posts` table/API is preserved. Historical social
 
 ## Build and tests
 
-Install the sibling `collector-mini` and `rss-collector-mini` libraries with `mvn install`, then:
+Install the sibling `poc-collector` and `poc-rss-collector` libraries with `mvn install`, then:
 
 ```sh
 mvn clean install
@@ -36,7 +36,7 @@ mvn clean install
 mvn -Ppostgres-it verify
 ```
 
-The profile tests PostgreSQL 16 deduplication, concurrent writers, rollback and timestamps. Ordinary JUnit tests cover source dispatch, RSS/Atom mapping, social adapters, field validation, source restrictions and legacy APIs. For Colima, set `DOCKER_HOST` to your Colima socket and `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`. The profile defaults to Docker API 1.44; override with `-Ddocker.api.version=...` if necessary.
+The profile tests PostgreSQL 16 deduplication, concurrent writers, rollback and timestamps. Ordinary JUnit tests cover source dispatch, RSS/Atom mapping, social adapters, field validation, source restrictions and legacy APIs. The profile defaults to Docker API 1.44; override with `-Ddocker.api.version=...` if necessary.
 
 The main jar is a plain Maven library; the additional `-exec.jar` runs the standalone application. See the dashboard README for ordered builds and the integrated Compose setup.
 
