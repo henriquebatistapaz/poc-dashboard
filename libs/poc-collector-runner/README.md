@@ -20,7 +20,7 @@ One manual run fetches, parses, validates and writes at most 1,000 items. It ret
 
 ### Database contract
 
-`dashboard-mini` owns Flyway migrations for `collected_item`. The runner only inserts through a supplied `DataSource`; it creates no canonical tables. Required fields: source (40 chars), external ID (2,000), link (2,000); optional title (1,000) and publication instant; collection time is assigned by the runner. Social text maps to title, permalink to link; author/full social text remain outside this dashboard read contract.
+`poc-dashboard` owns Flyway migrations for `collected_item`. The runner only inserts through a supplied `DataSource`; it creates no canonical tables. Required fields: source (40 chars), external ID (2,000), link (2,000); optional title (1,000) and publication instant; collection time is assigned by the runner. Social text maps to title, permalink to link; author/full social text remain outside this dashboard read contract.
 
 A unique `(source, external_id)` key and PostgreSQL `ON CONFLICT DO NOTHING` ensure first-write-wins deduplication, including concurrent writers. A repeated item never overwrites its original content. Each batch commits in its own JDBC transaction and rolls back completely on failure. Do not call it expecting participation in an outer Spring transaction. RSS IDs include a SHA-256 namespace of the trimmed feed URL so separate feeds can reuse the same GUID; changing that URL creates a different namespace.
 
