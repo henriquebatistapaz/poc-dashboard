@@ -36,7 +36,7 @@ mvn clean install
 mvn -Ppostgres-it verify
 ```
 
-The profile tests PostgreSQL 16 deduplication, concurrent writers, rollback and timestamps. Ordinary JUnit tests cover source dispatch, RSS/Atom mapping, social adapters, field validation, source restrictions and legacy APIs. For Colima, set `DOCKER_HOST` to your Colima socket and `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`. The profile defaults to Docker API 1.44; override with `-Ddocker.api.version=...` if necessary.
+The profile tests PostgreSQL 16 deduplication, concurrent writers, rollback and timestamps. Ordinary JUnit tests cover source dispatch, RSS/Atom mapping, social adapters, field validation, source restrictions and legacy APIs. The profile defaults to Docker API 1.44; override with `-Ddocker.api.version=...` if necessary.
 
 The main jar is a plain Maven library; the additional `-exec.jar` runs the standalone application. See the dashboard README for ordered builds and the integrated Compose setup.
 
