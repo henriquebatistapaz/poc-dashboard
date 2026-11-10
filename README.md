@@ -1,10 +1,10 @@
 # Dashboard Mini
 
-Private Java 21 / Maven backend that embeds `collector-runner-mini` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
+Private Java 21 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
 
 ## Vue panel — Portuguese, English and Spanish
 
-The local panel at `http://localhost:8085` includes administrator login, a feed test form, source selection, real RSS/Atom examples, new/duplicate counts, recent asynchronous collection history (including tracking a pending run again after login), filtered/paginated items and a detail dialog linking to the original. Paste a public RSS/Atom URL and select **Collect now**: the Vue app calls the authenticated Dashboard endpoint, which embeds the runner and uses the existing `rss-collector-mini` library. Successful collection refreshes the list automatically.
+The local panel at `http://localhost:8085` includes administrator login, a feed test form, source selection, real RSS/Atom examples, new/duplicate counts, recent asynchronous collection history (including tracking a pending run again after login), filtered/paginated items and a detail dialog linking to the original. Paste a public RSS/Atom URL and select **Collect now**: the Vue app calls the authenticated Dashboard endpoint, which embeds the runner and uses the existing `poc-rss-collector` library. Successful collection refreshes the list automatically.
 
 All user-facing labels, validation, errors, dates and counts support `pt-BR`, `en` and `es`. Change language on the login screen or in the workspace without reloading. Only the selected locale is saved in browser storage. JWT and login credentials remain in memory; reloading, signing out or session expiration requires a new login. Google Alerts URLs are masked and cleared after success/source change; source inputs are not persisted in the browser.
 
@@ -39,7 +39,7 @@ Swagger UI: `/swagger-ui.html`; OpenAPI: `/v3/api-docs`. Both are available with
 
 ## Build the private libraries
 
-Clone all four private repositories as siblings: `collector-mini`, `rss-collector-mini`, `collector-runner-mini`, `dashboard-mini`. From this repository:
+Clone all four private repositories as siblings: `poc-collector`, `poc-rss-collector`, `poc-collector-runner`, `poc-dashboard`. From this repository:
 
 ```sh
 ./scripts/build-local.sh
@@ -85,7 +85,7 @@ Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP
 
 A local Compose smoke run also collected real BBC RSS, XKCD Atom, Google News and WordPress feeds (79 items in that run). Repeating each collection inserted zero duplicates, and authenticated queries returned the stored items. External feed contents/counts can change. Google Alerts was validated with fixtures because a user-owned secret feed was not supplied; live Reddit remains gated by official approval and credentials.
 
-For Colima set `DOCKER_HOST` to its socket and `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`. Docker API defaults to 1.44 in the integration profile (`-Ddocker.api.version=...` overrides it).
+Docker API defaults to 1.44 in the integration profile (`-Ddocker.api.version=...` overrides it).
 
 ## Pending
 
