@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 
-/** Read model for items written by collector-runner-mini into collected_item. */
+/** Read model for items written by poc-collector-runner into collected_item. */
 @lombok.Getter
 @lombok.NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @Entity
