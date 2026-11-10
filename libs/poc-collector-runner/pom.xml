@@ -15,8 +15,8 @@
     <description>Private mini-project scaffold; see README.md and docs/sdd/.</description>
     <properties><java.version>21</java.version><docker.api.version>1.44</docker.api.version></properties>
     <dependencies>
-        <dependency><groupId>com.henrique</groupId><artifactId>collector-mini</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
-        <dependency><groupId>com.henrique</groupId><artifactId>rss-collector-mini</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+        <dependency><groupId>com.henrique</groupId><artifactId>poc-collector</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
+        <dependency><groupId>com.henrique</groupId><artifactId>poc-rss-collector</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
         <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>

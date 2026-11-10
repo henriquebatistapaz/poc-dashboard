@@ -10,7 +10,7 @@ Dois ambientes: **develop** (branch `develop`) e **production** (branch `main`).
 | `poc-dashboard-web` | `frontend` | `frontend/railway.toml` + `frontend/Dockerfile` | 80 |
 | `postgres` | plugin Railway | — | 5432 |
 
-O serviço web encaminha `/v1/*`, `/swagger-ui` e `/v3/api-docs` para a API. No Railway, a API precisa ser alcançável pelo nome interno: defina em `poc-dashboard-web` a variável `API_UPSTREAM=http://dashboard-mini-api.railway.internal:8080`.
+O serviço web encaminha `/v1/*`, `/swagger-ui` e `/v3/api-docs` para a API. No Railway, a API precisa ser alcançável pelo nome interno: defina em `poc-dashboard-web` a variável `API_UPSTREAM=http://poc-dashboard-api.railway.internal:8080`.
 
 ## 1. Criar o projeto
 
@@ -39,9 +39,9 @@ O serviço web encaminha `/v1/*`, `/swagger-ui` e `/v3/api-docs` para a API. No 
 
 | Variável | Valor |
 |---|---|
-| `API_UPSTREAM` | `http://dashboard-mini-api.railway.internal:8080` |
+| `API_UPSTREAM` | `http://poc-dashboard-api.railway.internal:8080` |
 
-O nome interno continua `dashboard-mini-api`: o Railway só mudou o nome do serviço, não o hostname privado. Não troque esse valor sem antes confirmar o hostname em `RAILWAY_PRIVATE_DOMAIN` do serviço da API.
+O nome interno continua `poc-dashboard-api`: o Railway só mudou o nome do serviço, não o hostname privado. Não troque esse valor sem antes confirmar o hostname em `RAILWAY_PRIVATE_DOMAIN` do serviço da API.
 | `PORT` | `80` (o nginx escuta na 80; sem isso o domínio retorna 502) |
 
 > Ordem de deploy: o nginx resolve o endereço da API quando sobe. Depois de redeploy da **API**, faça também redeploy do **web** (`railway redeploy --service poc-dashboard-web -y`), senão o web pode continuar apontando para o endereço antigo e responder 502.
@@ -50,7 +50,7 @@ Para `production`, use valores diferentes dos de `develop`, principalmente `DASH
 
 ## 3. Build dos coletores
 
-O código das bibliotecas privadas (`collector-mini`, `rss-collector-mini`, `poc-collector-runner`) fica em `libs/`. O Dockerfile instala as três a partir dali, então o build não precisa de token. Para atualizar `libs/` com o `main` das bibliotecas:
+O código das bibliotecas privadas (`poc-collector`, `poc-rss-collector`, `poc-collector-runner`) fica em `libs/`. O Dockerfile instala as três a partir dali, então o build não precisa de token. Para atualizar `libs/` com o `main` das bibliotecas:
 
 ```bash
 scripts/sync-libs.sh
