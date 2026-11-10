@@ -32,7 +32,7 @@ public record RedditOAuthConfig(String clientId, String clientSecret, String ref
 
     public String userAgent() {
         if (blank(redditUsername)) throw new SourceAccessException("REDDIT_USERNAME is required for the Reddit User-Agent.");
-        return "web:collector-mini:v0.1.0 (by /u/" + redditUsername + ")";
+        return "web:poc-collector:v0.1.0 (by /u/" + redditUsername + ")";
     }
 
     private static boolean blank(String value) { return value == null || value.isBlank(); }
