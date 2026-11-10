@@ -85,7 +85,7 @@ Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP
 
 A local Compose smoke run also collected real BBC RSS, XKCD Atom, Google News and WordPress feeds (79 items in that run). Repeating each collection inserted zero duplicates, and authenticated queries returned the stored items. External feed contents/counts can change. Google Alerts was validated with fixtures because a user-owned secret feed was not supplied; live Reddit remains gated by official approval and credentials.
 
-For Colima set `DOCKER_HOST` to its socket and `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`. Docker API defaults to 1.44 in the integration profile (`-Ddocker.api.version=...` overrides it).
+Docker API defaults to 1.44 in the integration profile (`-Ddocker.api.version=...` overrides it).
 
 ## Pending
 
