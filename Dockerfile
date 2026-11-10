@@ -5,7 +5,7 @@ FROM maven:3.9-eclipse-temurin-21 AS build
 COPY libs /opt/libs
 RUN \
     for repo in poc-collector poc-rss-collector poc-collector-runner; do \
-      mvn -B -q -f "/opt/libs/${repo}/pom.xml" -DskipTests install ; \
+      mvn -B -q -f "/opt/libs/${repo}/pom.xml" -DskipTests install || exit 1 ; \
     done
 WORKDIR /app
 COPY pom.xml /app/pom.xml
