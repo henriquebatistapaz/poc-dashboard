@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1.7
-# Build autocontido: as bibliotecas privadas (collector-mini, rss-collector-mini,
+# Build autocontido: as bibliotecas privadas (poc-collector, poc-rss-collector,
 # poc-collector-runner) ficam em libs/ (atualize com scripts/sync-libs.sh). Nao precisa de token.
 FROM maven:3.9-eclipse-temurin-21 AS build
 COPY libs /opt/libs
 RUN \
-    for repo in collector-mini rss-collector-mini poc-collector-runner; do \
+    for repo in poc-collector poc-rss-collector poc-collector-runner; do \
       mvn -B -q -f "/opt/libs/${repo}/pom.xml" -DskipTests install ; \
     done
 WORKDIR /app
