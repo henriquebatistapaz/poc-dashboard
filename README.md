@@ -1,6 +1,6 @@
 # Dashboard Mini
 
-Private Java 21 / Maven backend that embeds `collector-runner-mini` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
+Private Java 21 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
 
 ## Vue panel — Portuguese, English and Spanish
 
@@ -39,7 +39,7 @@ Swagger UI: `/swagger-ui.html`; OpenAPI: `/v3/api-docs`. Both are available with
 
 ## Build the private libraries
 
-Clone all four private repositories as siblings: `collector-mini`, `rss-collector-mini`, `collector-runner-mini`, `dashboard-mini`. From this repository:
+Clone all four private repositories as siblings: `collector-mini`, `rss-collector-mini`, `poc-collector-runner`, `poc-dashboard`. From this repository:
 
 ```sh
 ./scripts/build-local.sh
