@@ -8,7 +8,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "dashboard.api-key=")
+@SpringBootTest(properties = {
+        "dashboard.api-key=",
+        "dashboard.admin-email=admin@example.org",
+        "dashboard.jwt-secret=integration-test-secret-at-least-32-bytes"
+})
 @AutoConfigureMockMvc
 class UnconfiguredApiKeyTest {
     @Autowired MockMvc mvc;
