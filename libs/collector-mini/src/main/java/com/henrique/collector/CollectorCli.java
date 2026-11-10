@@ -11,7 +11,7 @@ public final class CollectorCli {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: java -jar collector-mini.jar <google-news|google-alerts|wordpress|reddit> [query-or-subreddit]");
+            System.err.println("Usage: java -jar poc-collector.jar <google-news|google-alerts|wordpress|reddit> [query-or-subreddit]");
             System.exit(2);
         }
         var fetcher = new JdkHttpFeedFetcher();

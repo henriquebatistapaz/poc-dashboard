@@ -4,7 +4,7 @@ Private Java 21 / Maven library and standalone synthetic-post API. Lombok suppli
 
 ## Dashboard integration
 
-`CollectionRunner` composes the existing `collector-mini` and `rss-collector-mini` libraries with a PostgreSQL `CollectedItemWriter`. The dashboard embeds the runner in its own process; no HTTP call between projects or message broker is required.
+`CollectionRunner` composes the existing `poc-collector` and `poc-rss-collector` libraries with a PostgreSQL `CollectedItemWriter`. The dashboard embeds the runner in its own process; no HTTP call between projects or message broker is required.
 
 | Source | Input | Behavior |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ The existing standalone `social_posts` table/API is preserved. Historical social
 
 ## Build and tests
 
-Install the sibling `collector-mini` and `rss-collector-mini` libraries with `mvn install`, then:
+Install the sibling `poc-collector` and `poc-rss-collector` libraries with `mvn install`, then:
 
 ```sh
 mvn clean install
