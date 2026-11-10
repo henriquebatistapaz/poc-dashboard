@@ -12,7 +12,7 @@ import org.springframework.security.oauth2.jwt.*;
 
 @Configuration
 public class JwtConfiguration {
-    public static final String ISSUER = "dashboard-mini";
+    public static final String ISSUER = "poc-dashboard";
 
     @Bean
     SecretKey jwtKey(@Value("${dashboard.jwt-secret:}") String configured) {
