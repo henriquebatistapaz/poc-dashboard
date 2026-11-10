@@ -4,7 +4,7 @@ Status: implemented synchronous integration; private repositories, Java 21, Mave
 
 ## Scope
 
-Compose the existing RSS/Atom library, source collectors and synthetic social adapters as a plain runner library embedded in dashboard-mini. The dashboard owns the canonical database schema and HTTP security; the runner owns source dispatch, normalization and atomic insert/deduplication. Preserve the legacy standalone social API and its separate table.
+Compose the existing RSS/Atom library, source collectors and synthetic social adapters as a plain runner library embedded in poc-dashboard. The dashboard owns the canonical database schema and HTTP security; the runner owns source dispatch, normalization and atomic insert/deduplication. Preserve the legacy standalone social API and its separate table.
 
 ## Acceptance criteria
 
@@ -22,4 +22,4 @@ Runs are synchronous, at most 1,000 items and 4,096 input characters. They have 
 
 ## Verification
 
-Runner unit/legacy tests: `mvn test`. Real PostgreSQL tests: `mvn -Ppostgres-it verify` with Docker. Cross-project consumer verification lives in dashboard-mini and uses the actual consumer-owned Flyway migration.
+Runner unit/legacy tests: `mvn test`. Real PostgreSQL tests: `mvn -Ppostgres-it verify` with Docker. Cross-project consumer verification lives in poc-dashboard and uses the actual consumer-owned Flyway migration.

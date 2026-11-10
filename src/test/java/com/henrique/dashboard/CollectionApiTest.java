@@ -61,7 +61,7 @@ class CollectionApiTest {
         mvc.perform(post("/v1/auth/login").contentType("application/json")
                 .content("{\"email\":\"admin@example.org\",\"password\":\"wrong\"}")).andExpect(status().isUnauthorized());
         mvc.perform(get("/v1/items").header("Authorization", "Bearer invalid")).andExpect(status().isUnauthorized());
-        var claims = JwtClaimsSet.builder().issuer("dashboard-mini").subject("admin@example.org")
+        var claims = JwtClaimsSet.builder().issuer("poc-dashboard").subject("admin@example.org")
                 .issuedAt(Instant.now().minusSeconds(3600)).expiresAt(Instant.now().minusSeconds(120))
                 .claim("scope", "items:read collections:write").build();
         String expired = encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
@@ -75,7 +75,7 @@ class CollectionApiTest {
                 .issuedAt(now).expiresAt(now.plusSeconds(900)).claim("scope", "items:read collections:write").build();
         String invalid = encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), wrongIssuer)).getTokenValue();
         mvc.perform(get("/v1/items").header("Authorization", "Bearer " + invalid)).andExpect(status().isUnauthorized());
-        var readOnly = JwtClaimsSet.builder().issuer("dashboard-mini").subject("reader@example.org")
+        var readOnly = JwtClaimsSet.builder().issuer("poc-dashboard").subject("reader@example.org")
                 .issuedAt(now).expiresAt(now.plusSeconds(900)).claim("scope", "items:read").build();
         String token = encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), readOnly)).getTokenValue();
         mvc.perform(get("/v1/items").header("Authorization", "Bearer " + token)).andExpect(status().isOk());
