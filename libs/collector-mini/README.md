@@ -52,4 +52,4 @@ See [SPEC.md](SPEC.md) for the source evidence, access limits, and implementatio
 
 ## Integration planning
 
-This collector remains a standalone source adapter. A future integration with `rss-collector-mini` and `collector-runner-mini` is being explored in the private `dashboard-mini` repository; its contract and architecture are still undecided.
+This collector remains a standalone source adapter. A future integration with `rss-collector-mini` and `poc-collector-runner` is being explored in the private `poc-dashboard` repository; its contract and architecture are still undecided.
