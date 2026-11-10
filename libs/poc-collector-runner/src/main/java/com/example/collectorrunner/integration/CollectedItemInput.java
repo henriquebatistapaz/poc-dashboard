@@ -3,7 +3,7 @@ package com.example.collectorrunner.integration;
 import com.example.collectorrunner.domain.NormalizedSocialPost;
 import java.time.Instant;
 
-/** Input for dashboard-mini's collected_item contract; migration ownership stays with the dashboard. */
+/** Input for poc-dashboard's collected_item contract; migration ownership stays with the dashboard. */
 public record CollectedItemInput(String source, String externalId, String title, String link, Instant publishedAt) {
     public CollectedItemInput {
         source = required(source, "source", 40);
