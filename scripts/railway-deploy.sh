@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploys dashboard-mini (API + web) to Railway for one environment.
+# Deploys poc-dashboard (API + web) to Railway for one environment.
 # Usage: scripts/railway-deploy.sh develop|production
 set -euo pipefail
 
@@ -38,8 +38,8 @@ mvn -B -q test
 echo "==> Frontend tests and build"
 (cd frontend && npm ci --silent && npm test --silent && npm run build --silent)
 
-api_service="${RAILWAY_API_SERVICE:-dashboard-mini-api}"
-web_service="${RAILWAY_WEB_SERVICE:-dashboard-mini-web}"
+api_service="${RAILWAY_API_SERVICE:-poc-dashboard-api}"
+web_service="${RAILWAY_WEB_SERVICE:-poc-dashboard-web}"
 env_name="$target"
 
 echo "==> Uploading API ($api_service) to Railway environment '$env_name'"
