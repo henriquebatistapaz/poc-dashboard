@@ -1,4 +1,4 @@
-# Dashboard Mini UI
+# POC Dashboard UI
 
 Private Vue 3 + TypeScript + Vite panel, using vue-i18n and the existing Dashboard/runner API. No new collector implementation is added to the frontend.
 
