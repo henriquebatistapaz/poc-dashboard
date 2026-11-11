@@ -55,9 +55,9 @@ Copy `.env.example` to `.env` and fill it locally (the file is ignored). Generat
 ./scripts/hash-admin-password.sh
 ```
 
-Paste the printed hash as a single-quoted `.env` value, e.g. `DASHBOARD_ADMIN_PASSWORD_HASH='$2a$...'`. The helper prompts without echo; it does not accept the password as a command argument. Passwords must contain 1–72 UTF-8 bytes. Admin credentials are runtime configuration, not an `app_user` table. No registration endpoint is provided.
+Paste the printed hash as a single-quoted `.env` value, e.g. `DASHBOARD_ADMIN_PASSWORD_HASH='$2a$...'`. The helper prompts without echo; it does not accept the password as a command argument. Passwords must contain 1–72 UTF-8 bytes. The first administrator is bootstrapped into `user_account`; public registration is disabled. Administrators can create `ADMIN` and `OPERATOR` accounts with `POST /v1/admin/users`, list accounts with `GET /v1/admin/users`, and deactivate another account with `POST /v1/admin/users/{id}/deactivate`. Passwords are stored as BCrypt hashes and never returned by the API.
 
-Login returns `accessToken`, `tokenType=Bearer`, `expiresIn=900`. JWTs use HS256 and verify issuer, signature and expiration. `DASHBOARD_JWT_SECRET` must contain at least 32 UTF-8 bytes. Missing admin configuration disables login (503), while read-only API-key mode remains possible. A missing/incorrect/unconfigured API key never grants access. API keys cannot run collections.
+Login returns `accessToken`, `tokenType=Bearer`, `expiresIn=900`. JWTs use HS256 and verify issuer, signature and expiration. `DASHBOARD_JWT_SECRET` must contain at least 32 UTF-8 bytes. Login returns 503 until the database has an enabled user and JWT signing is configured. A missing/incorrect/unconfigured API key never grants access. API keys cannot run collections.
 
 Reddit stays disabled by default. Only configure `REDDIT_API_ACCESS_APPROVED`, `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_REFRESH_TOKEN`, `REDDIT_USERNAME` after official access approval. Credentials are passed at runtime and are never committed.
 
