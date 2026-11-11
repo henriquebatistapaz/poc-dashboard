@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 class CollectedItemWriterPostgresIT {
-    @Container static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    @Container static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18-alpine");
     private PGSimpleDataSource dataSource;
     private CollectedItemWriter writer;
     private final Instant now = Instant.parse("2026-11-06T12:00:00Z");
