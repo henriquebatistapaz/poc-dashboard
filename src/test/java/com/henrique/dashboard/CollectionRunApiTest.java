@@ -16,12 +16,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.henrique.collector.source.SourceAccessException;
 import java.net.URI;
+import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -33,7 +34,7 @@ import org.springframework.test.web.servlet.MvcResult;
 class CollectionRunApiTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
-    @MockBean CollectionRunner runner;
+    @MockitoBean CollectionRunner runner;
 
     @DynamicPropertySource
     static void credentials(DynamicPropertyRegistry registry) {
@@ -130,6 +131,20 @@ class CollectionRunApiTest {
         mvc.perform(get("/v1/collections").param("size", "500").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].source").isNotEmpty());
+    }
+
+    @Test
+    void schedulesCollectionAndReturnsOnlyRunMetadata() throws Exception {
+        String input = "https://feed.example/private?token=scheduled-secret";
+        MvcResult created = mvc.perform(post("/v1/collections/schedules").header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(json.writeValueAsBytes(java.util.Map.of("source", "WORDPRESS", "input", input,
+                                "scheduledAt", Instant.now().plusSeconds(120).toString()))))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.scheduledAt").isNotEmpty())
+                .andReturn();
+        assertFalse(created.getResponse().getContentAsString().contains("scheduled-secret"));
     }
 
     @Test
