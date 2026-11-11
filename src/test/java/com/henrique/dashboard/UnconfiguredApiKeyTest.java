@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = {
         "dashboard.api-key=",
-        "dashboard.admin-email=admin@example.org",
         "dashboard.jwt-secret=integration-test-secret-at-least-32-bytes"
 })
 @AutoConfigureMockMvc

@@ -13,10 +13,11 @@
     <version>0.1.0-SNAPSHOT</version>
     <name>poc-collector-runner</name>
     <description>Private mini-project scaffold; see README.md and docs/sdd/.</description>
-    <properties><java.version>27</java.version><docker.api.version>1.44</docker.api.version>
+    <properties><mockito.version>5.24.0</mockito.version><byte-buddy.version>1.18.17</byte-buddy.version><java.version>27</java.version><docker.api.version>1.44</docker.api.version>
+        <lombok.version>1.18.48</lombok.version>
     <springdoc-openapi-starter-webmvc-ui.version>3.2.0</springdoc-openapi-starter-webmvc-ui.version>
-    <testcontainers.version>1.21.4</testcontainers.version>
-  </properties>
+        <testcontainers.version>2.0.5</testcontainers.version>
+    </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -31,33 +32,40 @@
     <dependencies>
         <dependency><groupId>com.henrique</groupId><artifactId>poc-collector</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
         <dependency><groupId>com.henrique</groupId><artifactId>poc-rss-collector</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
-        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional></dependency>
+        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>${lombok.version}</version><optional>true</optional></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
         <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
         <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId><version>${springdoc-openapi-starter-webmvc-ui.version}</version></dependency>
         <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc-test</artifactId><scope>test</scope></dependency>
-        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa-test</artifactId><scope>test</scope></dependency>
-        <dependency><groupId>org.testcontainers</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
-        <dependency><groupId>org.testcontainers</groupId><artifactId>postgresql</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-postgresql</artifactId><scope>test</scope></dependency>
     </dependencies>
-    <build><plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-                <annotationProcessorPaths>
-                    <path>
-                        <groupId>org.projectlombok</groupId><artifactId>lombok</artifactId>
-                        <version>1.18.48</version>
-                    </path>
-                </annotationProcessorPaths>
-            </configuration>
-        </plugin>
-        <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId>
-            <!-- Keep the plain jar as the main artifact so poc-dashboard can depend on it. -->
-            <configuration><classifier>exec</classifier></configuration></plugin>
-    </plugins></build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- Keep the plain jar as the main artifact so poc-dashboard can depend on it. -->
+                <configuration><classifier>exec</classifier></configuration>
+            </plugin>
+        </plugins>
+    </build>
     <profiles>
         <profile>
             <id>postgres-it</id>
