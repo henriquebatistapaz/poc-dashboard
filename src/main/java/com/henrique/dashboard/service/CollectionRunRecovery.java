@@ -10,7 +10,7 @@ import org.springframework.boot.ApplicationRunner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-/** Runs left PENDING or RUNNING by a restart cannot finish, so they are marked FAILED. */
+/** Recovers interrupted immediate runs and preserves scheduled runs for dispatch. */
 @Component
 @RequiredArgsConstructor
 public class CollectionRunRecovery implements ApplicationRunner {
@@ -20,7 +20,13 @@ public class CollectionRunRecovery implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         List<CollectionRun> interrupted = repository.findByStatusIn(List.of(RunStatus.PENDING, RunStatus.RUNNING));
         Instant now = Instant.now();
-        interrupted.forEach(run -> run.markFailed(now, "Interrupted by application restart"));
+        interrupted.forEach(run -> {
+            if (run.getScheduledAt() != null && run.getStatus() == RunStatus.RUNNING && run.getEncryptedInput() != null) {
+                run.retryScheduleAfterRestart();
+            } else if (run.getScheduledAt() == null) {
+                run.markFailed(now, "Interrupted by application restart");
+            }
+        });
         repository.saveAll(interrupted);
     }
 }

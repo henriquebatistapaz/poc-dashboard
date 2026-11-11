@@ -5,13 +5,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.henrique.dashboard.api.ItemController;
 import com.henrique.dashboard.domain.CollectedItem;
 import com.henrique.dashboard.repository.CollectedItemRepository;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -37,6 +38,23 @@ class ItemControllerTest {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.components.securitySchemes.apiKey.name").value("X-API-Key"));
+    }
+
+    @Test
+    void sourceFilterAcceptsEnumNameAndStoredValue() throws Exception {
+        mvc.perform(authorized("/v1/items").param("source", "GOOGLE_NEWS"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
+        mvc.perform(authorized("/v1/items").param("source", "google-news"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
+        mvc.perform(authorized("/v1/items").param("source", "RSS"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0));
+    }
+
+    @Test
+    void normalizesSourceNames() {
+        org.assertj.core.api.Assertions.assertThat(ItemController.normalizeSource(" GOOGLE_NEWS ")).isEqualTo("google-news");
+        org.assertj.core.api.Assertions.assertThat(ItemController.normalizeSource("rss")).isEqualTo("rss");
+        org.assertj.core.api.Assertions.assertThat(ItemController.normalizeSource("  ")).isNull();
     }
 
     @Test
