@@ -28,4 +28,8 @@ public final class CollectorService {
         if (collector == null) throw new SourceAccessException(source + " collector is not implemented.");
         return collector.collect(input);
     }
+
+    public List<SourceCapability> sources() {
+        return registry.all();
+    }
 }
