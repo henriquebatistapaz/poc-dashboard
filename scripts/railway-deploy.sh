@@ -45,5 +45,5 @@ env_name="$target"
 echo "==> Uploading API ($api_service) to Railway environment '$env_name'"
 railway up --detach --environment "$env_name" --service "$api_service"
 echo "==> Uploading web ($web_service) to Railway environment '$env_name'"
-railway up --detach --environment "$env_name" --service "$web_service" frontend
+railway up --detach --environment "$env_name" --service "$web_service"
 echo "Deploy requested for '$target'. Check status with: railway status --environment $env_name"
