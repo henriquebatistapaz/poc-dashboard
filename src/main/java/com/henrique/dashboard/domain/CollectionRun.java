@@ -33,6 +33,12 @@ public class CollectionRun {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "scheduled_at")
+    private Instant scheduledAt;
+
+    @Column(name = "encrypted_input", length = 8192)
+    private String encryptedInput;
+
     @Column(name = "started_at")
     private Instant startedAt;
 
@@ -50,6 +56,19 @@ public class CollectionRun {
         this.source = source;
         this.status = RunStatus.PENDING;
         this.createdAt = createdAt;
+    }
+
+    public CollectionRun(String source, Instant createdAt, Instant scheduledAt, String encryptedInput) {
+        this(source, createdAt);
+        this.scheduledAt = scheduledAt;
+        this.encryptedInput = encryptedInput;
+    }
+
+    public void clearEncryptedInput() { this.encryptedInput = null; }
+
+    public void retryScheduleAfterRestart() {
+        this.status = RunStatus.PENDING;
+        this.startedAt = null;
     }
 
     public void markRunning(Instant now) {
