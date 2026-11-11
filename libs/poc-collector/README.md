@@ -1,6 +1,6 @@
 # Multi-Source Collector Mini
 
-Private Java 27 / Maven 3.9 command-line collector for public RSS/Atom links and approved Reddit Data API results. It reads Google News search RSS, a user-provided Google Alerts RSS URL, public WordPress RSS/Atom feeds, and Reddit posts through official OAuth. Every returned item contains only source, stable ID, title, link, and timestamps. During consumer migration, the JAR keeps Java 21 bytecode compatibility while tests and the runtime use Java 27.
+Private Java 27 / Maven 3.9 command-line collector for public RSS/Atom links and approved Reddit Data API results. It reads Google News search RSS, a user-provided Google Alerts RSS URL, public WordPress RSS/Atom feeds, and Reddit posts through official OAuth. Every returned item contains only source, stable ID, title, link, and timestamps. The collector compiles and runs on Java 27.
 
 ## Build and tests
 
