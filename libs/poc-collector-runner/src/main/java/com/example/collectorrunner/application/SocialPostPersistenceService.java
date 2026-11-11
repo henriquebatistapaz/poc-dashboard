@@ -5,6 +5,9 @@ import com.example.collectorrunner.persistence.SocialPostEntity;
 import com.example.collectorrunner.persistence.SocialPostRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.Instant;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,48 @@ public class SocialPostPersistenceService {
         return repository.findAllByOrderByPublishedAtDesc().stream()
                 .map(SocialPostEntity::toDomain).toList();
     }
+
+    @Transactional(readOnly = true)
+    public PostSearchPage search(String source, String query, Instant from, Instant to, int page, int size) {
+        if (page < 0) throw new IllegalArgumentException("Page must be zero or greater");
+        if (size < 1 || size > 100) throw new IllegalArgumentException("Page size must be between 1 and 100");
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new IllegalArgumentException("From must be before or equal to to");
+        }
+        String normalizedSource = blankToNull(source);
+        String normalizedQuery = blankToNull(query);
+        if (normalizedSource != null && normalizedSource.length() > 100) {
+            throw new IllegalArgumentException("Source filter exceeds 100 characters");
+        }
+        if (normalizedQuery != null && normalizedQuery.length() > 200) {
+            throw new IllegalArgumentException("Query filter exceeds 200 characters");
+        }
+        var result = repository.search(normalizedSource, normalizedQuery, from, to,
+                PageRequest.of(page, size, Sort.by(Sort.Order.desc("publishedAt"), Sort.Order.desc("createdAt"))));
+        return new PostSearchPage(result.getContent().stream().map(SocialPostEntity::toDomain).toList(),
+                result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
+    }
+
+    @Transactional
+    public boolean delete(String source, String externalId) {
+        if (source == null || source.isBlank() || externalId == null || externalId.isBlank()) {
+            throw new IllegalArgumentException("Source and externalId are required");
+        }
+        return repository.deleteBySourceAndExternalId(source.trim(), externalId.trim()) > 0;
+    }
+
+    @Transactional
+    public long deleteCreatedBefore(Instant cutoff) {
+        if (cutoff == null) throw new IllegalArgumentException("Cutoff is required");
+        return repository.deleteByCreatedAtBefore(cutoff);
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    public record PostSearchPage(List<NormalizedSocialPost> items, int page, int size,
+            long totalElements, int totalPages) {}
 
     private void validate(NormalizedSocialPost post) {
         if (post == null) throw new IllegalArgumentException("Post is required");
