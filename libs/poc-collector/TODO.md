@@ -14,18 +14,18 @@
 - [ ] Complete Reddit's external Data API access approval and configure app credentials locally before live collection.
 - [x] Implement Reddit OAuth refresh-token flow with fail-closed approval and credential checks.
 - [x] Implement Reddit `/new` post collection with the `read` scope and local JUnit fixtures.
-- [ ] Research an official permitted Issuu route; keep the source disabled unless verified.
+- [x] Research an official permitted Issuu route; keep the source disabled because no public publication search/feed route is documented.
 - [x] Select and implement the initial feed vertical slice: Google News, conditional Google Alerts, and WordPress.
-- [ ] Approve API, persistence, scheduling, and retention requirements.
+- [x] Approve and implement the REST/OpenAPI, persistence, scheduling, and retention requirements for the local service.
 
 ## Later implementation slices
 
-- [x] Create a Java 21 / Maven command-line collector.
+- [x] Create a Java 27 / Maven command-line collector.
 - [x] Add RSS/Atom parser tests, source-specific tests, bounded HTTP fetcher, and URL safety checks.
 - [ ] Revisit the Google News RSS URL format if Google changes the undocumented endpoint.
 - [ ] Confirm whether this Google Alerts account exposes an RSS feed; keep the URL in a secret store/local environment only.
-- [ ] Obtain Reddit's Data API approval and register the collector app; then configure its secrets in the local runtime environment.
-- [ ] Harden WordPress DNS rebinding protection before exposing collection as a hosted service.
-- [ ] Add persistent storage only after retention and deletion behavior are agreed.
+- [ ] Obtain Reddit's Data API approval and register the collector app; then configure its secrets in the local runtime environment (external approval is still pending).
+- [x] Pin WordPress feed requests to checked public DNS results and reject unsafe re-resolution before connecting.
+- [x] Add durable local storage with deduplication, encrypted scheduled inputs, and configurable item retention.
 - [ ] Consider ActiveMQ Classic only if refresh jobs need asynchronous delivery. Consider Kafka only if replay or multiple independent consumers become a real requirement.
-- [ ] Add REST/OpenAPI endpoints after the first parser and fetcher slice is accepted and network access is threat-reviewed.
+- [x] Add an authenticated local REST API and OpenAPI contract after threat-reviewing the network fetch path.

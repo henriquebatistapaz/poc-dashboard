@@ -35,17 +35,25 @@ public class SocialPostEntity {
     @Column(name = "published_at")
     private Instant publishedAt;
 
+    @Column(name = "created_at")
+    private Instant createdAt;
+
     @Column(length = 2048)
     private String permalink;
 
 
     public SocialPostEntity(NormalizedSocialPost post) {
+        this(post, Instant.now());
+    }
+
+    SocialPostEntity(NormalizedSocialPost post, Instant createdAt) {
         this.source = post.source().trim();
         this.externalId = post.externalId().trim();
         this.author = post.author();
         this.text = post.text();
         this.publishedAt = post.publishedAt();
         this.permalink = post.permalink();
+        this.createdAt = createdAt;
     }
 
     public NormalizedSocialPost toDomain() {
