@@ -1,5 +1,7 @@
 # Deploy no Railway — poc-dashboard
 
+Build Java: OpenJDK 27.0.1.0.3, Spring Boot 4.1.2 e Maven 3.9 ou superior.
+
 Dois ambientes: **develop** (branch `develop`) e **production** (branch `main`). Em cada um há dois serviços e um Postgres.
 
 ## Serviços
