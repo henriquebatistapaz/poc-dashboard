@@ -14,7 +14,7 @@ class SourceRegistryTest {
         assertEquals(CapabilityStatus.CONDITIONAL, registry.get(CollectorSource.GOOGLE_ALERTS).status());
         assertEquals(CapabilityStatus.AVAILABLE, registry.get(CollectorSource.WORDPRESS).status());
         assertEquals(CapabilityStatus.CONDITIONAL, registry.get(CollectorSource.REDDIT).status());
-        assertEquals(CapabilityStatus.UNVERIFIED, registry.get(CollectorSource.ISSUU).status());
+        assertEquals(CapabilityStatus.UNAVAILABLE, registry.get(CollectorSource.ISSUU).status());
     }
 
     @Test

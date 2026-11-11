@@ -1,6 +1,6 @@
 # POC Dashboard
 
-Private Java 21 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
+Private Java 27 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
 
 ## Vue panel — Portuguese, English and Spanish
 
@@ -17,7 +17,7 @@ See [frontend/README.md](frontend/README.md) for development, browser tests and 
 3. The embedded runner calls the existing RSS/source/social libraries and commits new items to PostgreSQL.
 4. Query `GET /v1/items` or `GET /v1/items/{id}` using the JWT or a read-only `X-API-Key`.
 
-No separate runner HTTP server is needed. The standalone runner's old `social_posts` table is independent; existing rows are not copied automatically. Dashboard migrations own `collected_item`. See [SPEC.md](SPEC.md) for the target architecture and remaining phases.
+No separate runner HTTP server is needed. Dashboard migrations own `collected_item`. To import historical rows from `social_posts` when both tables are in the same PostgreSQL database, review and run [`scripts/migrate-social-posts.sql`](scripts/migrate-social-posts.sql); it is idempotent and skips existing `(source, external_id)` pairs. The target model does not retain the legacy author field. See [SPEC.md](SPEC.md) for the target architecture and remaining phases.
 
 ### Collection request
 
@@ -45,7 +45,7 @@ Clone all four private repositories as siblings: `poc-collector`, `poc-rss-colle
 ./scripts/build-local.sh
 ```
 
-It runs Maven installs in dependency order (collector, RSS, runner), then packages the dashboard. Alternative locations can be supplied with `COLLECTOR_REPO`, `RSS_REPO` and `RUNNER_REPO`. Java 21 and Maven are required. Artifacts resolve through the local Maven repository; no private Maven package registry is configured.
+It runs Maven installs in dependency order (collector, RSS, runner), then packages the dashboard. Alternative locations can be supplied with `COLLECTOR_REPO`, `RSS_REPO` and `RUNNER_REPO`. Java 27 and Maven are required. Artifacts resolve through the local Maven repository; no private Maven package registry is configured.
 
 ## Local credentials
 
@@ -55,9 +55,9 @@ Copy `.env.example` to `.env` and fill it locally (the file is ignored). Generat
 ./scripts/hash-admin-password.sh
 ```
 
-Paste the printed hash as a single-quoted `.env` value, e.g. `DASHBOARD_ADMIN_PASSWORD_HASH='$2a$...'`. The helper prompts without echo; it does not accept the password as a command argument. Passwords must contain 1–72 UTF-8 bytes. Admin credentials are runtime configuration, not an `app_user` table. No registration endpoint is provided.
+Paste the printed hash as a single-quoted `.env` value, e.g. `DASHBOARD_ADMIN_PASSWORD_HASH='$2a$...'`. The helper prompts without echo; it does not accept the password as a command argument. Passwords must contain 1–72 UTF-8 bytes. The first administrator is bootstrapped into `user_account`; public registration is disabled. Administrators can create `ADMIN` and `OPERATOR` accounts with `POST /v1/admin/users`, list accounts with `GET /v1/admin/users`, and deactivate another account with `POST /v1/admin/users/{id}/deactivate`. Passwords are stored as BCrypt hashes and never returned by the API.
 
-Login returns `accessToken`, `tokenType=Bearer`, `expiresIn=900`. JWTs use HS256 and verify issuer, signature and expiration. `DASHBOARD_JWT_SECRET` must contain at least 32 UTF-8 bytes. Missing admin configuration disables login (503), while read-only API-key mode remains possible. A missing/incorrect/unconfigured API key never grants access. API keys cannot run collections.
+Login returns `accessToken`, `tokenType=Bearer`, `expiresIn=900`. JWTs use HS256 and verify issuer, signature and expiration. `DASHBOARD_JWT_SECRET` must contain at least 32 UTF-8 bytes. Login returns 503 until the database has an enabled user and JWT signing is configured. A missing/incorrect/unconfigured API key never grants access. API keys cannot run collections.
 
 Reddit stays disabled by default. Only configure `REDDIT_API_ACCESS_APPROVED`, `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_REFRESH_TOKEN`, `REDDIT_USERNAME` after official access approval. Credentials are passed at runtime and are never committed.
 
@@ -89,4 +89,4 @@ Docker API defaults to 1.44 in the integration profile (`-Ddocker.api.version=..
 
 ## Pending
 
-Scheduling, persistent user management, historical social-row migration and public deployment review. The current single administrator is configured by environment; persistent user management is future work. The repositories stay private. AI-Init assets and generated `/docs/` are excluded from Git.
+Historical social-row migration and public deployment review. Scheduling is available when `DASHBOARD_SCHEDULE_KEY` is configured with 64 hexadecimal characters; scheduled inputs are encrypted at rest. The repositories stay private. AI-Init assets and generated `/docs/` are excluded from Git.
