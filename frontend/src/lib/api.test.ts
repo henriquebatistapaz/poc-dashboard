@@ -50,4 +50,13 @@ describe('waitForRun', () => {
     await expect(waitForRun(4, 'token', undefined, 1)).rejects.toMatchObject({ status: 502 })
     vi.unstubAllGlobals()
   })
+
+  it('stops polling when the user cancels a run', async () => {
+    const controller = new AbortController()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ id: 8, status: 'RUNNING' }), { status: 200 })))
+    const polling = waitForRun(8, 'token', controller.signal, 10000)
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1))
+    controller.abort()
+    await expect(polling).rejects.toMatchObject({ name: 'AbortError' })
+  })
 })
