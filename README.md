@@ -1,4 +1,4 @@
-# Dashboard Mini
+# POC Dashboard
 
 Private Java 21 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
 
