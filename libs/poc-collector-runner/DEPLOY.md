@@ -14,6 +14,12 @@ mvn clean verify
 mvn spring-boot:run
 ```
 
+## Variáveis de retenção e takedown
+
+- `SERVER_ADDRESS` usa `127.0.0.1` por padrão; mantenha a API standalone em loopback.
+- `RUNNER_ADMIN_API_KEY` habilita o `DELETE /v1/posts/{source}/{externalId}`; sem valor, a operação retorna 403.
+- `POST_RETENTION_DAYS` habilita a remoção agendada; padrão `0` mantém retenção automática desativada. Configure um período aprovado para o ambiente antes de ativá-la.
+
 ## Pendências de publicação
 
 Provisionar PostgreSQL e definir `DB_URL`, `DB_USERNAME` e `DB_PASSWORD`. O build remoto precisa acessar os dois artefatos Maven ou compilar os projetos irmãos antes. Ver o [README](README.md) para o teste com PostgreSQL.

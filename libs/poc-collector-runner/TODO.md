@@ -7,7 +7,7 @@
 - [x] Add `POST /v1/posts` ingestion and `GET /v1/posts` listing.
 - [x] Add local PostgreSQL Compose configuration and H2-backed JUnit tests.
 - [x] Expose both API operations in OpenAPI and Swagger UI.
-- [ ] Add pagination and filters after approving query semantics.
-- [ ] Define retention, deletion/takedown, and privacy behavior before production use.
-- [ ] Connect fixture adapters to a controlled ingestion route after approving its contract.
+- [x] Add backwards-compatible pagination/search at `GET /v1/posts/search`: source, text/author, publication date range; page 0/size 20 defaults and size 100 maximum.
+- [x] Define opt-in retention (`POST_RETENTION_DAYS`, default 0) and keyed takedown by source/external ID; bind the standalone API to loopback by default.
+- [x] Keep fixture adapters behind the existing dashboard `POST /v1/collections` contract; do not add a duplicate fixture-only runner route.
 - [ ] Consider ActiveMQ Classic only if asynchronous job delivery is needed; consider Kafka only for replay or multiple independent consumers.
