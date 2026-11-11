@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureTestRestTemplate
 @Import(DashboardRunnerPostgresIT.FixtureConfiguration.class)
 class DashboardRunnerPostgresIT {
-    @Container static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    @Container static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18-alpine");
     @Autowired TestRestTemplate http;
     @Autowired ObjectMapper json;
     @Autowired CollectedItemRepository items;
