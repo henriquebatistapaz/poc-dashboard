@@ -13,6 +13,7 @@ export interface LoginResponse { accessToken: string; tokenType: string; expires
 export type RunStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED'
 export interface CollectionRun {
   id: number; source: CollectionSource; status: RunStatus
+  createdAt?: string; startedAt?: string | null; finishedAt?: string | null
   fetched: number | null; inserted: number | null; duplicates: number | null; errorMessage: string | null
 }
 export interface Filters { source: string; q: string; from: string; to: string }
