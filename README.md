@@ -17,7 +17,7 @@ See [frontend/README.md](frontend/README.md) for development, browser tests and 
 3. The embedded runner calls the existing RSS/source/social libraries and commits new items to PostgreSQL.
 4. Query `GET /v1/items` or `GET /v1/items/{id}` using the JWT or a read-only `X-API-Key`.
 
-No separate runner HTTP server is needed. The standalone runner's old `social_posts` table is independent; existing rows are not copied automatically. Dashboard migrations own `collected_item`. See [SPEC.md](SPEC.md) for the target architecture and remaining phases.
+No separate runner HTTP server is needed. Dashboard migrations own `collected_item`. To import historical rows from `social_posts` when both tables are in the same PostgreSQL database, review and run [`scripts/migrate-social-posts.sql`](scripts/migrate-social-posts.sql); it is idempotent and skips existing `(source, external_id)` pairs. The target model does not retain the legacy author field. See [SPEC.md](SPEC.md) for the target architecture and remaining phases.
 
 ### Collection request
 
