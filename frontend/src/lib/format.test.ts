@@ -11,6 +11,7 @@ describe('untrusted content formatting', () => {
     i18n.global.locale.value = 'es'
     expect(displayDate(null)).toBe('No indicada')
     expect(sourceLabel('alpha')).toContain('prueba')
+    expect(sourceLabel('GOOGLE_NEWS')).toBe('Google News')
     i18n.global.locale.value = 'en'
     expect(displayDate('invalid')).toBe('Not provided')
     expect(sourceLabel('unexpected')).toBe('unexpected')
