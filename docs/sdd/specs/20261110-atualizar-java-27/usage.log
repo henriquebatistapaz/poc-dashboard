@@ -1,0 +1,5 @@
+2026-11-10T23:18:46-03:00 | /new-spec | model: gpt-6.1-sol | in: ~1900 | out: ~1600
+2026-11-10T23:21:09-03:00 | /next + @qa | REVISE SPEC | [BLOCKER] §5/AC-02: sync-libs.sh seleciona uma branch para os três repositórios. Fixar e comprovar os três SHAs efetivamente incorporados. §9.1: especificar consulta sem autorização e falha de coleta com fonte sintética. [IMPORTANT] §10/AC-04: identificar a revisão, imagem ou artefato anterior aplicável e o smoke a repetir após o retorno.
+2026-11-11T07:08:00-03:00 | /implement-spec | Dashboard candidate Java 27: libs locais instaladas isoladamente, clean verify passou com 39 testes; Docker image/PostgreSQL/smoke visual pendentes.
+2026-11-11T07:13:00-03:00 | /validate-implementation | Dashboard local Java 27: H2 sintético, `/v3/api-docs` 200, `/` anônimo 401; login sintético e inspeção visual do workspace concluídos. Docker/PG e Railway produção permanecem pendentes.
+2026-11-11T07:15:00-03:00 | /test-plan | Plano de teste Java 27 consolidado com os resultados observados e os gates que aguardam Docker/produção.

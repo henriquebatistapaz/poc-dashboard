@@ -26,19 +26,21 @@ export async function request<T>(path: string, token?: string, body?: unknown, s
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, ms)
-    signal?.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')) }, { once: true })
+    if (signal?.aborted) { reject(new DOMException('Aborted', 'AbortError')); return }
+    const timer = setTimeout(() => { signal?.removeEventListener('abort', abort); resolve() }, ms)
+    const abort = () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')) }
+    signal?.addEventListener('abort', abort, { once: true })
   })
 }
 
-// Polls a background collection run until it finishes. A failed run is reported with a fixed status only.
+// Polls a background run with bounded backoff; cancellation releases the token and stops pending waits.
 export async function waitForRun(id: number, token: string, signal?: AbortSignal,
                                  intervalMs = 500, maxAttempts = 120): Promise<CollectionRun> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const run = await request<CollectionRun>(`/v1/collections/${id}`, token, undefined, signal)
     if (run.status === 'SUCCEEDED') return run
     if (run.status === 'FAILED') throw new ApiError(502)
-    await sleep(intervalMs, signal)
+    await sleep(Math.min(intervalMs * (2 ** Math.floor(attempt / 3)), 3000), signal)
   }
   throw new ApiError(504)
 }
