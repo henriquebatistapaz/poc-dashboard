@@ -33,18 +33,23 @@ public final class PublicHttpsFeedUrlPolicy {
             throw new IllegalArgumentException("Feed URL must use public HTTPS without credentials or a custom port.");
         }
         try {
-            InetAddress[] addresses = resolver.resolve(host);
-            if (addresses.length == 0) throw new IllegalArgumentException("Feed host has no public address.");
-            for (InetAddress address : addresses) {
-                if (!isPublic(address)) throw new IllegalArgumentException("Feed host resolves to a non-public address.");
-            }
+            resolvePublicAddresses(host, resolver);
             return uri;
         } catch (UnknownHostException e) {
             throw new IllegalArgumentException("Feed host could not be resolved.");
         }
     }
 
-    private static boolean isPublic(InetAddress address) {
+    public static InetAddress[] resolvePublicAddresses(String host, DnsResolver resolver) throws UnknownHostException {
+        InetAddress[] addresses = resolver.resolve(host);
+        if (addresses.length == 0) throw new UnknownHostException("Feed host has no address.");
+        for (InetAddress address : addresses) {
+            if (!isPublic(address)) throw new UnknownHostException("Feed host resolves to a non-public address.");
+        }
+        return addresses;
+    }
+
+    public static boolean isPublic(InetAddress address) {
         if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress()
                 || address.isSiteLocalAddress() || address.isMulticastAddress()) return false;
         byte[] bytes = address.getAddress();
@@ -55,10 +60,20 @@ public final class PublicHttpsFeedUrlPolicy {
             return !(a == 0 || a == 10 || a == 127 || a >= 224 || (a == 100 && b >= 64 && b <= 127)
                     || (a == 169 && b == 254) || (a == 172 && b >= 16 && b <= 31)
                     || (a == 192 && (b == 0 || b == 168)) || (a == 198 && (b == 18 || b == 19 || b == 51))
-                    || (a == 203 && b == 0 && c == 113));
+                    || (a == 192 && b == 88 && c == 99) || (a == 203 && b == 0 && c == 113));
         }
-        // IPv6 unique-local (fc00::/7) and documentation (2001:db8::/32) are not public destinations.
-        return !((bytes[0] & 0xFE) == 0xFC || ((bytes[0] & 255) == 0x20 && (bytes[1] & 255) == 0x01
-                && (bytes[2] & 255) == 0x0D && (bytes[3] & 255) == 0xB8));
+        int first = bytes[0] & 255;
+        int second = bytes[1] & 255;
+        int third = bytes[2] & 255;
+        int fourth = bytes[3] & 255;
+        boolean globalUnicast = (first & 0xE0) == 0x20;
+        boolean protocolAssignment = first == 0x20 && second == 0x01 && (third & 0xFE) == 0;
+        boolean documentation = first == 0x20 && second == 0x01 && third == 0x0D && fourth == 0xB8;
+        boolean sixToFour = first == 0x20 && second == 0x02;
+        boolean documentationV2 = first == 0x3F && second == 0xFF && (third & 0xF0) == 0;
+        boolean nat64WellKnown = first == 0x00 && second == 0x64 && third == 0xFF && fourth == 0x9B;
+        boolean nat64LocalUse = nat64WellKnown && bytes[4] == 0 && bytes[5] == 1;
+        return globalUnicast && !protocolAssignment && !documentation && !sixToFour
+                && !documentationV2 && !nat64WellKnown && !nat64LocalUse;
     }
 }

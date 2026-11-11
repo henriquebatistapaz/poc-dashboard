@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:dashboard;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:dashboard-${random.uuid};MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
     username: sa
     password: ""
     driver-class-name: org.h2.Driver
@@ -8,3 +8,5 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+dashboard:
+  schedule-key: "0000000000000000000000000000000000000000000000000000000000000000"
