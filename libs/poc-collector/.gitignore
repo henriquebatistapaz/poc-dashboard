@@ -1,6 +1,7 @@
 # Java build outputs (for the future implementation)
 target/
 *.class
+collector-data.json
 
 # Local secrets and environment
 .env
