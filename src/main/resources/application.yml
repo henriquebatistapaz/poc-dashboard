@@ -18,6 +18,9 @@ dashboard:
   # Falha fechado: a senha só é definida explicitamente no ambiente local/serviço.
   admin-password: ${DASHBOARD_ADMIN_PASSWORD:}
   jwt-secret: ${DASHBOARD_JWT_SECRET:}
+  schedule-key: ${DASHBOARD_SCHEDULE_KEY:}
+  schedule:
+    poll-ms: ${DASHBOARD_SCHEDULE_POLL_MS:5000}
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}
   port: ${PORT:8080}

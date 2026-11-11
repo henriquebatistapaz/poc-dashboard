@@ -47,6 +47,12 @@ class RssFeedParserTest {
     }
 
     @Test
+    void rejectsTruncatedFeedXml() {
+        byte[] xml = "<rss><channel><item>".getBytes(StandardCharsets.UTF_8);
+        assertThrows(FeedParseException.class, () -> parser.parse(xml, CollectorSource.WORDPRESS));
+    }
+
+    @Test
     void rejectsExternalEntityPayload() {
         String xml = "<!DOCTYPE rss [<!ENTITY x SYSTEM 'file:///etc/passwd'>]><rss><channel><item><title>&x;</title>"
                 + "<link>https://example.org</link></item></channel></rss>";
