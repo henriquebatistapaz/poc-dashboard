@@ -1,6 +1,6 @@
 spring:
   application:
-    name: dashboard-mini
+    name: poc-dashboard
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/dashboard}
     username: ${DB_USER:dashboard}
@@ -15,6 +15,12 @@ dashboard:
   api-key: ${DASHBOARD_API_KEY:}
   admin-email: ${DASHBOARD_ADMIN_EMAIL:}
   admin-password-hash: ${DASHBOARD_ADMIN_PASSWORD_HASH:}
+  # Falha fechado: a senha só é definida explicitamente no ambiente local/serviço.
+  admin-password: ${DASHBOARD_ADMIN_PASSWORD:}
   jwt-secret: ${DASHBOARD_JWT_SECRET:}
+  schedule-key: ${DASHBOARD_SCHEDULE_KEY:}
+  schedule:
+    poll-ms: ${DASHBOARD_SCHEDULE_POLL_MS:5000}
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${PORT:8080}

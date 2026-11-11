@@ -1,4 +1,9 @@
-**
-!target/
-!target/dashboard-mini-0.1.0-SNAPSHOT.jar
-!Dockerfile
+.git
+target
+frontend
+docs
+scripts
+*.md
+.env
+.env.*
+!.env.example

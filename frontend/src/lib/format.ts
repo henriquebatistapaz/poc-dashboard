@@ -13,7 +13,10 @@ export function displayDate(value: string | null): string {
 }
 
 const sources = ['rss', 'google-news', 'google-alerts', 'wordpress', 'reddit', 'alpha', 'beta']
-export const sourceLabel = (source: string) => sources.includes(source) ? i18n.global.t(`sources.${source}`) : source
+export const sourceLabel = (source: string) => {
+  const normalized = source.toLowerCase().replaceAll('_', '-')
+  return sources.includes(normalized) ? i18n.global.t(`sources.${normalized}`) : source
+}
 
 export function hostLabel(value: string): string {
   const safe = safeLink(value)
