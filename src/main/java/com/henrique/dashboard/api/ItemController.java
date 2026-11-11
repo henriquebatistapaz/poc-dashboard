@@ -73,11 +73,23 @@ public class ItemController {
         removal.remove(id, reason, authentication.getName());
     }
 
+    /**
+     * Aceita o nome do enum usado na coleta (ex.: RSS, GOOGLE_NEWS) ou o valor gravado (rss, google-news).
+     * Ambos viram o valor gravado: minúsculas, com "_" trocado por "-".
+     */
+    public static String normalizeSource(String source) {
+        if (source == null || source.isBlank()) {
+            return null;
+        }
+        return source.trim().toLowerCase(java.util.Locale.ROOT).replace('_', '-');
+    }
+
     static Specification<CollectedItem> filter(String source, String q, Instant from, Instant to) {
         return (root, query, cb) -> {
             var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
-            if (source != null && !source.isBlank()) {
-                predicates.add(cb.equal(root.get("source"), source.trim()));
+            String normalized = normalizeSource(source);
+            if (normalized != null) {
+                predicates.add(cb.equal(root.get("source"), normalized));
             }
             if (q != null && !q.isBlank()) {
                 predicates.add(cb.like(cb.lower(root.get("title")), "%" + q.trim().toLowerCase(java.util.Locale.ROOT) + "%"));
