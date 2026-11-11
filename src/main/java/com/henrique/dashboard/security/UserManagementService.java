@@ -20,8 +20,22 @@ public class UserManagementService {
 
     @Transactional
     public void bootstrapAdmin(String email, String passwordHash, String plainPassword) {
-        if (email == null || email.isBlank() || (passwordHash == null || passwordHash.isBlank())
-                && (plainPassword == null || plainPassword.isBlank())) return;
+        boolean hasEmail = email != null && !email.isBlank();
+        boolean hasHash = passwordHash != null && !passwordHash.isBlank();
+        boolean hasPassword = plainPassword != null && !plainPassword.isBlank();
+        if (!hasEmail && !hasHash && !hasPassword) return;
+        if (!hasEmail || email.length() > 254 || !email.contains("@") || hasHash == hasPassword) {
+            throw new IllegalStateException("Admin bootstrap requires a valid email and exactly one credential");
+        }
+        if (hasPassword) {
+            int length = plainPassword.getBytes(StandardCharsets.UTF_8).length;
+            if (length < 12 || length > 72) {
+                throw new IllegalStateException("Admin bootstrap password must contain 12–72 bytes");
+            }
+        }
+        if (hasHash && !passwordHash.matches("\\$2[aby]\\$[0-9]{2}\\$[./A-Za-z0-9]{53}")) {
+            throw new IllegalStateException("Admin bootstrap password hash must be BCrypt");
+        }
         if (users.findByEmailIgnoreCase(email).isPresent()) return;
         String hash = passwordHash == null || passwordHash.isBlank() ? passwords.encode(plainPassword) : passwordHash;
         users.save(new UserAccount(email.trim(), hash, UserRole.ADMIN));
