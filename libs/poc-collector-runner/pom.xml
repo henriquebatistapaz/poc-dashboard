@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.5</version>
+        <version>3.5.16</version>
         <relativePath/>
     </parent>
     <groupId>com.example.collectorrunner</groupId>
@@ -13,7 +13,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <name>poc-collector-runner</name>
     <description>Private mini-project scaffold; see README.md and docs/sdd/.</description>
-    <properties><java.version>21</java.version><docker.api.version>1.44</docker.api.version></properties>
+    <properties><byte-buddy.version>1.18.17</byte-buddy.version><mockito.version>5.24.0</mockito.version><lombok.version>1.18.48</lombok.version><java.version>27</java.version><docker.api.version>1.44</docker.api.version></properties>
     <dependencies>
         <dependency><groupId>com.henrique</groupId><artifactId>poc-collector</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
         <dependency><groupId>com.henrique</groupId><artifactId>poc-rss-collector</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
@@ -27,7 +27,7 @@
         <dependency><groupId>org.testcontainers</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.testcontainers</groupId><artifactId>postgresql</artifactId><scope>test</scope></dependency>
     </dependencies>
-    <build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId>
+    <build><plugins><plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><configuration><annotationProcessorPaths><path><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>${lombok.version}</version></path></annotationProcessorPaths></configuration></plugin><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId>
             <!-- Keep the plain jar as the main artifact so poc-dashboard can depend on it. -->
             <configuration><classifier>exec</classifier></configuration></plugin></plugins></build>
     <profiles>
