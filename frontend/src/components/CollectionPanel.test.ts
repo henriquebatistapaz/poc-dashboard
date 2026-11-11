@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import CollectionPanel from './CollectionPanel.vue'
+import CollectionHistory from './CollectionHistory.vue'
 import { i18n } from '../i18n'
 
 beforeEach(() => { i18n.global.locale.value = 'pt-BR' })
@@ -40,5 +41,20 @@ describe('manual collection', () => {
     expect(wrapper.text()).toContain('Recopilar ahora')
     i18n.global.locale.value = 'en'; await nextTick()
     expect(wrapper.text()).toContain('Collection complete')
+  })
+})
+
+describe('collection history', () => {
+  it('localizes source and status and lets the user resume an active run', async () => {
+    const run = { id: 17, source: 'GOOGLE_NEWS' as const, status: 'RUNNING' as const, createdAt: '2026-11-06T12:00:00Z',
+      fetched: null, inserted: null, duplicates: null, errorMessage: null }
+    const wrapper = mount(CollectionHistory, { props: { runs: [run], busy: false, tracking: false, error: '' }, global: { plugins: [i18n] } })
+    expect(wrapper.text()).toContain('Google News')
+    expect(wrapper.text()).toContain('Em andamento')
+    await wrapper.get('button.history-resume').trigger('click')
+    expect(wrapper.emitted('resume')![0]).toEqual([run])
+    i18n.global.locale.value = 'en'; await nextTick()
+    expect(wrapper.text()).toContain('In progress')
+    expect(wrapper.text()).toContain('Track run')
   })
 })

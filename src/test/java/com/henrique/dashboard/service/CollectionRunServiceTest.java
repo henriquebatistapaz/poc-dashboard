@@ -33,10 +33,12 @@ class CollectionRunServiceTest {
 
     CollectionRunService service;
     CollectionRun stored;
+    ScheduleInputCipher scheduleCipher;
 
     @BeforeEach
     void setUp() {
-        service = new CollectionRunService(repository, runner, executor);
+        scheduleCipher = new ScheduleInputCipher("0000000000000000000000000000000000000000000000000000000000000000");
+        service = new CollectionRunService(repository, runner, executor, scheduleCipher);
         // Persist as the database would: assign an id and keep one shared instance.
         lenient().when(repository.save(any(CollectionRun.class))).thenAnswer(invocation -> {
             CollectionRun run = invocation.getArgument(0);
@@ -78,6 +80,34 @@ class CollectionRunServiceTest {
         assertThat(stored.getSource()).isEqualTo("REDDIT");
         assertThat(stored.toString()).doesNotContain("secret-query");
         assertThat(stored.getErrorMessage()).isNull();
+    }
+
+    @Test
+    void schedulePersistsEncryptedInputWithoutStartingBeforeItsTime() {
+        String input = "https://feed.example/path?token=private-value";
+        CollectionRun scheduled = service.schedule(CollectionSource.WORDPRESS, input,
+                java.time.Instant.now().plusSeconds(60));
+
+        assertThat(scheduled.getStatus()).isEqualTo(RunStatus.PENDING);
+        assertThat(scheduled.getScheduledAt()).isNotNull();
+        assertThat(scheduled.getEncryptedInput()).isNotEqualTo(input).doesNotContain("private-value");
+        assertThat(scheduleCipher.decrypt(scheduled.getEncryptedInput())).isEqualTo(input);
+        verify(executor, never()).submit(any(Runnable.class));
+    }
+
+    @Test
+    void dispatchClaimsDueRunAndExecutesItOnce() throws Exception {
+        when(runner.run(CollectionSource.WORDPRESS, "https://feed.example/"))
+                .thenReturn(new CollectionRunner.CollectionResult(CollectionSource.WORDPRESS, 2, 2, 0));
+        service.schedule(CollectionSource.WORDPRESS, "https://feed.example/", java.time.Instant.now().plusSeconds(1));
+        when(repository.findDueScheduleIds(any(), any(), any())).thenReturn(List.of(1L));
+        when(repository.claimDueSchedule(any(), any(), any(), any())).thenReturn(1);
+
+        service.dispatchDueSchedules();
+
+        assertThat(stored.getStatus()).isEqualTo(RunStatus.SUCCEEDED);
+        assertThat(stored.getEncryptedInput()).isNull();
+        verify(runner).run(CollectionSource.WORDPRESS, "https://feed.example/");
     }
 
     @Test
@@ -125,14 +155,19 @@ class CollectionRunServiceTest {
         CollectionRun pending = new CollectionRun("WORDPRESS", java.time.Instant.now());
         CollectionRun running = new CollectionRun("REDDIT", java.time.Instant.now());
         running.markRunning(java.time.Instant.now());
+        CollectionRun scheduled = new CollectionRun("WORDPRESS", java.time.Instant.now(),
+                java.time.Instant.now().plusSeconds(10), "encrypted");
+        scheduled.markRunning(java.time.Instant.now());
         when(repository.findByStatusIn(List.of(RunStatus.PENDING, RunStatus.RUNNING)))
-                .thenReturn(List.of(pending, running));
+                .thenReturn(List.of(pending, running, scheduled));
 
         new CollectionRunRecovery(repository).run(null);
 
         assertThat(pending.getStatus()).isEqualTo(RunStatus.FAILED);
         assertThat(running.getErrorMessage()).isEqualTo("Interrupted by application restart");
-        verify(repository).saveAll(List.of(pending, running));
+        assertThat(scheduled.getStatus()).isEqualTo(RunStatus.PENDING);
+        assertThat(scheduled.getEncryptedInput()).isEqualTo("encrypted");
+        verify(repository).saveAll(List.of(pending, running, scheduled));
     }
 
     @Test
