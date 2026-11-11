@@ -14,7 +14,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <name>POC Dashboard</name>
     <description>Private dashboard backend over items collected by poc-collector-runner.</description>
-    <properties>
+    <properties><mockito.version>5.24.0</mockito.version><byte-buddy.version>1.18.17</byte-buddy.version>
         <java.version>27</java.version>
         <docker.api.version>1.44</docker.api.version>
         <lombok.version>1.18.48</lombok.version>
