@@ -8,3 +8,5 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+dashboard:
+  schedule-key: "0000000000000000000000000000000000000000000000000000000000000000"
