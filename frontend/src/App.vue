@@ -172,7 +172,7 @@ onBeforeUnmount(() => { clearTimeout(expiryTimer); listController?.abort(); deta
   <div v-else class="workspace-shell">
     <aside class="sidebar">
       <a class="brand" href="#library"><span class="brand-icon"><Layers :size="21" /></span>coleta<span class="brand-dot">.</span></a>
-      <div class="workspace-switch"><span class="workspace-avatar">{{ email.charAt(0).toUpperCase() }}</span><div><strong>Dashboard Mini</strong><small><span class="live-dot"></span>{{ t('common.private') }}</small></div></div>
+      <div class="workspace-switch"><span class="workspace-avatar">{{ email.charAt(0).toUpperCase() }}</span><div><strong>POC Dashboard</strong><small><span class="live-dot"></span>{{ t('common.private') }}</small></div></div>
       <span class="nav-label">{{ t('dashboard.workspace') }}</span>
       <nav :aria-label="t('common.workspace')"><a class="nav-item active" href="#library"><Library :size="18" />{{ t('dashboard.contents') }}<span class="nav-count">{{ n(total) }}</span></a><a class="nav-item" href="#collect"><Plus :size="18" />{{ t('dashboard.newCollection') }}</a><a class="nav-item" href="#activity"><Clock3 :size="18" />{{ t('history.title') }}</a></nav>
       <div class="sidebar-bottom"><a class="nav-item" href="/swagger-ui.html" target="_blank" rel="noopener noreferrer"><BookOpen :size="17" />{{ t('dashboard.apiDocs') }}<ArrowUpRight :size="13" /></a><div class="private-note"><ShieldCheck :size="15" /><span>{{ t('dashboard.local') }}</span></div></div>
