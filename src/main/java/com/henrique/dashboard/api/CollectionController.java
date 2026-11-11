@@ -41,6 +41,20 @@ public class CollectionController {
         return ResponseEntity.accepted().location(location).body(CollectionRunResponse.from(run));
     }
 
+    @PostMapping("/schedules")
+    @Operation(summary = "Schedule one collection for a future time")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<CollectionRunResponse> schedule(@RequestBody ScheduleRequest request) {
+        if (request == null || request.source() == null || request.input() == null || request.input().isBlank()
+                || request.scheduledAt() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "source, input and scheduledAt are required");
+        }
+        CollectionRun run = runs.schedule(request.source(), request.input(), request.scheduledAt());
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().replacePath("/v1/collections/{id}")
+                .buildAndExpand(run.getId()).toUri();
+        return ResponseEntity.accepted().location(location).body(CollectionRunResponse.from(run));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Status and outcome of one collection run")
     @SecurityRequirement(name = "bearerAuth")
@@ -64,11 +78,15 @@ public class CollectionController {
         @Override public String toString() { return "CollectionRequest[source=" + source + ", input=REDACTED]"; }
     }
 
-    public record CollectionRunResponse(Long id, String source, String status, Instant createdAt, Instant startedAt,
+    public record ScheduleRequest(CollectionSource source, String input, Instant scheduledAt) {
+        @Override public String toString() { return "ScheduleRequest[source=" + source + ", input=REDACTED, scheduledAt=" + scheduledAt + "]"; }
+    }
+
+    public record CollectionRunResponse(Long id, String source, String status, Instant createdAt, Instant scheduledAt, Instant startedAt,
                                         Instant finishedAt, Integer fetched, Integer inserted, Integer duplicates,
                                         String errorMessage) {
         static CollectionRunResponse from(CollectionRun run) {
-            return new CollectionRunResponse(run.getId(), run.getSource(), run.getStatus().name(), run.getCreatedAt(),
+            return new CollectionRunResponse(run.getId(), run.getSource(), run.getStatus().name(), run.getCreatedAt(), run.getScheduledAt(),
                     run.getStartedAt(), run.getFinishedAt(), run.getFetched(), run.getInserted(), run.getDuplicates(),
                     run.getErrorMessage());
         }
