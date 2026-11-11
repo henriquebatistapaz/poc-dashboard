@@ -13,7 +13,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <name>poc-collector-runner</name>
     <description>Private mini-project scaffold; see README.md and docs/sdd/.</description>
-    <properties><java.version>27</java.version><docker.api.version>1.44</docker.api.version>
+    <properties><mockito.version>5.24.0</mockito.version><byte-buddy.version>1.18.17</byte-buddy.version><java.version>27</java.version><docker.api.version>1.44</docker.api.version>
         <lombok.version>1.18.48</lombok.version>
     <springdoc-openapi-starter-webmvc-ui.version>3.2.0</springdoc-openapi-starter-webmvc-ui.version>
         <testcontainers.version>2.0.5</testcontainers.version>
