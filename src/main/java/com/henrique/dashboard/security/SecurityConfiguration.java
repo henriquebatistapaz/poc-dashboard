@@ -46,6 +46,7 @@ public class SecurityConfiguration {
                         .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
+                        .requestMatchers("/v1/admin/users/**").hasAuthority("SCOPE_admin:users")
                         .requestMatchers(HttpMethod.POST, "/v1/collections").hasAuthority("SCOPE_collections:write")
                         .requestMatchers(HttpMethod.GET, "/v1/collections", "/v1/collections/**").hasAuthority("SCOPE_collections:write")
                         .requestMatchers(HttpMethod.GET, "/v1/items", "/v1/items/**").hasAnyAuthority("ROLE_API_READER", "SCOPE_items:read")
