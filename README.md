@@ -1,6 +1,6 @@
 # POC Dashboard
 
-Private Java 21 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
+Private Java 27 / Maven backend on Spring Boot 4.1.2 that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
 
 ## Vue panel — Portuguese, English and Spanish
 
@@ -45,7 +45,7 @@ Clone all four private repositories as siblings: `poc-collector`, `poc-rss-colle
 ./scripts/build-local.sh
 ```
 
-It runs Maven installs in dependency order (collector, RSS, runner), then packages the dashboard. Alternative locations can be supplied with `COLLECTOR_REPO`, `RSS_REPO` and `RUNNER_REPO`. Java 21 and Maven are required. Artifacts resolve through the local Maven repository; no private Maven package registry is configured.
+It runs Maven installs in dependency order (collector, RSS, runner), then packages the dashboard. Alternative locations can be supplied with `COLLECTOR_REPO`, `RSS_REPO` and `RUNNER_REPO`. OpenJDK 27.0.1.0.3 and Maven 3.9 or later are required. Artifacts resolve through the local Maven repository; no private Maven package registry is configured.
 
 ## Local credentials
 
