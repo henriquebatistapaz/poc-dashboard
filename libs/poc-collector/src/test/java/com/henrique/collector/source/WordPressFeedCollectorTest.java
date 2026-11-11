@@ -3,8 +3,11 @@ package com.henrique.collector.source;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.henrique.collector.feed.RssFeedParser;
+import com.henrique.collector.feed.FeedFetchException;
+import com.henrique.collector.feed.JdkHttpFeedFetcher;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 class WordPressFeedCollectorTest {
@@ -36,5 +39,32 @@ class WordPressFeedCollectorTest {
     void rejectsUrlWithUserInfoOrUnexpectedPort() {
         assertThrows(IllegalArgumentException.class, () -> policy.validate("https://user:pass@blog.example/feed"));
         assertThrows(IllegalArgumentException.class, () -> policy.validate("https://blog.example:8443/feed"));
+    }
+
+    @Test
+    void rejectsReservedAndTunneledIpRanges() throws Exception {
+        assertFalse(PublicHttpsFeedUrlPolicy.isPublic(InetAddress.getByName("192.88.99.1")));
+        assertFalse(PublicHttpsFeedUrlPolicy.isPublic(InetAddress.getByName("2001:db8::1")));
+        assertFalse(PublicHttpsFeedUrlPolicy.isPublic(InetAddress.getByName("2002:0808:0808::1")));
+        assertFalse(PublicHttpsFeedUrlPolicy.isPublic(InetAddress.getByName("64:ff9b::808:808")));
+        assertTrue(PublicHttpsFeedUrlPolicy.isPublic(InetAddress.getByName("2606:4700:4700::1111")));
+    }
+
+    @Test
+    void rejectsDnsRebindingBeforeOpeningConnection() {
+        AtomicInteger resolutions = new AtomicInteger();
+        DnsResolver rebindingResolver = host -> {
+            if (resolutions.getAndIncrement() == 0) {
+                return new InetAddress[]{InetAddress.getByAddress(new byte[]{8, 8, 8, 8})};
+            }
+            return new InetAddress[]{InetAddress.getByAddress(new byte[]{10, 0, 0, 5})};
+        };
+        var collector = new WordPressFeedCollector(
+                new JdkHttpFeedFetcher(rebindingResolver), new RssFeedParser(),
+                new PublicHttpsFeedUrlPolicy(rebindingResolver));
+
+        assertThrows(FeedFetchException.class,
+                () -> collector.collect("https://blog.example/feed/atom"));
+        assertEquals(2, resolutions.get());
     }
 }
