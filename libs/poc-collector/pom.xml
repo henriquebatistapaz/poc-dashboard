@@ -5,8 +5,8 @@
   <groupId>com.henrique</groupId>
   <artifactId>poc-collector</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <properties>
-    <maven.compiler.release>21</maven.compiler.release>
+  <properties><byte-buddy.version>1.18.17</byte-buddy.version><mockito.version>5.24.0</mockito.version>
+    <maven.compiler.release>27</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>5.12.2</junit.version>
     <jackson.version>2.21.8</jackson.version>
@@ -23,7 +23,7 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.0</version>
-        <configuration><release>21</release></configuration>
+        <configuration><release>27</release></configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.3</version>
