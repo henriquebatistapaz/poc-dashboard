@@ -1,6 +1,6 @@
 # Collector Runner Mini
 
-Private Java 21 / Maven library and standalone synthetic-post API. Lombok supplies entity getters/protected constructors and constructor injection; immutable transport types remain Java records.
+Private Java 27 / Maven library and standalone synthetic-post API using Spring Boot 4.1.2. Lombok supplies entity getters/protected constructors and constructor injection; immutable transport types remain Java records.
 
 ## Dashboard integration
 

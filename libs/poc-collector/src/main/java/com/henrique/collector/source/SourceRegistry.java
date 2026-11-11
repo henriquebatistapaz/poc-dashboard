@@ -16,8 +16,8 @@ public final class SourceRegistry {
                 "Consumes a public RSS or Atom URL supplied by the user, if the site publishes one.");
         register(CollectorSource.REDDIT, CapabilityStatus.CONDITIONAL,
                 "Official OAuth collector; disabled until Reddit Data API access is approved and OAuth credentials are configured.");
-        register(CollectorSource.ISSUU, CapabilityStatus.UNVERIFIED,
-                "No official public tokenless feed or API contract has been verified.");
+        register(CollectorSource.ISSUU, CapabilityStatus.UNAVAILABLE,
+                "Issuu's first-party API requires an account token and does not document public publication search; no public feed route is verified.");
     }
 
     public SourceCapability get(CollectorSource source) {
