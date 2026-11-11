@@ -1,6 +1,6 @@
 # Collector Runner Mini
 
-Private Java 21 / Maven library and standalone synthetic-post API. Lombok supplies entity getters/protected constructors and constructor injection; immutable transport types remain Java records.
+Private Java 27 / Maven 3.9 library and standalone synthetic-post API. Lombok supplies entity getters/protected constructors and constructor injection; immutable transport types remain Java records. Spring Boot 4.1.2 and Lombok 1.18.48 are pinned for Java 27 support.
 
 ## Dashboard integration
 
@@ -42,14 +42,20 @@ The main jar is a plain Maven library; the additional `-exec.jar` runs the stand
 
 ## Legacy standalone synthetic-post API
 
-`POST /v1/posts` accepts a `NormalizedSocialPost` and returns 201 for an insertion or 200 for a duplicate. `GET /v1/posts` lists persisted posts by publication date. These routes operate on `social_posts`, not the dashboard table.
+`POST /v1/posts` accepts a `NormalizedSocialPost` and returns 201 for an insertion or 200 for a duplicate. `GET /v1/posts` preserves the original full-list response. `GET /v1/posts/search` adds bounded pagination (default page 0/size 20, maximum size 100) with optional case-insensitive exact `source`, substring `q` over author/text, and inclusive ISO-8601 `from`/`to` publication timestamps. It returns `items`, `page`, `size`, `totalElements` and `totalPages`. These routes operate on `social_posts`, not the dashboard table.
+
+`DELETE /v1/posts/{source}/{externalId}` is a takedown operation. It requires `X-Runner-Admin-Key` matching `RUNNER_ADMIN_API_KEY`; when the key is unset, deletion fails closed. The standalone API binds to loopback by default (`SERVER_ADDRESS=127.0.0.1`). Keep that default unless the host provides an equivalent private network boundary.
+
+Retention is opt-in. `POST_RETENTION_DAYS` defaults to `0` (disabled); a positive value deletes rows by their local `created_at` age each day at 03:17 UTC. The scheduler logs only the number of rows removed. Keep the value at zero until the retention period has been reviewed for the deployment.
+
+On first startup after this release, existing rows receive `created_at` from `published_at`; if publication time is missing, startup time is used. This metadata-only backfill preserves every row.
 
 ```sh
 docker compose up -d postgres
 mvn spring-boot:run
 ```
 
-Defaults: database `social_adapter` on localhost:5432; override `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`. Swagger: `http://localhost:8080/swagger-ui/index.html`. This legacy API has no new authentication layer and is for local development; use the authenticated Dashboard for the integrated workflow.
+Defaults: database `social_adapter` on localhost:5432; override `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`. Swagger: `http://localhost:8080/swagger-ui/index.html`. Read and ingest routes remain for local development; the takedown operation requires its separate admin key. Use the authenticated Dashboard for the integrated workflow.
 
 ## Pending
 

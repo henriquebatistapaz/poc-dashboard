@@ -37,6 +37,16 @@ class GoogleAlertsCollectorTest {
     }
 
     @Test
+    void failsClosedOnFetchTimeoutWithoutLeakingTheUrl() {
+        String secretUrl = "https://www.google.com/alerts/feeds/account-id/secret-alert-id";
+        var collector = new GoogleAlertsCollector(uri -> { throw new FeedFetchException("fixture timeout"); },
+                new RssFeedParser(), policy);
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> collector.collect(secretUrl));
+        assertFalse(exception.getMessage().contains("secret-alert-id"));
+        assertNull(exception.getCause());
+    }
+
+    @Test
     void parsesUserSuppliedFeedUsingAlertsSourceIdentity() {
         byte[] xml = "<rss><channel><item><title>Alert hit</title><link>https://example.org/a</link><guid>a-1</guid></item></channel></rss>"
                 .getBytes(StandardCharsets.UTF_8);
