@@ -20,6 +20,11 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Instalar bibliotecas locais (libs/)
+        run: |
+          for repo in poc-collector poc-rss-collector poc-collector-runner; do
+            mvn -B -q -f "libs/${repo}/pom.xml" -DskipTests install
+          done
       - name: Testes
         run: mvn -B test
       - name: Build do jar
