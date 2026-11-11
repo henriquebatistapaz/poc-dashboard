@@ -74,3 +74,13 @@ Os scripts recusam deploy com árvore suja ou na branch errada, rodam `mvn test`
 - API: `GET https://<api>/v3/api-docs` responde 200.
 - Login: `POST https://<web>/v1/auth/login` com as credenciais do administrador.
 - Painel: `https://<web>/` carrega a tela de login.
+
+## 6. Revisão de segurança antes de production
+
+- Use Postgres, `DASHBOARD_JWT_SECRET` (32+ bytes) e `DASHBOARD_API_KEY` fortes, exclusivos para production; nunca reutilize valores de develop.
+- Configure exatamente uma credencial do admin: `DASHBOARD_ADMIN_PASSWORD` com 12–72 bytes ou `DASHBOARD_ADMIN_PASSWORD_HASH` BCrypt. O bootstrap falha se a configuração estiver incompleta ou inválida.
+- Confirme que nenhum serviço está usando os valores locais padrão de banco; configure `DB_URL`, `DB_USER` e `DB_PASSWORD` do Postgres production.
+- Mantenha `REDDIT_API_ACCESS_APPROVED=false` até aprovação oficial e credenciais válidas. Configure `DASHBOARD_SCHEDULE_KEY` apenas se agendamentos forem usados; preserve a mesma chave para não perder agendamentos pendentes.
+- Web e API usam a mesma origem via proxy nginx; CORS não é necessário. O frontend envia bearer JWT, não cookies; a API é stateless e CSRF fica desativado.
+- Faça login como admin, confirme expiração do JWT de 15 minutos, acesso negado sem token e bloqueio de operações de admin para `OPERATOR`.
+- Revise variáveis e logs nos dois serviços sem revelar os valores. Este checklist não confirma os valores configurados no Railway; a inspeção de production deve ocorrer antes da promoção.

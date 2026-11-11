@@ -14,8 +14,12 @@
     <version>0.1.0-SNAPSHOT</version>
     <name>POC Dashboard</name>
     <description>Private dashboard backend over items collected by poc-collector-runner.</description>
-    <properties><java.version>27</java.version><docker.api.version>1.44</docker.api.version>
-        <testcontainers.version>1.21.4</testcontainers.version></properties>
+    <properties><mockito.version>5.24.0</mockito.version><byte-buddy.version>1.18.17</byte-buddy.version>
+        <java.version>27</java.version>
+        <docker.api.version>1.44</docker.api.version>
+        <lombok.version>1.18.48</lombok.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
+    </properties>
     <dependencyManagement><dependencies><dependency>
         <groupId>org.testcontainers</groupId><artifactId>testcontainers-bom</artifactId>
         <version>${testcontainers.version}</version><type>pom</type><scope>import</scope>
@@ -24,9 +28,9 @@
         <dependency><groupId>com.example.collectorrunner</groupId><artifactId>poc-collector-runner</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-jackson2</artifactId></dependency>
-        <dependency><groupId>org.testcontainers</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
-        <dependency><groupId>org.testcontainers</groupId><artifactId>postgresql</artifactId><scope>test</scope></dependency>
-        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional></dependency>
+        <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-postgresql</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>${lombok.version}</version><optional>true</optional></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
@@ -35,17 +39,16 @@
         <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
         <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId><version>3.2.0</version></dependency>
         <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc-test</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa-test</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security-test</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security-oauth2-resource-server-test</artifactId><scope>test</scope></dependency>
     </dependencies>
     <build><plugins>
-        <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId>
-            <configuration><annotationProcessorPaths><path>
-                <groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>1.18.48</version>
-            </path></annotationProcessorPaths></configuration>
-        </plugin>
+        <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><configuration>
+            <annotationProcessorPaths><path><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>${lombok.version}</version></path></annotationProcessorPaths>
+        </configuration></plugin>
         <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin>
     </plugins></build>
     <profiles><profile><id>postgres-it</id><build><plugins><plugin>
