@@ -1,1 +1,0 @@
-2026-11-11T08:12:00-03:00 | /implement-spec | Script PostgreSQL transacional e idempotente criado; checagem estática feita. Execução requer banco com as tabelas social_posts e collected_item no mesmo PostgreSQL.

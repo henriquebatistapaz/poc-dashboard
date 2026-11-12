@@ -1,1 +1,0 @@
-2026-11-11T08:08:00-03:00 | /implement-spec | Agendamento de coletas implementado localmente: V5, AES-GCM para input, endpoint autenticado, dispatcher e recuperação; `mvn -B test` passou com 45 testes. `clean verify` em execução.
