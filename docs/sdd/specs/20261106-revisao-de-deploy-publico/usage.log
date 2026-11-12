@@ -1,2 +1,0 @@
-2026-11-11T08:17:00-03:00 | /implement-spec | Revisão local de auth/config/proxy; bootstrap admin endurecido (12–72 bytes ou BCrypt válido) com testes. Checklist de produção adicionado ao DEPLOY.md; acesso ao Railway production não verificado.
-2026-11-11T08:16:00-03:00 | /test-plan | `mvn -B test` passou com 48 testes. Inspeção real das variáveis do Railway production permanece pendente.
