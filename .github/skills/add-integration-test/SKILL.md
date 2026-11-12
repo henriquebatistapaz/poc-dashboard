@@ -18,7 +18,7 @@ Look for existing integration test setup: Testcontainers dependencies, base clas
 class OrderRepositoryIT {          // *IT suffix → failsafe, not surefire
     @Container
     static PostgreSQLContainer<?> postgres =
-        new PostgreSQLContainer<>("postgres:16-alpine");   // match the REAL version from docker-compose/prod
+        new PostgreSQLContainer<>("postgres:18-alpine");   // match the REAL version from docker-compose/prod
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry r) {
