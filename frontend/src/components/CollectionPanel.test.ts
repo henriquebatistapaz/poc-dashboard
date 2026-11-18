@@ -80,13 +80,13 @@ describe('manual collection', () => {
     expect(wrapper.emitted('collect')).toBeUndefined()
   })
 
-  it('clears private input after success and reports duplicate-only results', async () => {
+  it('clears input after success and reports duplicate-only results', async () => {
     const wrapper = render()
-    await wrapper.get('#collection-source').setValue('GOOGLE_ALERTS')
-    await wrapper.get('#collection-input').setValue('https://www.google.com/alerts/feeds/demo/secret')
-    expect(wrapper.get('#collection-input').attributes('type')).toBe('password')
+    await wrapper.get('#collection-source').setValue('RSS')
+    await wrapper.get('#collection-input').setValue('https://example.org/feed.xml')
+    expect(wrapper.get('#collection-input').attributes('type')).toBe('url')
     await wrapper.setProps({
-      result: { id: 1, source: 'GOOGLE_ALERTS', status: 'SUCCEEDED', fetched: 2, inserted: 0, duplicates: 2, errorMessage: null },
+      result: { id: 1, source: 'RSS', status: 'SUCCEEDED', fetched: 2, inserted: 0, duplicates: 2, errorMessage: null },
     })
     expect((wrapper.get('#collection-input').element as HTMLInputElement).value).toBe('')
     expect(wrapper.get('[role="status"]').text()).toContain('Nenhuma duplicata')

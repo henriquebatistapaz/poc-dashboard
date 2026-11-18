@@ -6,8 +6,6 @@ import com.example.rsscollector.application.FeedDocumentFetcher;
 import com.example.rsscollector.application.RssFeedLinkValidator;
 import com.example.rsscollector.application.RssFeedParser;
 import com.henrique.collector.source.CollectorService;
-import com.henrique.collector.source.GoogleAlertsCollector;
-import com.henrique.collector.source.GoogleAlertsUrlPolicy;
 import com.henrique.collector.source.GoogleNewsCollector;
 import com.henrique.collector.source.SourceAccessException;
 import com.henrique.collector.source.SourceRegistry;
@@ -87,7 +85,6 @@ public class SmokeApplication {
         var collectorService = new CollectorService(
                 new SourceRegistry(),
                 new GoogleNewsCollector(blockedExternalFetcher, legacyParser),
-                new GoogleAlertsCollector(blockedExternalFetcher, legacyParser, new GoogleAlertsUrlPolicy()),
                 new WordPressFeedCollector(blockedExternalFetcher, legacyParser));
 
         var delegate = new DefaultCollectionGateway(
