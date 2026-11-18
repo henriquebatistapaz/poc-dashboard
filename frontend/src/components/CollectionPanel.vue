@@ -14,11 +14,14 @@ const validation = ref('')
 const hiddenResult = ref(false)
 const isFixture = computed(() => source.value === 'ALPHA' || source.value === 'BETA')
 const isUrl = computed(() => source.value === 'RSS')
+const isRestSource = computed(() => ['MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS'].includes(source.value))
 
 const PLACEHOLDER_KEYS: Record<Exclude<CollectionSource, 'ALPHA' | 'BETA'>, string> = {
   RSS: 'collection.feedPlaceholder',
   GOOGLE_NEWS: 'collection.queryPlaceholder',
   WORDPRESS: 'collection.wordpressPlaceholder',
+  MASTODON: 'collection.restPlaceholder', LEMMY: 'collection.restPlaceholder', DEV_TO: 'collection.restPlaceholder',
+  HACKER_NEWS: 'collection.restPlaceholder', STACK_EXCHANGE: 'collection.restPlaceholder', GITHUB: 'collection.restPlaceholder', TABNEWS: 'collection.restPlaceholder',
 }
 
 const placeholder = computed(() =>
@@ -29,7 +32,7 @@ const placeholder = computed(() =>
       : t(PLACEHOLDER_KEYS[source.value]),
 )
 
-type SourceExample = { label?: string; labelKey?: string; value: string }
+type SourceExample = { label: string; value: string } | { labelKey: string; value: string } | { valueKey: string }
 
 const EXAMPLES: Partial<Record<CollectionSource, SourceExample[]>> = {
   RSS: [
@@ -49,6 +52,13 @@ const EXAMPLES: Partial<Record<CollectionSource, SourceExample[]>> = {
     { label: 'technology', value: 'technology' },
     { label: 'wordpress', value: 'wordpress' },
   ],
+  MASTODON: [{ valueKey: 'collection.mastodonQuery' }, { valueKey: 'collection.mastodonQuery2' }],
+  LEMMY: [{ valueKey: 'collection.lemmyQuery' }, { valueKey: 'collection.lemmyQuery2' }],
+  DEV_TO: [{ valueKey: 'collection.devToQuery' }, { valueKey: 'collection.devToQuery2' }],
+  HACKER_NEWS: [{ valueKey: 'collection.hackerNewsQuery' }, { valueKey: 'collection.hackerNewsQuery2' }],
+  STACK_EXCHANGE: [{ valueKey: 'collection.stackExchangeQuery' }, { valueKey: 'collection.stackExchangeQuery2' }],
+  GITHUB: [{ valueKey: 'collection.githubQuery' }, { valueKey: 'collection.githubQuery2' }],
+  TABNEWS: [{ valueKey: 'collection.tabnewsQuery' }, { valueKey: 'collection.tabnewsQuery2' }],
   ALPHA: [
     {
       labelKey: 'collection.fixtureExample',
@@ -64,6 +74,16 @@ const EXAMPLES: Partial<Record<CollectionSource, SourceExample[]>> = {
 }
 
 const activeExamples = computed(() => EXAMPLES[source.value] ?? [])
+
+function exampleLabel(item: SourceExample) {
+  if ('labelKey' in item) return t(item.labelKey)
+  if ('label' in item) return item.label
+  return t(item.valueKey)
+}
+
+function exampleValue(item: SourceExample) {
+  return 'valueKey' in item ? t(item.valueKey) : item.value
+}
 
 watch(source, () => {
   input.value = ''
@@ -122,6 +142,13 @@ function example(value: string) {
           <option value="RSS">{{ t('sources.rss') }}</option>
           <option value="GOOGLE_NEWS">{{ t('sources.google-news') }}</option>
           <option value="WORDPRESS">{{ t('sources.wordpress') }}</option>
+          <option value="MASTODON">{{ t('sources.mastodon') }}</option>
+          <option value="LEMMY">{{ t('sources.lemmy') }}</option>
+          <option value="DEV_TO">{{ t('sources.dev-to') }}</option>
+          <option value="HACKER_NEWS">{{ t('sources.hacker-news') }}</option>
+          <option value="STACK_EXCHANGE">{{ t('sources.stack-exchange') }}</option>
+          <option value="GITHUB">{{ t('sources.github') }}</option>
+          <option value="TABNEWS">{{ t('sources.tabnews') }}</option>
           <option value="ALPHA">{{ t('sources.alpha') }}</option>
           <option value="BETA">{{ t('sources.beta') }}</option>
         </select>
@@ -174,15 +201,16 @@ function example(value: string) {
       <span>{{ t('collection.examples') }}</span>
       <button
         v-for="item in activeExamples"
-        :key="item.labelKey ?? item.label"
+        :key="'valueKey' in item ? item.valueKey : 'labelKey' in item ? item.labelKey : item.label"
         type="button"
         :disabled="busy"
-        @click="example(item.value)"
+        @click="example(exampleValue(item))"
       >
-        {{ item.labelKey ? t(item.labelKey) : item.label }} <ArrowUpRight :size="12" aria-hidden="true" />
+        {{ exampleLabel(item) }} <ArrowUpRight :size="12" aria-hidden="true" />
       </button>
     </div>
     <p v-if="source === 'WORDPRESS'" class="field-help">{{ t('collection.wordpressHelp') }}</p>
+    <p v-else-if="isRestSource" class="field-help">{{ t('collection.restHelp') }}</p>
     <p v-else-if="isFixture" class="field-help">{{ t('collection.fixtureHelp') }}</p>
     <p v-if="busy" class="field-help" role="status">{{ t('collection.wait') }}</p>
     <div v-if="validation || error" id="collection-error" class="notice error" role="alert">

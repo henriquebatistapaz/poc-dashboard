@@ -11,8 +11,17 @@ Private Java 27 / Maven 3.9 library and standalone synthetic-post API using Spri
 | `RSS` | Public RSS 2.0 / Atom 1.0 URL | Reuses the RSS library's bounded HTTP fetcher and parser |
 | `GOOGLE_NEWS` | Search query, up to 200 characters | Reuses the existing Google News collector |
 | `WORDPRESS` | Search keyword (normalized to tag slug) | Searches public WordPress.com tag RSS feeds (`wordpress.com/tag/<slug>/feed/`) |
+| `MASTODON` | Search term | Searches public Mastodon hashtag timelines |
+| `LEMMY` | Search term | Searches public Lemmy posts |
+| `DEV_TO` | Search term | Searches public DEV.to articles |
+| `HACKER_NEWS` | Search term | Searches public Hacker News stories |
+| `STACK_EXCHANGE` | Search term | Searches public Stack Exchange questions |
+| `GITHUB` | Search term | Searches public GitHub repositories |
+| `TABNEWS` | Search term | Searches public TabNews posts |
 | `ALPHA`, `BETA` | Synthetic fixture JSON | Reuses the existing social adapters, not real social providers |
 | `ISSUU` | Any input | Unavailable until a permitted route is verified |
+
+Google Alerts collection and scheduling have been removed. Previously collected items and run history remain readable.
 
 One manual run fetches, parses, validates and writes at most 1,000 items. It returns `source`, `fetched`, `inserted` and `duplicates`. Input is capped at 4,096 characters. Longer social text requires a caller-selected title excerpt (maximum 1,000 characters); the library does not silently truncate.
 

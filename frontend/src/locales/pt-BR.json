@@ -68,7 +68,7 @@
     "eyebrow": "DESCUBRA NA PRÁTICA",
     "title": "Teste uma fonte agora",
     "manual": "Coleta manual",
-    "description": "Cole um link RSS ou Atom. Nós buscamos o conteúdo e adicionamos os novos itens ao seu painel.",
+    "description": "Cole um link RSS ou Atom ou busque por palavra nas fontes públicas. Os novos itens entram no seu painel.",
     "source": "Fonte",
     "feedUrl": "Link do feed",
     "fixture": "JSON de teste",
@@ -88,7 +88,23 @@
     "empty": "O feed foi lido, mas não retornou itens utilizáveis.",
     "duplicateNote": "Todos os itens já estavam salvos. Nenhuma duplicata foi criada.",
     "view": "Ver itens",
-    "dismiss": "Fechar resultado"
+    "dismiss": "Fechar resultado",
+    "restPlaceholder": "Ex.: java, spring boot ou nome de usuário",
+    "restHelp": "A busca usa APIs públicas, com resultados limitados e sem necessidade de credenciais.",
+    "mastodonQuery": "java",
+    "lemmyQuery": "linux",
+    "devToQuery": "spring boot",
+    "hackerNewsQuery": "postgres",
+    "stackExchangeQuery": "spring boot",
+    "githubQuery": "spring boot",
+    "tabnewsQuery": "java",
+    "mastodonQuery2": "desenvolvimento de software",
+    "lemmyQuery2": "tecnologia",
+    "devToQuery2": "desenvolvimento web",
+    "hackerNewsQuery2": "open source",
+    "stackExchangeQuery2": "spring boot",
+    "githubQuery2": "fastapi",
+    "tabnewsQuery2": "tecnologia"
   },
   "history": {
     "title": "Coletas recentes",
@@ -99,14 +115,26 @@
     "failed": "A coleta falhou. O detalhe foi ocultado por segurança.",
     "resume": "Acompanhar",
     "tracking": "Acompanhando coleta…",
-    "status": { "pending": "Na fila", "running": "Em andamento", "succeeded": "Concluída", "failed": "Falhou" }
+    "status": {
+      "pending": "Na fila",
+      "running": "Em andamento",
+      "succeeded": "Concluída",
+      "failed": "Falhou"
+    }
   },
   "sources": {
     "rss": "RSS / Atom",
     "google-news": "Google News",
     "wordpress": "WordPress",
     "alpha": "Alpha · teste",
-    "beta": "Beta · teste"
+    "beta": "Beta · teste",
+    "mastodon": "Mastodon",
+    "lemmy": "Lemmy",
+    "dev-to": "DEV.to",
+    "hacker-news": "Hacker News",
+    "stack-exchange": "Stack Exchange",
+    "github": "GitHub",
+    "tabnews": "TabNews"
   },
   "filters": {
     "search": "Buscar no título",

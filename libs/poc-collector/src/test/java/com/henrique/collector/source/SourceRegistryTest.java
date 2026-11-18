@@ -9,10 +9,15 @@ class SourceRegistryTest {
     @Test
     void describesCapabilityOfEveryRequestedSource() {
         SourceRegistry registry = new SourceRegistry();
-        assertEquals(3, registry.all().size());
+        assertEquals(10, registry.all().size());
         assertEquals(CapabilityStatus.CONDITIONAL, registry.get(CollectorSource.GOOGLE_NEWS).status());
         assertEquals(CapabilityStatus.AVAILABLE, registry.get(CollectorSource.WORDPRESS).status());
         assertEquals(CapabilityStatus.UNAVAILABLE, registry.get(CollectorSource.ISSUU).status());
+        for (CollectorSource source : new CollectorSource[]{CollectorSource.MASTODON, CollectorSource.LEMMY,
+                CollectorSource.DEV_TO, CollectorSource.HACKER_NEWS, CollectorSource.STACK_EXCHANGE,
+                CollectorSource.GITHUB, CollectorSource.TABNEWS}) {
+            assertEquals(CapabilityStatus.AVAILABLE, registry.get(source).status());
+        }
     }
 
     @Test
