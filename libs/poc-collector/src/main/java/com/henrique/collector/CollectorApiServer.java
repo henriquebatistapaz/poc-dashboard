@@ -272,15 +272,12 @@ public final class CollectorApiServer implements AutoCloseable {
     public static void main(String[] args) throws Exception {
         var environment = System.getenv();
         var fetcher = new JdkHttpFeedFetcher();
-        var transport = new JdkRedditHttpTransport();
-        var reddit = RedditOAuthConfig.fromEnvironment(environment);
         var parser = new RssFeedParser();
         var registry = new SourceRegistry();
         var collector = new CollectorService(registry,
                 new GoogleNewsCollector(fetcher, parser),
                 new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
-                new WordPressFeedCollector(fetcher, parser, new PublicHttpsFeedUrlPolicy()),
-                new RedditCollector(reddit, new RedditOAuthTokenProvider(reddit, transport), transport));
+                new WordPressFeedCollector(fetcher, parser));
         SecretBox secretBox = SecretBox.fromEnvironment(environment.get("COLLECTOR_SECRET_KEY"));
         String apiKey = environment.get("COLLECTOR_API_KEY");
         long retentionDays = parseLong(environment.getOrDefault("COLLECTOR_RETENTION_DAYS", "30"), "COLLECTOR_RETENTION_DAYS");

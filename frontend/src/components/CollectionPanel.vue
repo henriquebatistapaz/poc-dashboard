@@ -12,23 +12,59 @@ const source = ref<CollectionSource>('RSS')
 const input = ref('')
 const validation = ref('')
 const hiddenResult = ref(false)
-const isFixture = computed(() => ['ALPHA', 'BETA'].includes(source.value))
-const isUrl = computed(() => ['RSS', 'WORDPRESS', 'GOOGLE_ALERTS'].includes(source.value))
+const isFixture = computed(() => source.value === 'ALPHA' || source.value === 'BETA')
+const isUrl = computed(() => source.value === 'RSS' || source.value === 'GOOGLE_ALERTS')
+
+const PLACEHOLDER_KEYS: Record<Exclude<CollectionSource, 'ALPHA' | 'BETA'>, string> = {
+  RSS: 'collection.feedPlaceholder',
+  GOOGLE_NEWS: 'collection.queryPlaceholder',
+  WORDPRESS: 'collection.wordpressPlaceholder',
+  GOOGLE_ALERTS: 'collection.alertsPlaceholder',
+}
+
 const placeholder = computed(() =>
   source.value === 'ALPHA'
     ? '{"posts": […]}'
     : source.value === 'BETA'
       ? '{"items": […]}'
-      : t(
-          source.value === 'GOOGLE_NEWS'
-            ? 'collection.queryPlaceholder'
-            : source.value === 'GOOGLE_ALERTS'
-              ? 'collection.alertsPlaceholder'
-              : source.value === 'REDDIT'
-                ? 'collection.redditPlaceholder'
-                : 'collection.feedPlaceholder',
-        ),
+      : t(PLACEHOLDER_KEYS[source.value]),
 )
+
+type SourceExample = { label?: string; labelKey?: string; value: string }
+
+const EXAMPLES: Partial<Record<CollectionSource, SourceExample[]>> = {
+  RSS: [
+    { label: 'BBC News', value: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
+    { label: 'XKCD · Atom', value: 'https://xkcd.com/atom.xml' },
+    { label: 'TabNews', value: 'https://www.tabnews.com.br/recentes/rss' },
+    { label: 'G1', value: 'https://g1.globo.com/rss/g1/' },
+    { label: 'Hacker News', value: 'https://hnrss.org/frontpage' },
+  ],
+  GOOGLE_NEWS: [
+    { label: 'Java Spring Boot', value: 'Java Spring Boot' },
+    { label: 'Energia renovável', value: 'energia renovável' },
+    { label: 'Inteligência artificial', value: 'inteligência artificial' },
+  ],
+  WORDPRESS: [
+    { label: 'java', value: 'java' },
+    { label: 'technology', value: 'technology' },
+    { label: 'wordpress', value: 'wordpress' },
+  ],
+  ALPHA: [
+    {
+      labelKey: 'collection.fixtureExample',
+      value: '{"posts":[{"id":"alpha-1","author":{"handle":"@dev"},"text":"Exemplo Alpha","created_at":"2026-11-18T12:00:00Z","url":"https://example.org/alpha/1"}]}',
+    },
+  ],
+  BETA: [
+    {
+      labelKey: 'collection.fixtureExample',
+      value: '{"items":[{"postId":"beta-1","authorName":"Maria","body":"Exemplo Beta","publishedAt":"2026-11-18T12:00:00Z","link":"https://example.org/beta/1"}]}',
+    },
+  ],
+}
+
+const activeExamples = computed(() => EXAMPLES[source.value] ?? [])
 
 watch(source, () => {
   input.value = ''
@@ -88,22 +124,13 @@ function example(value: string) {
           <option value="GOOGLE_NEWS">{{ t('sources.google-news') }}</option>
           <option value="WORDPRESS">{{ t('sources.wordpress') }}</option>
           <option value="GOOGLE_ALERTS">{{ t('sources.google-alerts') }}</option>
-          <option value="REDDIT">{{ t('sources.redditConditional') }}</option>
           <option value="ALPHA">{{ t('sources.alpha') }}</option>
           <option value="BETA">{{ t('sources.beta') }}</option>
         </select>
       </div>
       <div class="field input-field">
         <label for="collection-input">{{
-          t(
-            isFixture
-              ? 'collection.fixture'
-              : isUrl
-                ? 'collection.feedUrl'
-                : source === 'REDDIT'
-                  ? 'collection.subreddit'
-                  : 'collection.search',
-          )
+          t(isFixture ? 'collection.fixture' : isUrl ? 'collection.feedUrl' : 'collection.search')
         }}</label>
         <div class="input-with-icon">
           <Link v-if="isUrl && source !== 'GOOGLE_ALERTS'" :size="17" aria-hidden="true" />
@@ -145,20 +172,20 @@ function example(value: string) {
         {{ t(busy ? 'collection.busy' : 'collection.submit') }}
       </button>
     </form>
-    <div v-if="source === 'RSS'" class="feed-examples">
+    <div v-if="activeExamples.length" class="feed-examples">
       <span>{{ t('collection.examples') }}</span>
-      <button type="button" :disabled="busy" @click="example('https://feeds.bbci.co.uk/news/world/rss.xml')">
-        BBC News <ArrowUpRight :size="12" aria-hidden="true" />
-      </button>
-      <button type="button" :disabled="busy" @click="example('https://xkcd.com/atom.xml')">
-        XKCD · Atom <ArrowUpRight :size="12" aria-hidden="true" />
-      </button>
-      <button type="button" :disabled="busy" @click="example('https://wordpress.org/news/feed/')">
-        WordPress <ArrowUpRight :size="12" aria-hidden="true" />
+      <button
+        v-for="item in activeExamples"
+        :key="item.labelKey ?? item.label"
+        type="button"
+        :disabled="busy"
+        @click="example(item.value)"
+      >
+        {{ item.labelKey ? t(item.labelKey) : item.label }} <ArrowUpRight :size="12" aria-hidden="true" />
       </button>
     </div>
-    <p v-else-if="source === 'GOOGLE_ALERTS'" class="field-help">{{ t('collection.alertsHelp') }}</p>
-    <p v-else-if="source === 'REDDIT'" class="field-help">{{ t('collection.redditHelp') }}</p>
+    <p v-if="source === 'GOOGLE_ALERTS'" class="field-help">{{ t('collection.alertsHelp') }}</p>
+    <p v-else-if="source === 'WORDPRESS'" class="field-help">{{ t('collection.wordpressHelp') }}</p>
     <p v-else-if="isFixture" class="field-help">{{ t('collection.fixtureHelp') }}</p>
     <p v-if="busy" class="field-help" role="status">{{ t('collection.wait') }}</p>
     <div v-if="validation || error" id="collection-error" class="notice error" role="alert">

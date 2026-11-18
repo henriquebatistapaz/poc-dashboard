@@ -109,7 +109,7 @@ class CollectionRunApiTest {
     void rejectsBlankAndInvalidScheduleInputsBeforeStarting() throws Exception {
         mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                         .contentType("application/json")
-                        .content("{\"source\":\"REDDIT\",\"input\":\"  \"}"))
+                        .content("{\"source\":\"GOOGLE_NEWS\",\"input\":\"  \"}"))
                 .andExpect(status().isBadRequest());
         mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                         .contentType("application/json")
@@ -164,6 +164,6 @@ class CollectionRunApiTest {
     void apiKeyCannotReadOrStartRuns() throws Exception {
         mvc.perform(get("/v1/collections").header("X-API-Key", "reader-key")).andExpect(status().isForbidden());
         mvc.perform(post("/v1/collections").header("X-API-Key", "reader-key").contentType("application/json")
-                .content("{\"source\":\"REDDIT\",\"input\":\"x\"}")).andExpect(status().isForbidden());
+                .content("{\"source\":\"GOOGLE_NEWS\",\"input\":\"x\"}")).andExpect(status().isForbidden());
     }
 }
