@@ -63,6 +63,25 @@ class ItemRemovalApiTest {
     }
 
     @Test
+    void operatorCannotRemoveItem() throws Exception {
+        long id = seedItem();
+        mvc.perform(post("/v1/admin/users").header("Authorization", "Bearer " + adminToken())
+                .contentType("application/json")
+                .content("{\"email\":\"op-removal@example.org\",\"password\":\"op-test-password\",\"role\":\"OPERATOR\"}"))
+                .andExpect(status().isCreated());
+        var opRes = mvc.perform(post("/v1/auth/login").contentType("application/json")
+                .content("{\"email\":\"op-removal@example.org\",\"password\":\"op-test-password\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String opToken = json.readTree(opRes.getResponse().getContentAsString()).path("accessToken").asText();
+
+        mvc.perform(delete("/v1/items/" + id).header("Authorization", "Bearer " + opToken)
+                .contentType("application/json").content("{\"reason\":\"tentativa sem permissao\"}"))
+                .andExpect(status().isForbidden());
+        assertThat(items.existsById(id)).isTrue();
+        assertThat(removals.findAll()).isEmpty();
+    }
+
+    @Test
     void readOnlyApiKeyCannotRemove() throws Exception {
         long id = seedItem();
         mvc.perform(delete("/v1/items/" + id).header("X-API-Key", "reader-key")

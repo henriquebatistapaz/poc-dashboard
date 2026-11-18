@@ -3,6 +3,7 @@ import { ApiError, errorMessage, request, waitForRun } from './api'
 import { i18n } from '../i18n'
 
 afterEach(() => vi.unstubAllGlobals())
+
 describe('API transport', () => {
   it('posts credentials in the body, never the URL or persistent browser storage', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response('{"accessToken":"test-token"}', { status: 200 }))
@@ -15,6 +16,7 @@ describe('API transport', () => {
     expect(options.body).toContain('private')
     expect(localStorage.getItem('accessToken')).toBeNull()
   })
+
   it('adds the bearer token and does not reflect secret upstream error text', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response('secret-feed-url', { status: 502 }))
     vi.stubGlobal('fetch', fetch)
@@ -22,6 +24,20 @@ describe('API transport', () => {
     expect(fetch.mock.calls[0]![1].headers.Authorization).toBe('Bearer token')
     expect(errorMessage(new ApiError(502))).not.toContain('secret-feed-url')
   })
+
+  it('handles malformed JSON, AbortError, and generic or unknown errors', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('not-json', { status: 200 })))
+    await expect(request('/v1/items', 'token')).rejects.toMatchObject({ status: 502 })
+
+    const abortErr = new DOMException('Aborted', 'AbortError')
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(abortErr))
+    await expect(request('/v1/items', 'token')).rejects.toMatchObject({ name: 'AbortError' })
+
+    i18n.global.locale.value = 'pt-BR'
+    expect(errorMessage(new Error('unexpected'))).toContain('Não foi possível concluir')
+    expect(errorMessage(new ApiError(500))).toContain('encontrou um erro')
+  })
+
   it('localizes errors and distinguishes network failures', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('private-network-details')))
     await expect(request('/v1/items', 'token')).rejects.toMatchObject({ status: 0 })
@@ -42,16 +58,22 @@ describe('waitForRun', () => {
     const run = await waitForRun(3, 'token', undefined, 1)
     expect(run.status).toBe('SUCCEEDED')
     expect(run.inserted).toBe(1)
-    vi.unstubAllGlobals()
   })
 
-  it('maps a failed run to a fixed 502 without the server message', async () => {
+  it('maps a failed run to a fixed 502 and times out after maxAttempts', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ id: 4, status: 'FAILED', errorMessage: 'https://secret.example/feed' }), { status: 200 })))
     await expect(waitForRun(4, 'token', undefined, 1)).rejects.toMatchObject({ status: 502 })
-    vi.unstubAllGlobals()
+
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ id: 5, status: 'PENDING' }), { status: 200 })))
+    await expect(waitForRun(5, 'token', undefined, 1, 2)).rejects.toMatchObject({ status: 504 })
   })
 
-  it('stops polling when the user cancels a run', async () => {
+  it('stops polling when the user cancels a run or passes an already aborted signal', async () => {
+    const preAborted = new AbortController()
+    preAborted.abort()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ id: 7, status: 'RUNNING' }), { status: 200 })))
+    await expect(waitForRun(7, 'token', preAborted.signal, 1)).rejects.toMatchObject({ name: 'AbortError' })
+
     const controller = new AbortController()
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ id: 8, status: 'RUNNING' }), { status: 200 })))
     const polling = waitForRun(8, 'token', controller.signal, 10000)
