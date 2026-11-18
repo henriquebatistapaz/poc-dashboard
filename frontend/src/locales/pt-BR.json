@@ -79,8 +79,6 @@
     "feedPlaceholder": "https://seu-site.com/feed.xml",
     "queryPlaceholder": "Ex.: energia renovável no Brasil",
     "wordpressPlaceholder": "Ex.: java ou tecnologia",
-    "alertsPlaceholder": "https://www.google.com/alerts/feeds/123456/789012",
-    "alertsHelp": "Crie um alerta em google.com/alerts com entrega 'Feed RSS' e cole seu link privado (formato: https://www.google.com/alerts/feeds/ID_USUARIO/ID_ALERTA). Ele não fica salvo no painel.",
     "wordpressHelp": "Busca posts públicos por tag no WordPress.com (wordpress.com/tag/TERMO/feed/).",
     "fixtureExample": "Preencher JSON de exemplo",
     "fixtureHelp": "Formato sintético dos adapters Alpha/Beta para testes locais. Não acessa redes sociais reais.",
@@ -106,7 +104,6 @@
   "sources": {
     "rss": "RSS / Atom",
     "google-news": "Google News",
-    "google-alerts": "Google Alerts",
     "wordpress": "WordPress",
     "alpha": "Alpha · teste",
     "beta": "Beta · teste"

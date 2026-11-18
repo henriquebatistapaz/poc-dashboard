@@ -90,7 +90,7 @@ class DashboardRunnerPostgresIT {
     }
 
     @ParameterizedTest
-    @EnumSource(value = CollectionSource.class, names = {"ALPHA", "BETA", "RSS", "GOOGLE_NEWS", "GOOGLE_ALERTS", "WORDPRESS"})
+    @EnumSource(value = CollectionSource.class, names = {"ALPHA", "BETA", "RSS", "GOOGLE_NEWS", "WORDPRESS"})
     void collectsParsesPersistsDeduplicatesAndQueriesOverHttp(CollectionSource source) throws Exception {
         String input = switch (source) {
             case ALPHA -> """
@@ -102,7 +102,6 @@ class DashboardRunnerPostgresIT {
                 "publishedAt":"2026-11-06T00:00:00Z","link":"https://example.org/item"}]}
                 """;
             case RSS -> "https://example.org/feed";
-            case GOOGLE_ALERTS -> "https://www.google.com/alerts/feeds/demo/secret";
             default -> "java";
         };
         String token = login();
@@ -165,7 +164,6 @@ class DashboardRunnerPostgresIT {
             com.henrique.collector.feed.FeedFetcher fetcher = uri -> rss.getBytes(StandardCharsets.UTF_8);
             var parser = new RssFeedParser();
             var service = new CollectorService(new SourceRegistry(), new GoogleNewsCollector(fetcher, parser),
-                    new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
                     new WordPressFeedCollector(fetcher, parser));
             var urls = new RssFeedLinkValidator();
             // Only upstream fetching/DNS are fixtures: parsers, runner, SQL, Flyway, security and HTTP API are real.

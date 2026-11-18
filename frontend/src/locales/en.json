@@ -79,8 +79,6 @@
     "feedPlaceholder": "https://your-site.com/feed.xml",
     "queryPlaceholder": "E.g. renewable energy",
     "wordpressPlaceholder": "E.g. java or technology",
-    "alertsPlaceholder": "https://www.google.com/alerts/feeds/123456/789012",
-    "alertsHelp": "Create an alert at google.com/alerts with 'RSS feed' delivery and paste your private link (format: https://www.google.com/alerts/feeds/USER_ID/ALERT_ID). Never saved in the browser.",
     "wordpressHelp": "Searches public WordPress.com tag RSS feeds (wordpress.com/tag/TERM/feed/).",
     "fixtureExample": "Fill sample JSON",
     "fixtureHelp": "Synthetic Alpha/Beta adapter format for local testing. Does not access real social networks.",
@@ -106,7 +104,6 @@
   "sources": {
     "rss": "RSS / Atom",
     "google-news": "Google News",
-    "google-alerts": "Google Alerts",
     "wordpress": "WordPress",
     "alpha": "Alpha · test",
     "beta": "Beta · test"
