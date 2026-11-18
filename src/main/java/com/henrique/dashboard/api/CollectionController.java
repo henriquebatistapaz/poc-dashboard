@@ -36,6 +36,7 @@ public class CollectionController {
         if (request == null || request.source() == null || request.input() == null || request.input().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "source and input are required");
         }
+        validateSourceInput(request.source(), request.input());
         CollectionRun run = runs.start(request.source(), request.input());
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(run.getId()).toUri();
         return ResponseEntity.accepted().location(location).body(CollectionRunResponse.from(run));
@@ -49,10 +50,28 @@ public class CollectionController {
                 || request.scheduledAt() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "source, input and scheduledAt are required");
         }
+        validateSourceInput(request.source(), request.input());
         CollectionRun run = runs.schedule(request.source(), request.input(), request.scheduledAt());
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().replacePath("/v1/collections/{id}")
                 .buildAndExpand(run.getId()).toUri();
         return ResponseEntity.accepted().location(location).body(CollectionRunResponse.from(run));
+    }
+
+    private static void validateSourceInput(CollectionSource source, String input) {
+        String value = input.trim();
+        int max = switch (source) {
+            case WIKIPEDIA, GITLAB -> 200;
+            case LOBSTERS -> 100;
+            default -> Integer.MAX_VALUE;
+        };
+        boolean openRestSource = source == CollectionSource.WIKIPEDIA
+                || source == CollectionSource.GITLAB || source == CollectionSource.LOBSTERS;
+        boolean invalidLobstersTag = source == CollectionSource.LOBSTERS
+                && !value.equals("hottest") && !value.matches("[A-Za-z0-9]{1,100}");
+        if (value.length() > max || (openRestSource && value.codePoints().anyMatch(Character::isISOControl))
+                || invalidLobstersTag) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid source input");
+        }
     }
 
     @GetMapping("/{id}")

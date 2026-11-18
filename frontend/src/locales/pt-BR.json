@@ -104,7 +104,13 @@
     "hackerNewsQuery2": "open source",
     "stackExchangeQuery2": "spring boot",
     "githubQuery2": "fastapi",
-    "tabnewsQuery2": "tecnologia"
+    "tabnewsQuery2": "tecnologia",
+    "wikipediaQuery": "sistema solar",
+    "wikipediaQuery2": "história da computação",
+    "gitLabQuery": "spring boot",
+    "gitLabQuery2": "projetos open source",
+    "lobstersQuery": "hottest",
+    "lobstersQuery2": "programming"
   },
   "history": {
     "title": "Coletas recentes",
@@ -134,7 +140,10 @@
     "hacker-news": "Hacker News",
     "stack-exchange": "Stack Exchange",
     "github": "GitHub",
-    "tabnews": "TabNews"
+    "tabnews": "TabNews",
+    "wikipedia": "Wikipedia",
+    "gitlab": "GitLab",
+    "lobsters": "Lobsters"
   },
   "filters": {
     "search": "Buscar no título",
