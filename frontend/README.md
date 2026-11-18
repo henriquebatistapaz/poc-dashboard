@@ -15,7 +15,7 @@ Open `http://localhost:5173`. Vite proxies `/v1`, Swagger and OpenAPI to `http:/
 
 ## Features
 
-Login, logout and session expiration; RSS/Atom paste-and-collect with verified feed examples; keyword search for Google News, WordPress, Mastodon, Lemmy, DEV.to, Hacker News, Stack Exchange, GitHub and TabNews; synthetic Alpha/Beta fixture JSON examples; new/duplicate counters; recent asynchronous run history with resume tracking for pending runs; source/title/collection-date filters; pagination; native accessible detail dialog; safe original links; responsive mobile layout and localized empty/loading/error states. Alpha/Beta inputs are synthetic fixture JSON, not live social networks.
+Login, logout and session expiration; RSS/Atom paste-and-collect with verified feed examples; keyword search for Google News, WordPress, Mastodon, Lemmy, DEV.to, Hacker News, Stack Exchange, GitHub, TabNews, Wikipedia, GitLab and Lobsters; synthetic Alpha/Beta fixture JSON examples; new/duplicate counters; recent asynchronous run history with resume tracking for pending runs; source/title/collection-date filters; pagination; native accessible detail dialog; safe original links; responsive mobile layout and localized empty/loading/error states. Alpha/Beta inputs are synthetic fixture JSON, not live social networks.
 
 The JWT stays in memory for its 15-minute session and is cleared on logout/401/expiration. Reloading requires login again. Requests carry Bearer authorization, never query credentials. Only non-sensitive browser preferences (`coleta.locale` and `poc-dashboard:theme`) are stored locally. Upstream error bodies are not displayed. Titles are rendered as text, and only HTTP(S) links without embedded credentials can be opened.
 
