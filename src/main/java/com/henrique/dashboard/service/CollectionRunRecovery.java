@@ -1,5 +1,6 @@
 package com.henrique.dashboard.service;
 
+import com.example.collectorrunner.integration.CollectionSource;
 import com.henrique.dashboard.domain.CollectionRun;
 import com.henrique.dashboard.domain.RunStatus;
 import com.henrique.dashboard.repository.CollectionRunRepository;
@@ -21,12 +22,24 @@ public class CollectionRunRecovery implements ApplicationRunner {
         List<CollectionRun> interrupted = repository.findByStatusIn(List.of(RunStatus.PENDING, RunStatus.RUNNING));
         Instant now = Instant.now();
         interrupted.forEach(run -> {
-            if (run.getScheduledAt() != null && run.getStatus() == RunStatus.RUNNING && run.getEncryptedInput() != null) {
+            if (run.getScheduledAt() != null && !isSupportedSource(run.getSource())) {
+                run.markFailed(now, "Scheduled collection source is no longer supported");
+                run.clearEncryptedInput();
+            } else if (run.getScheduledAt() != null && run.getStatus() == RunStatus.RUNNING && run.getEncryptedInput() != null) {
                 run.retryScheduleAfterRestart();
             } else if (run.getScheduledAt() == null) {
                 run.markFailed(now, "Interrupted by application restart");
             }
         });
         repository.saveAll(interrupted);
+    }
+
+    private boolean isSupportedSource(String source) {
+        try {
+            CollectionSource.valueOf(source);
+            return true;
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 }

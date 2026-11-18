@@ -44,7 +44,7 @@ describe('manual collection', () => {
 
   it('supports all source types, empty results, dismiss and view actions', async () => {
     const wrapper = render()
-    for (const source of ['ALPHA', 'BETA', 'GOOGLE_NEWS', 'WORDPRESS'] as const) {
+    for (const source of ['ALPHA', 'BETA', 'GOOGLE_NEWS', 'WORDPRESS', 'MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS'] as const) {
       await wrapper.get('#collection-source').setValue(source)
       expect(wrapper.find('#collection-input').exists()).toBe(true)
     }
@@ -67,6 +67,29 @@ describe('manual collection', () => {
     expect(wrapper.emitted('view')).toHaveLength(1)
     await wrapper.get('button[aria-label="Fechar resultado"]').trigger('click')
     expect(wrapper.find('.collection-result').exists()).toBe(false)
+  })
+
+  it('shows two localized REST examples and help for every new source', async () => {
+    const wrapper = render()
+    const sources = ['MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS'] as const
+    for (const source of sources) {
+      await wrapper.get('#collection-source').setValue(source)
+      expect(wrapper.findAll('.feed-examples button')).toHaveLength(2)
+      expect(wrapper.find('.field-help')?.text()).toContain('APIs públicas')
+      await wrapper.findAll('.feed-examples button')[0]!.trigger('click')
+      expect((wrapper.get('#collection-input').element as HTMLInputElement).value).not.toBe('')
+      await wrapper.findAll('.feed-examples button')[1]!.trigger('click')
+      expect((wrapper.get('#collection-input').element as HTMLInputElement).value).not.toBe('')
+    }
+    for (const locale of ['en', 'es'] as const) {
+      i18n.global.locale.value = locale
+      await wrapper.get('#collection-source').setValue('GITHUB')
+      await nextTick()
+      expect(wrapper.find('.field-help')?.text()).toContain(locale === 'en' ? 'no credentials' : 'sin credenciales')
+      expect(wrapper.findAll('.feed-examples button')).toHaveLength(2)
+      await wrapper.findAll('.feed-examples button')[0]!.trigger('click')
+      expect((wrapper.get('#collection-input').element as HTMLInputElement).value).not.toBe('')
+    }
   })
 
   it('fills real examples without starting an unsolicited collection', async () => {

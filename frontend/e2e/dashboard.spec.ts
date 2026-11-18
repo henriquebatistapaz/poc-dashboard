@@ -77,6 +77,20 @@ test('RSS collection, deduplication, details and authenticated UI', async ({ pag
   await expect(page.getByRole('heading', { name: 'Entre no seu workspace' })).toBeVisible()
 })
 
+test('shows the seven public REST sources with working examples in the selector', async ({ page }) => {
+  await mockApi(page); await login(page)
+  const select = page.locator('#collection-source')
+  for (const [source, sample] of [
+    ['MASTODON', 'java'], ['LEMMY', 'linux'], ['DEV_TO', 'spring boot'],
+    ['HACKER_NEWS', 'postgres'], ['STACK_EXCHANGE', 'spring boot'], ['GITHUB', 'spring boot'], ['TABNEWS', 'java'],
+  ]) {
+    await select.selectOption(source)
+    await expect(page.locator('.feed-examples button')).toHaveCount(2)
+    await page.locator('.feed-examples button').first().click()
+    await expect(page.locator('#collection-input')).toHaveValue(sample)
+  }
+})
+
 test('resumes tracking an asynchronous collection from recent history', async ({ page }) => {
   await mockApi(page, [{ id: 41, source: 'RSS', status: 'RUNNING', createdAt: '2026-11-06T12:00:00Z', fetched: null, inserted: null, duplicates: null, errorMessage: null }])
   await login(page)
