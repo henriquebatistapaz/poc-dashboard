@@ -3,12 +3,10 @@ package com.example.collectorrunner.integration;
 import com.example.rsscollector.application.RssFeedLinkValidator;
 import com.henrique.collector.feed.RssFeedParser;
 import com.henrique.collector.source.*;
-import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class DefaultCollectionGatewayTest {
     static final String RSS = """
@@ -24,12 +22,9 @@ class DefaultCollectionGatewayTest {
     private DefaultCollectionGateway gateway() {
         com.henrique.collector.feed.FeedFetcher fetcher = uri -> RSS.getBytes(StandardCharsets.UTF_8);
         var parser = new RssFeedParser();
-        var reddit = mock(RedditCollector.class);
-        doThrow(new SourceAccessException("disabled")).when(reddit).collect(anyString());
         var collectors = new CollectorService(new SourceRegistry(), new GoogleNewsCollector(fetcher, parser),
                 new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
-                new WordPressFeedCollector(fetcher, parser, new PublicHttpsFeedUrlPolicy(host ->
-                        new InetAddress[]{InetAddress.getByAddress(new byte[]{8,8,8,8})})), reddit);
+                new WordPressFeedCollector(fetcher, parser));
         var urls = new RssFeedLinkValidator();
         return new DefaultCollectionGateway(collectors, url -> ATOM,
                 new com.example.rsscollector.application.RssFeedParser(urls), urls);
@@ -39,7 +34,7 @@ class DefaultCollectionGatewayTest {
     void mapsEachImplementedFeedSource() {
         var gateway = gateway();
         assertEquals("google-news", gateway.collect(CollectionSource.GOOGLE_NEWS, "java").getFirst().source());
-        assertEquals("wordpress", gateway.collect(CollectionSource.WORDPRESS, "https://example.org/feed").getFirst().source());
+        assertEquals("wordpress", gateway.collect(CollectionSource.WORDPRESS, "java").getFirst().source());
         assertEquals("google-alerts", gateway.collect(CollectionSource.GOOGLE_ALERTS, "https://www.google.com/alerts/feeds/demo/secret").getFirst().source());
         var rss = gateway.collect(CollectionSource.RSS, "https://example.org/feed").getFirst();
         assertEquals("rss", rss.source());
@@ -67,7 +62,8 @@ class DefaultCollectionGatewayTest {
     void preservesSourceAvailabilityAndUrlRules() {
         var gateway = gateway();
         assertThrows(SourceAccessException.class, () -> gateway.collect(CollectionSource.ISSUU, "anything"));
-        assertThrows(SourceAccessException.class, () -> DefaultCollectionGateway.fromEnvironment(Map.of()).collect(CollectionSource.REDDIT, "java"));
+        assertThrows(SourceAccessException.class, () -> DefaultCollectionGateway.fromEnvironment(Map.of()).collect(CollectionSource.ISSUU, "anything"));
+        assertThrows(IllegalArgumentException.class, () -> gateway.collect(CollectionSource.WORDPRESS, "   "));
         assertThrows(IllegalArgumentException.class, () -> gateway.collect(CollectionSource.RSS, "http://127.0.0.1/feed"));
         assertThrows(IllegalArgumentException.class, () -> gateway.collect(CollectionSource.GOOGLE_ALERTS, "https://example.org/feed"));
     }

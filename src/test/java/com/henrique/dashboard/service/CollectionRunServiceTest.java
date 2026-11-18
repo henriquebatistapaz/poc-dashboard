@@ -72,12 +72,12 @@ class CollectionRunServiceTest {
 
     @Test
     void inputIsNeverPersisted() throws Exception {
-        when(runner.run(CollectionSource.REDDIT, "secret-query"))
-                .thenReturn(new CollectionRunner.CollectionResult(CollectionSource.REDDIT, 0, 0, 0));
+        when(runner.run(CollectionSource.GOOGLE_ALERTS, "secret-query"))
+                .thenReturn(new CollectionRunner.CollectionResult(CollectionSource.GOOGLE_ALERTS, 0, 0, 0));
 
-        service.start(CollectionSource.REDDIT, "secret-query");
+        service.start(CollectionSource.GOOGLE_ALERTS, "secret-query");
 
-        assertThat(stored.getSource()).isEqualTo("REDDIT");
+        assertThat(stored.getSource()).isEqualTo("GOOGLE_ALERTS");
         assertThat(stored.toString()).doesNotContain("secret-query");
         assertThat(stored.getErrorMessage()).isNull();
     }
@@ -153,7 +153,7 @@ class CollectionRunServiceTest {
     @Test
     void recoveryMarksInterruptedRunsAsFailed() {
         CollectionRun pending = new CollectionRun("WORDPRESS", java.time.Instant.now());
-        CollectionRun running = new CollectionRun("REDDIT", java.time.Instant.now());
+        CollectionRun running = new CollectionRun("GOOGLE_NEWS", java.time.Instant.now());
         running.markRunning(java.time.Instant.now());
         CollectionRun scheduled = new CollectionRun("WORDPRESS", java.time.Instant.now(),
                 java.time.Instant.now().plusSeconds(10), "encrypted");
