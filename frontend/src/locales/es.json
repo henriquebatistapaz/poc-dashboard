@@ -11,6 +11,17 @@
     "unavailableLink": "Enlace no disponible",
     "workspace": "Espacio de trabajo"
   },
+  "theme": {
+    "label": "Tema",
+    "auto": "Automático",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "nav": {
+    "openMenu": "Abrir menú de navegación",
+    "closeMenu": "Cerrar menú de navegación",
+    "menuTitle": "Navegación del espacio"
+  },
   "login": {
     "eyebrow": "TU ESPACIO PRIVADO",
     "headline": "Buenas fuentes. Nuevas perspectivas.",
@@ -136,7 +147,8 @@
     "previous": "Anterior",
     "next": "Siguiente",
     "page": "Página {page} de {pages}",
-    "pageSize": "Elementos por página"
+    "pageSize": "Elementos por página",
+    "tableRegion": "Tabla de elementos recopilados"
   },
   "details": {
     "title": "Detalles del elemento",

@@ -17,7 +17,7 @@ Open `http://localhost:5173`. Vite proxies `/v1`, Swagger and OpenAPI to `http:/
 
 Login, logout and session expiration; RSS/Atom paste-and-collect with BBC, XKCD and WordPress examples; all supported manual source inputs; new/duplicate counters; recent asynchronous run history with resume tracking for pending runs; source/title/collection-date filters; pagination; native accessible detail dialog; safe original links; responsive mobile layout and localized empty/loading/error states. Google Alerts input is masked; Reddit remains subject to official approval and server OAuth configuration. Alpha/Beta inputs are synthetic fixture JSON, not live social networks.
 
-The JWT stays in memory for its 15-minute session and is cleared on logout/401/expiration. Reloading requires login again. Requests carry Bearer authorization, never query credentials. The only stored browser preference is `coleta.locale`. Upstream error bodies are not displayed. Titles are rendered as text, and only HTTP(S) links without embedded credentials can be opened.
+The JWT stays in memory for its 15-minute session and is cleared on logout/401/expiration. Reloading requires login again. Requests carry Bearer authorization, never query credentials. Only non-sensitive browser preferences (`coleta.locale` and `poc-dashboard:theme`) are stored locally. Upstream error bodies are not displayed. Titles are rendered as text, and only HTTP(S) links without embedded credentials can be opened.
 
 ## Languages
 
