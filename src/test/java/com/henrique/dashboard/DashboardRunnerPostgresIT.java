@@ -7,11 +7,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.henrique.collector.feed.RssFeedParser;
 import com.henrique.collector.source.*;
 import com.henrique.dashboard.repository.CollectedItemRepository;
+import com.henrique.dashboard.repository.ItemRemovalRepository;
+import com.henrique.dashboard.integration.RemovalAwareCollectionGateway;
 import java.net.URI;
 import java.net.InetSocketAddress;
 import java.io.IOException;
 import com.sun.net.httpserver.HttpServer;
 import java.nio.charset.StandardCharsets;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,8 +25,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
@@ -36,13 +40,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestRestTemplate
 @Import(DashboardRunnerPostgresIT.FixtureConfiguration.class)
 class DashboardRunnerPostgresIT {
     @Container static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18-alpine");
-    @Autowired TestRestTemplate http;
+    private static final HttpClient http = HttpClient.newHttpClient();
+    @LocalServerPort int port;
     @Autowired ObjectMapper json;
     @Autowired CollectedItemRepository items;
+    @Autowired ItemRemovalRepository removals;
 
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry registry) {
@@ -58,19 +63,38 @@ class DashboardRunnerPostgresIT {
     }
 
     @BeforeEach
-    void clean() { items.deleteAll(); }
+    void clean() {
+        removals.deleteAll();
+        items.deleteAll();
+    }
+
+    private ResponseEntity<String> exchange(String path, HttpMethod method, HttpEntity<?> entity) throws Exception {
+        var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port).resolve(path));
+        entity.getHeaders().forEach((name, values) -> values.forEach(value -> request.header(name, value)));
+        if (entity.getBody() == null) {
+            request.method(method.name(), HttpRequest.BodyPublishers.noBody());
+        } else {
+            request.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            request.method(method.name(), HttpRequest.BodyPublishers.ofString(json.writeValueAsString(entity.getBody())));
+        }
+        var response = http.send(request.build(), HttpResponse.BodyHandlers.ofString());
+        var headers = new HttpHeaders();
+        response.headers().map().forEach(headers::put);
+        return new ResponseEntity<>(response.body(), headers, HttpStatusCode.valueOf(response.statusCode()));
+    }
 
     private String login() throws Exception {
-        var response = http.postForEntity("/v1/auth/login", Map.of("email", "admin@example.org", "password", "test-password"), String.class);
+        var response = exchange("/v1/auth/login", HttpMethod.POST,
+                new HttpEntity<>(Map.of("email", "admin@example.org", "password", "test-password")));
         assertEquals(HttpStatus.OK, response.getStatusCode());
         return json.readTree(response.getBody()).path("accessToken").asText();
     }
 
-    private ResponseEntity<String> collect(CollectionSource source, String input, String token) {
+    private ResponseEntity<String> collect(CollectionSource source, String input, String token) throws Exception {
         var headers = new HttpHeaders();
         headers.setBearerAuth(token);
-        return http.exchange("/v1/collections", HttpMethod.POST,
-                new HttpEntity<>(Map.of("source", source.name(), "input", input), headers), String.class);
+        return exchange("/v1/collections", HttpMethod.POST,
+                new HttpEntity<>(Map.of("source", source.name(), "input", input), headers));
     }
 
     private JsonNode awaitRun(ResponseEntity<String> accepted, String token) throws Exception {
@@ -80,8 +104,8 @@ class DashboardRunnerPostgresIT {
         for (int attempt = 0; attempt < 200; attempt++) {
             var headers = new HttpHeaders();
             headers.setBearerAuth(token);
-            run = json.readTree(http.exchange(URI.create(location).getPath(), HttpMethod.GET,
-                    new HttpEntity<>(headers), String.class).getBody());
+            run = json.readTree(exchange(URI.create(location).getPath(), HttpMethod.GET,
+                    new HttpEntity<>(headers)).getBody());
             String status = run.path("status").asText();
             if ("SUCCEEDED".equals(status) || "FAILED".equals(status)) {
                 return run;
@@ -125,7 +149,7 @@ class DashboardRunnerPostgresIT {
         var headers = new HttpHeaders();
         headers.set("X-API-Key", "integration-reader");
         String storedSource = source.name().toLowerCase(java.util.Locale.ROOT).replace('_', '-');
-        var listed = http.exchange("/v1/items?source=" + storedSource + "&q=integration&size=1", HttpMethod.GET, new HttpEntity<>(headers), String.class);
+        var listed = exchange("/v1/items?source=" + storedSource + "&q=integration&size=1", HttpMethod.GET, new HttpEntity<>(headers));
         assertEquals(HttpStatus.OK, listed.getStatusCode());
         JsonNode body = json.readTree(listed.getBody());
         assertEquals(1, body.path("total").asInt());
@@ -143,13 +167,28 @@ class DashboardRunnerPostgresIT {
         };
         assertEquals(expectedTitle, item.path("title").asText());
         assertEquals(expectedLink, item.path("link").asText());
-        var enumListed = http.exchange("/v1/items?source=" + source.name() + "&q=integration&size=1", HttpMethod.GET,
-                new HttpEntity<>(headers), String.class);
+        var enumListed = exchange("/v1/items?source=" + source.name() + "&q=integration&size=1", HttpMethod.GET,
+                new HttpEntity<>(headers));
         assertEquals(1, json.readTree(enumListed.getBody()).path("total").asInt());
         assertFalse(item.path("collectedAt").asText().isBlank());
-        var detail = http.exchange("/v1/items/" + item.path("id").asLong(), HttpMethod.GET, new HttpEntity<>(headers), String.class);
+        var detail = exchange("/v1/items/" + item.path("id").asLong(), HttpMethod.GET, new HttpEntity<>(headers));
         assertEquals(HttpStatus.OK, detail.getStatusCode());
         assertEquals(item.path("externalId"), json.readTree(detail.getBody()).path("externalId"));
+
+        var adminHeaders = new HttpHeaders();
+        adminHeaders.setBearerAuth(token);
+        adminHeaders.setContentType(MediaType.APPLICATION_JSON);
+        var deleted = exchange("/v1/items/" + item.path("id").asLong(), HttpMethod.DELETE,
+                new HttpEntity<>(Map.of("reason", "integration test"), adminHeaders));
+        assertEquals(HttpStatus.NO_CONTENT, deleted.getStatusCode());
+        assertEquals(0, items.count());
+        assertEquals(1, removals.count());
+
+        JsonNode afterRemoval = awaitRun(collect(source, input, token), token);
+        assertEquals("SUCCEEDED", afterRemoval.path("status").asText(), afterRemoval.toString());
+        assertEquals(0, afterRemoval.path("inserted").asInt());
+        assertEquals(0, afterRemoval.path("duplicates").asInt());
+        assertEquals(0, items.count());
     }
 
     @Test
@@ -195,7 +234,7 @@ class DashboardRunnerPostgresIT {
         }
 
         @Bean @Primary
-        CollectionGateway fixtureGateway(FixtureServer server) {
+        CollectionGateway fixtureGateway(FixtureServer server, ItemRemovalRepository removals) {
             String rss = """
                 <rss version="2.0"><channel><title>test</title><item><guid>fixture-1</guid>
                 <title>Integration title</title><link>https://example.org/item</link>
@@ -221,10 +260,11 @@ class DashboardRunnerPostgresIT {
                     CollectionSource.DEV_TO, base.resolve("/devto"), CollectionSource.HACKER_NEWS, base.resolve("/hn"),
                     CollectionSource.STACK_EXCHANGE, base.resolve("/stack"), CollectionSource.GITHUB, base.resolve("/github"),
                     CollectionSource.TABNEWS, base.resolve("/tabnews")));
-            return (source, input) -> switch (source) {
+            CollectionGateway delegate = (source, input) -> switch (source) {
                 case MASTODON, LEMMY, DEV_TO, HACKER_NEWS, STACK_EXCHANGE, GITHUB, TABNEWS -> restSources.collect(source, input);
                 default -> existingSources.collect(source, input);
             };
+            return new RemovalAwareCollectionGateway(delegate, removals);
         }
     }
 
