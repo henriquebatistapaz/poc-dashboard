@@ -1,6 +1,6 @@
 # Deploy e execução local
 
-CLI Java para coletar links de fontes públicas e da API do Reddit quando autorizada.
+CLI Java para coletar links de fontes públicas e feeds RSS/Atom configurados.
 
 ## Validação local
 

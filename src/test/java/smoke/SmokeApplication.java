@@ -9,11 +9,6 @@ import com.henrique.collector.source.CollectorService;
 import com.henrique.collector.source.GoogleAlertsCollector;
 import com.henrique.collector.source.GoogleAlertsUrlPolicy;
 import com.henrique.collector.source.GoogleNewsCollector;
-import com.henrique.collector.source.JdkRedditHttpTransport;
-import com.henrique.collector.source.PublicHttpsFeedUrlPolicy;
-import com.henrique.collector.source.RedditCollector;
-import com.henrique.collector.source.RedditOAuthConfig;
-import com.henrique.collector.source.RedditOAuthTokenProvider;
 import com.henrique.collector.source.SourceAccessException;
 import com.henrique.collector.source.SourceRegistry;
 import com.henrique.collector.source.WordPressFeedCollector;
@@ -89,14 +84,11 @@ public class SmokeApplication {
             throw new SourceAccessException("External sources are disabled in smoke mode");
         };
         var legacyParser = new com.henrique.collector.feed.RssFeedParser();
-        var redditConfig = RedditOAuthConfig.fromEnvironment(Map.of());
-        var redditTransport = new JdkRedditHttpTransport();
         var collectorService = new CollectorService(
                 new SourceRegistry(),
                 new GoogleNewsCollector(blockedExternalFetcher, legacyParser),
                 new GoogleAlertsCollector(blockedExternalFetcher, legacyParser, new GoogleAlertsUrlPolicy()),
-                new WordPressFeedCollector(blockedExternalFetcher, legacyParser, new PublicHttpsFeedUrlPolicy()),
-                new RedditCollector(redditConfig, new RedditOAuthTokenProvider(redditConfig, redditTransport), redditTransport));
+                new WordPressFeedCollector(blockedExternalFetcher, legacyParser));
 
         var delegate = new DefaultCollectionGateway(
                 collectorService,
