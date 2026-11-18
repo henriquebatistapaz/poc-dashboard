@@ -43,7 +43,7 @@ Portas padrão do Compose: 15432 (banco), 8084 (API), 8085 (painel). Deploy no R
 - Autenticação: usuários `ADMIN` e `OPERATOR` persistidos com BCrypt; JWT HS256 expira em 900 s; `X-API-Key` só leitura e nunca roda coleta. Admin inicial por configuração; cadastro público desativado.
 - Coletas imediatas e agendadas rodam com histórico persistido (`CollectionRun`, `RunStatus`) e recuperação no boot (`CollectionRunRecovery`). Inputs agendados são cifrados com AES-GCM.
 - Segredos: URLs do Google Alerts, chaves, JWT secret e credenciais Reddit nunca vão para log, resposta de erro ou git.
-- Frontend: todo texto visível em `frontend/src/locales/{pt-BR,en,es}.json`; JWT só em memória; só o idioma vai para o storage.
+- Frontend: todo texto visível em `frontend/src/locales/{pt-BR,en,es}.json`; JWT só em memória; apenas preferências não sensíveis (`coleta.locale` e `poc-dashboard:theme`) vão para o storage.
 
 ## Project skills
 

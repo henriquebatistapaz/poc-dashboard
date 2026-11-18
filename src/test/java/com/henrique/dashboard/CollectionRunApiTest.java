@@ -106,10 +106,23 @@ class CollectionRunApiTest {
     }
 
     @Test
-    void rejectsBlankInputBeforeStarting() throws Exception {
+    void rejectsBlankAndInvalidScheduleInputsBeforeStarting() throws Exception {
         mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content("{\"source\":\"REDDIT\",\"input\":\"  \"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content("{\"source\":\"UNKNOWN\",\"input\":\"https://example.org/feed\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/v1/collections/schedules").header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(json.writeValueAsBytes(java.util.Map.of("source", "RSS", "input", "https://example.org/feed",
+                                "scheduledAt", Instant.now().minusSeconds(60).toString()))))
                 .andExpect(status().isBadRequest());
     }
 
