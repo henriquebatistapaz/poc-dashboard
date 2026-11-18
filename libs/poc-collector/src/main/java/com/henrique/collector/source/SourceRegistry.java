@@ -13,9 +13,7 @@ public final class SourceRegistry {
         register(CollectorSource.GOOGLE_ALERTS, CapabilityStatus.CONDITIONAL,
                 "Requires a user-provided RSS URL exposed by that user's Google Alerts account.");
         register(CollectorSource.WORDPRESS, CapabilityStatus.AVAILABLE,
-                "Consumes a public RSS or Atom URL supplied by the user, if the site publishes one.");
-        register(CollectorSource.REDDIT, CapabilityStatus.CONDITIONAL,
-                "Official OAuth collector; disabled until Reddit Data API access is approved and OAuth credentials are configured.");
+                "Searches public WordPress.com tag RSS feeds for the supplied keyword.");
         register(CollectorSource.ISSUU, CapabilityStatus.UNAVAILABLE,
                 "Issuu's first-party API requires an account token and does not document public publication search; no public feed route is verified.");
     }

@@ -10,13 +10,11 @@ public final class CollectorService {
     private final Map<CollectorSource, FeedCollector> collectors = new EnumMap<>(CollectorSource.class);
 
     public CollectorService(SourceRegistry registry, GoogleNewsCollector googleNews,
-                            GoogleAlertsCollector googleAlerts, WordPressFeedCollector wordpress,
-                            RedditCollector reddit) {
+                            GoogleAlertsCollector googleAlerts, WordPressFeedCollector wordpress) {
         this.registry = registry;
         collectors.put(CollectorSource.GOOGLE_NEWS, googleNews);
         collectors.put(CollectorSource.GOOGLE_ALERTS, googleAlerts);
         collectors.put(CollectorSource.WORDPRESS, wordpress);
-        collectors.put(CollectorSource.REDDIT, reddit);
     }
 
     public List<FeedItem> collect(CollectorSource source, String input) {

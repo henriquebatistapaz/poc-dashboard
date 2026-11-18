@@ -44,11 +44,17 @@ describe('manual collection', () => {
 
   it('supports all source types, empty results, dismiss and view actions', async () => {
     const wrapper = render()
-    for (const source of ['ALPHA', 'BETA', 'GOOGLE_NEWS', 'REDDIT', 'WORDPRESS'] as const) {
+    for (const source of ['ALPHA', 'BETA', 'GOOGLE_NEWS', 'WORDPRESS'] as const) {
       await wrapper.get('#collection-source').setValue(source)
       expect(wrapper.find('#collection-input').exists()).toBe(true)
     }
+    await wrapper.get('#collection-source').setValue('WORDPRESS')
+    expect(wrapper.get('label[for="collection-input"]').text()).toContain('O que você quer buscar')
+    await wrapper.findAll('.feed-examples button')[0]!.trigger('click')
+    expect((wrapper.get('#collection-input').element as HTMLInputElement).value).toBe('java')
     await wrapper.get('#collection-source').setValue('ALPHA')
+    await wrapper.findAll('.feed-examples button')[0]!.trigger('click')
+    expect((wrapper.get('#collection-input').element as HTMLTextAreaElement).value).toContain('"posts"')
     await wrapper.get('#collection-input').setValue('{"posts":[]}')
     await wrapper.get('form').trigger('submit')
     expect(wrapper.emitted('collect')![0]).toEqual(['ALPHA', '{"posts":[]}'])
@@ -70,7 +76,7 @@ describe('manual collection', () => {
     await wrapper.findAll('.feed-examples button')[1]!.trigger('click')
     expect((wrapper.get('#collection-input').element as HTMLInputElement).value).toBe('https://xkcd.com/atom.xml')
     await wrapper.findAll('.feed-examples button')[2]!.trigger('click')
-    expect((wrapper.get('#collection-input').element as HTMLInputElement).value).toContain('wordpress.org')
+    expect((wrapper.get('#collection-input').element as HTMLInputElement).value).toContain('tabnews.com.br')
     expect(wrapper.emitted('collect')).toBeUndefined()
   })
 
