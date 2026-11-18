@@ -68,7 +68,7 @@
     "eyebrow": "TRY IT YOURSELF",
     "title": "Try a source now",
     "manual": "Manual collection",
-    "description": "Paste an RSS or Atom link. We fetch the content and add new items to your workspace.",
+    "description": "Paste an RSS or Atom link, or search public sources by keyword. New items appear in your dashboard.",
     "source": "Source",
     "feedUrl": "Feed URL",
     "fixture": "Test JSON",
@@ -88,7 +88,23 @@
     "empty": "The feed was read but returned no usable items.",
     "duplicateNote": "All items were already saved. No duplicates were created.",
     "view": "View items",
-    "dismiss": "Dismiss result"
+    "dismiss": "Dismiss result",
+    "restPlaceholder": "E.g. java, spring boot, or username handle",
+    "restHelp": "Search uses public APIs, with bounded results and no credentials required.",
+    "mastodonQuery": "open source",
+    "lemmyQuery": "programming",
+    "devToQuery": "typescript",
+    "hackerNewsQuery": "postgres",
+    "stackExchangeQuery": "python list",
+    "githubQuery": "fastapi",
+    "tabnewsQuery": "open source",
+    "mastodonQuery2": "software development",
+    "lemmyQuery2": "technology",
+    "devToQuery2": "web development",
+    "hackerNewsQuery2": "open source",
+    "stackExchangeQuery2": "python list",
+    "githubQuery2": "fastapi",
+    "tabnewsQuery2": "technology"
   },
   "history": {
     "title": "Recent collections",
@@ -99,14 +115,26 @@
     "failed": "The collection failed. Details are hidden for safety.",
     "resume": "Track run",
     "tracking": "Tracking collection…",
-    "status": { "pending": "Queued", "running": "In progress", "succeeded": "Complete", "failed": "Failed" }
+    "status": {
+      "pending": "Queued",
+      "running": "In progress",
+      "succeeded": "Complete",
+      "failed": "Failed"
+    }
   },
   "sources": {
     "rss": "RSS / Atom",
     "google-news": "Google News",
     "wordpress": "WordPress",
     "alpha": "Alpha · test",
-    "beta": "Beta · test"
+    "beta": "Beta · test",
+    "mastodon": "Mastodon",
+    "lemmy": "Lemmy",
+    "dev-to": "DEV.to",
+    "hacker-news": "Hacker News",
+    "stack-exchange": "Stack Exchange",
+    "github": "GitHub",
+    "tabnews": "TabNews"
   },
   "filters": {
     "search": "Search titles",

@@ -53,7 +53,7 @@ const size = ref(10)
 const filters = reactive<Filters>({ source: '', q: '', from: '', to: '' })
 const applied = ref<Filters>({ ...filters })
 const filterError = ref('')
-const sources = ['rss', 'google-news', 'wordpress', 'alpha', 'beta']
+const sources = ['rss', 'google-news', 'wordpress', 'alpha', 'beta', 'mastodon', 'lemmy', 'dev-to', 'hacker-news', 'stack-exchange', 'github', 'tabnews']
 const pages = computed(() => Math.max(1, Math.ceil(total.value / size.value)))
 const dialogOpen = ref(false)
 const detail = ref<Item | null>(null)
