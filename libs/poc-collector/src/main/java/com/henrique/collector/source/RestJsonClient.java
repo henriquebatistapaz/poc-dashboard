@@ -21,7 +21,8 @@ final class RestJsonClient {
     static final int MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
     private static final Set<String> OFFICIAL_HOSTS = Set.of("mastodon.social", "lemmy.world", "dev.to",
-            "hn.algolia.com", "api.stackexchange.com", "api.github.com", "www.tabnews.com.br");
+            "hn.algolia.com", "api.stackexchange.com", "api.github.com", "www.tabnews.com.br",
+            "en.wikipedia.org", "pt.wikipedia.org", "gitlab.com", "lobste.rs");
     private final URI baseUri;
     private final HttpClient client;
     private final ObjectMapper mapper;
