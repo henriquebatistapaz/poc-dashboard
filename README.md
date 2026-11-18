@@ -4,7 +4,7 @@ Private Java 27 / Maven backend on Spring Boot 4.1.2 that embeds `poc-collector-
 
 ## Vue panel — Portuguese, English and Spanish
 
-The local panel at `http://localhost:8085` includes administrator login, a feed test form, source selection, real RSS/Atom examples, new/duplicate counts, recent asynchronous collection history (including tracking a pending run again after login), filtered/paginated items and a detail dialog linking to the original. Choose RSS/Atom, Google News, WordPress, Mastodon, Lemmy, DEV.to, Hacker News, Stack Exchange, GitHub or TabNews and enter a feed URL or search term. The Vue app calls the authenticated Dashboard endpoint, which embeds the runner and its source libraries. Successful collection refreshes the list automatically. Google Alerts collection and scheduling are removed; saved items and run history remain readable.
+The local panel at `http://localhost:8085` includes administrator login, a feed test form, source selection, real RSS/Atom examples, new/duplicate counts, recent asynchronous collection history (including tracking a pending run again after login), filtered/paginated items and a detail dialog linking to the original. Choose RSS/Atom, Google News, WordPress, Mastodon, Lemmy, DEV.to, Hacker News, Stack Exchange, GitHub, TabNews, Wikipedia, GitLab or Lobsters and enter a feed URL, search term or Lobsters tag. The Vue app calls the authenticated Dashboard endpoint, which embeds the runner and its source libraries. Successful collection refreshes the list automatically. Google Alerts collection and scheduling are removed; saved items and run history remain readable.
 
 All user-facing labels, validation, errors, dates and counts support `pt-BR`, `en` and `es`. Change language on the login screen or in the workspace without reloading. Only the selected locale is saved in browser storage. JWT and login credentials remain in memory; reloading, signing out or session expiration requires a new login; source inputs are not persisted in the browser.
 
@@ -79,7 +79,7 @@ mvn test
 mvn -Ppostgres-it verify
 ```
 
-Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP login/collection/query endpoints, actual runner and parsers; only upstream fetches/DNS are deterministic fixtures. They verify RSS/Atom, Google News, WordPress, the seven public REST sources and Alpha/Beta using local fixtures; source restrictions remain active. These deterministic tests do not prove live Google service availability.
+Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP login/collection/query endpoints, actual runner and parsers; only upstream fetches/DNS are deterministic fixtures. They verify RSS/Atom, Google News, WordPress, the ten public REST sources and Alpha/Beta using local fixtures; source restrictions remain active. These deterministic tests do not prove live Google service availability.
 
 A local Compose smoke run also collected real BBC RSS, XKCD Atom, Google News and WordPress feeds (79 items in that run). Repeating each collection inserted zero duplicates, and authenticated queries returned the stored items. External feed contents/counts can change.
 

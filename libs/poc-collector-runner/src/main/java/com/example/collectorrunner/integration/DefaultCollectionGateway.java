@@ -41,7 +41,10 @@ public final class DefaultCollectionGateway implements CollectionGateway {
                 new HackerNewsCollector(endpoint(restEndpoints, CollectionSource.HACKER_NEWS, "https://hn.algolia.com/api/v1/search")),
                 new StackExchangeCollector(endpoint(restEndpoints, CollectionSource.STACK_EXCHANGE, "https://api.stackexchange.com/2.3/search")),
                 new GitHubCollector(endpoint(restEndpoints, CollectionSource.GITHUB, "https://api.github.com/search/repositories")),
-                new TabNewsCollector(endpoint(restEndpoints, CollectionSource.TABNEWS, "https://www.tabnews.com.br/api/v1/contents")));
+                new TabNewsCollector(endpoint(restEndpoints, CollectionSource.TABNEWS, "https://www.tabnews.com.br/api/v1/contents")),
+                new WikipediaCollector(endpoint(restEndpoints, CollectionSource.WIKIPEDIA, "https://en.wikipedia.org/w/api.php")),
+                new GitLabCollector(endpoint(restEndpoints, CollectionSource.GITLAB, "https://gitlab.com/api/v4/projects")),
+                new LobstersCollector(endpoint(restEndpoints, CollectionSource.LOBSTERS, "https://lobste.rs")));
         var urls = new RssFeedLinkValidator();
         return new DefaultCollectionGateway(service, new BoundedFeedHttpFetcher(urls),
                 new com.example.rsscollector.application.RssFeedParser(urls), urls);

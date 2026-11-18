@@ -19,6 +19,9 @@ public final class SourceRegistry {
         register(CollectorSource.STACK_EXCHANGE, CapabilityStatus.AVAILABLE, "Uses the public Stack Exchange API for Stack Overflow.");
         register(CollectorSource.GITHUB, CapabilityStatus.AVAILABLE, "Uses the public GitHub repository search API.");
         register(CollectorSource.TABNEWS, CapabilityStatus.AVAILABLE, "Uses the public TabNews contents API.");
+        register(CollectorSource.WIKIPEDIA, CapabilityStatus.AVAILABLE, "Uses the public Wikipedia search API.");
+        register(CollectorSource.GITLAB, CapabilityStatus.AVAILABLE, "Uses the public GitLab projects API.");
+        register(CollectorSource.LOBSTERS, CapabilityStatus.AVAILABLE, "Uses the public Lobsters tag and hottest APIs.");
         register(CollectorSource.ISSUU, CapabilityStatus.UNAVAILABLE,
                 "Issuu's first-party API requires an account token and does not document public publication search; no public feed route is verified.");
     }
