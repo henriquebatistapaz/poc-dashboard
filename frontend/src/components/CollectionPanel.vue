@@ -14,7 +14,7 @@ const validation = ref('')
 const hiddenResult = ref(false)
 const isFixture = computed(() => source.value === 'ALPHA' || source.value === 'BETA')
 const isUrl = computed(() => source.value === 'RSS')
-const isRestSource = computed(() => ['MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS'].includes(source.value))
+const isRestSource = computed(() => ['MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS', 'WIKIPEDIA', 'GITLAB', 'LOBSTERS'].includes(source.value))
 
 const PLACEHOLDER_KEYS: Record<Exclude<CollectionSource, 'ALPHA' | 'BETA'>, string> = {
   RSS: 'collection.feedPlaceholder',
@@ -22,6 +22,7 @@ const PLACEHOLDER_KEYS: Record<Exclude<CollectionSource, 'ALPHA' | 'BETA'>, stri
   WORDPRESS: 'collection.wordpressPlaceholder',
   MASTODON: 'collection.restPlaceholder', LEMMY: 'collection.restPlaceholder', DEV_TO: 'collection.restPlaceholder',
   HACKER_NEWS: 'collection.restPlaceholder', STACK_EXCHANGE: 'collection.restPlaceholder', GITHUB: 'collection.restPlaceholder', TABNEWS: 'collection.restPlaceholder',
+  WIKIPEDIA: 'collection.restPlaceholder', GITLAB: 'collection.restPlaceholder', LOBSTERS: 'collection.restPlaceholder',
 }
 
 const placeholder = computed(() =>
@@ -59,6 +60,9 @@ const EXAMPLES: Partial<Record<CollectionSource, SourceExample[]>> = {
   STACK_EXCHANGE: [{ valueKey: 'collection.stackExchangeQuery' }, { valueKey: 'collection.stackExchangeQuery2' }],
   GITHUB: [{ valueKey: 'collection.githubQuery' }, { valueKey: 'collection.githubQuery2' }],
   TABNEWS: [{ valueKey: 'collection.tabnewsQuery' }, { valueKey: 'collection.tabnewsQuery2' }],
+  WIKIPEDIA: [{ valueKey: 'collection.wikipediaQuery' }, { valueKey: 'collection.wikipediaQuery2' }],
+  GITLAB: [{ valueKey: 'collection.gitLabQuery' }, { valueKey: 'collection.gitLabQuery2' }],
+  LOBSTERS: [{ valueKey: 'collection.lobstersQuery' }, { valueKey: 'collection.lobstersQuery2' }],
   ALPHA: [
     {
       labelKey: 'collection.fixtureExample',
@@ -149,6 +153,9 @@ function example(value: string) {
           <option value="STACK_EXCHANGE">{{ t('sources.stack-exchange') }}</option>
           <option value="GITHUB">{{ t('sources.github') }}</option>
           <option value="TABNEWS">{{ t('sources.tabnews') }}</option>
+          <option value="WIKIPEDIA">{{ t('sources.wikipedia') }}</option>
+          <option value="GITLAB">{{ t('sources.gitlab') }}</option>
+          <option value="LOBSTERS">{{ t('sources.lobsters') }}</option>
           <option value="ALPHA">{{ t('sources.alpha') }}</option>
           <option value="BETA">{{ t('sources.beta') }}</option>
         </select>

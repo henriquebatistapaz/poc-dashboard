@@ -108,10 +108,46 @@ class RestJsonCollectorsTest {
         assertEquals(7, requests.get());
     }
 
+    @Test void parsesWikipediaGitLabAndLobstersUsingTheirPublicContracts() {
+        response = """
+                {"query":{"search":[{"pageid":42,"title":"Sistema solar","timestamp":"2026-11-18T12:00:00Z"}]}}
+                """;
+        var wikipedia = new WikipediaCollector(endpoint("/w/api.php")).collect("sistema solar").getFirst();
+        assertEquals("42", wikipedia.sourceId());
+        assertEquals("https://en.wikipedia.org/?curid=42", wikipedia.link().toString());
+        assertTrue(requestPath.contains("action=query"));
+        assertTrue(requestPath.contains("srsearch=sistema+solar"));
+
+        response = """
+                [{"id":7,"name_with_namespace":"grupo/projeto","web_url":"https://gitlab.com/grupo/projeto","last_activity_at":"2026-11-18T12:00:00Z"}]
+                """;
+        var gitlab = new GitLabCollector(endpoint("/api/v4/projects")).collect("spring boot").getFirst();
+        assertEquals("7", gitlab.sourceId());
+        assertEquals("grupo/projeto", gitlab.title());
+        assertTrue(requestPath.contains("search=spring+boot"));
+        assertTrue(requestPath.contains("per_page=30"));
+
+        response = """
+                [{"short_id":"abc123","title":"Discussão de teste","url":"https://example.test/story","created_at":"2026-11-18T12:00:00Z"}]
+                """;
+        var lobsters = new LobstersCollector(endpoint("/")).collect("hottest").getFirst();
+        assertEquals("abc123", lobsters.sourceId());
+        assertEquals("https://example.test/story", lobsters.link().toString());
+        assertEquals("/hottest.json", requestPath);
+        new LobstersCollector(endpoint("/")).collect("");
+        assertEquals("/hottest.json", requestPath);
+        new LobstersCollector(endpoint("/")).collect("java");
+        assertEquals("/t/java.json", requestPath);
+    }
+
     @Test void rejectsInvalidInputsBeforeSendingRequests() {
         assertThrows(IllegalArgumentException.class, () -> new MastodonCollector(endpoint("/mastodon")).collect("#"));
         assertThrows(IllegalArgumentException.class, () -> new DevToCollector(endpoint("/devto")).collect("@"));
         assertThrows(IllegalArgumentException.class, () -> new TabNewsCollector(endpoint("/tabnews")).collect("@bad/name"));
+        assertThrows(IllegalArgumentException.class, () -> new WikipediaCollector(endpoint("/wiki")).collect("x".repeat(201)));
+        assertThrows(IllegalArgumentException.class, () -> new GitLabCollector(endpoint("/gitlab")).collect("x".repeat(201)));
+        assertThrows(IllegalArgumentException.class, () -> new LobstersCollector(endpoint("/lobsters")).collect("bad-tag"));
+        assertThrows(IllegalArgumentException.class, () -> new LobstersCollector(endpoint("/lobsters")).collect("x".repeat(101)));
         assertEquals(0, requests.get());
     }
 

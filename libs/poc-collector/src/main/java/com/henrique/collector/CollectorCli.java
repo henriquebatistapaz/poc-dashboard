@@ -11,7 +11,7 @@ public final class CollectorCli {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: java -jar poc-collector.jar <google-news|wordpress|mastodon|lemmy|dev-to|hacker-news|stack-exchange|github|tabnews> [query]");
+            System.err.println("Usage: java -jar poc-collector.jar <google-news|wordpress|mastodon|lemmy|dev-to|hacker-news|stack-exchange|github|tabnews|wikipedia|gitlab|lobsters> [query]");
             System.exit(2);
         }
         var fetcher = new JdkHttpFeedFetcher();
@@ -30,11 +30,15 @@ public final class CollectorCli {
                 case "stack-exchange" -> CollectorSource.STACK_EXCHANGE;
                 case "github" -> CollectorSource.GITHUB;
                 case "tabnews" -> CollectorSource.TABNEWS;
+                case "wikipedia" -> CollectorSource.WIKIPEDIA;
+                case "gitlab" -> CollectorSource.GITLAB;
+                case "lobsters" -> CollectorSource.LOBSTERS;
                 case "issuu" -> CollectorSource.ISSUU;
                 default -> throw new IllegalArgumentException("Unknown or unavailable source.");
             };
             String input = switch (source) {
-                case GOOGLE_NEWS, WORDPRESS, MASTODON, LEMMY, DEV_TO, HACKER_NEWS, STACK_EXCHANGE, GITHUB, TABNEWS ->
+                case GOOGLE_NEWS, WORDPRESS, MASTODON, LEMMY, DEV_TO, HACKER_NEWS, STACK_EXCHANGE, GITHUB, TABNEWS,
+                        WIKIPEDIA, GITLAB, LOBSTERS ->
                         String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
                 default -> "";
             };

@@ -10,5 +10,8 @@ public enum CollectorSource {
     HACKER_NEWS,
     STACK_EXCHANGE,
     GITHUB,
-    TABNEWS
+    TABNEWS,
+    WIKIPEDIA,
+    GITLAB,
+    LOBSTERS
 }
