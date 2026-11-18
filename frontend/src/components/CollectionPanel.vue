@@ -13,13 +13,12 @@ const input = ref('')
 const validation = ref('')
 const hiddenResult = ref(false)
 const isFixture = computed(() => source.value === 'ALPHA' || source.value === 'BETA')
-const isUrl = computed(() => source.value === 'RSS' || source.value === 'GOOGLE_ALERTS')
+const isUrl = computed(() => source.value === 'RSS')
 
 const PLACEHOLDER_KEYS: Record<Exclude<CollectionSource, 'ALPHA' | 'BETA'>, string> = {
   RSS: 'collection.feedPlaceholder',
   GOOGLE_NEWS: 'collection.queryPlaceholder',
   WORDPRESS: 'collection.wordpressPlaceholder',
-  GOOGLE_ALERTS: 'collection.alertsPlaceholder',
 }
 
 const placeholder = computed(() =>
@@ -123,7 +122,6 @@ function example(value: string) {
           <option value="RSS">{{ t('sources.rss') }}</option>
           <option value="GOOGLE_NEWS">{{ t('sources.google-news') }}</option>
           <option value="WORDPRESS">{{ t('sources.wordpress') }}</option>
-          <option value="GOOGLE_ALERTS">{{ t('sources.google-alerts') }}</option>
           <option value="ALPHA">{{ t('sources.alpha') }}</option>
           <option value="BETA">{{ t('sources.beta') }}</option>
         </select>
@@ -133,7 +131,7 @@ function example(value: string) {
           t(isFixture ? 'collection.fixture' : isUrl ? 'collection.feedUrl' : 'collection.search')
         }}</label>
         <div class="input-with-icon">
-          <Link v-if="isUrl && source !== 'GOOGLE_ALERTS'" :size="17" aria-hidden="true" />
+          <Link v-if="isUrl" :size="17" aria-hidden="true" />
           <textarea
             v-if="isFixture"
             id="collection-input"
@@ -150,9 +148,9 @@ function example(value: string) {
             v-else
             id="collection-input"
             v-model="input"
-            :class="{ 'with-icon': isUrl && source !== 'GOOGLE_ALERTS' }"
-            :type="source === 'GOOGLE_ALERTS' ? 'password' : isUrl ? 'url' : 'text'"
-            :inputmode="isUrl && source !== 'GOOGLE_ALERTS' ? 'url' : 'text'"
+            :class="{ 'with-icon': isUrl }"
+            :type="isUrl ? 'url' : 'text'"
+            :inputmode="isUrl ? 'url' : 'text'"
             autocapitalize="none"
             autocorrect="off"
             :placeholder="placeholder"
@@ -184,8 +182,7 @@ function example(value: string) {
         {{ item.labelKey ? t(item.labelKey) : item.label }} <ArrowUpRight :size="12" aria-hidden="true" />
       </button>
     </div>
-    <p v-if="source === 'GOOGLE_ALERTS'" class="field-help">{{ t('collection.alertsHelp') }}</p>
-    <p v-else-if="source === 'WORDPRESS'" class="field-help">{{ t('collection.wordpressHelp') }}</p>
+    <p v-if="source === 'WORDPRESS'" class="field-help">{{ t('collection.wordpressHelp') }}</p>
     <p v-else-if="isFixture" class="field-help">{{ t('collection.fixtureHelp') }}</p>
     <p v-if="busy" class="field-help" role="status">{{ t('collection.wait') }}</p>
     <div v-if="validation || error" id="collection-error" class="notice error" role="alert">
