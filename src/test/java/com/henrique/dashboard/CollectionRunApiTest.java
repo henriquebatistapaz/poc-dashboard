@@ -92,12 +92,12 @@ class CollectionRunApiTest {
 
     @Test
     void failedRunShowsSafeMessageWithoutSecret() throws Exception {
-        when(runner.run(CollectionSource.GOOGLE_ALERTS, "alert-input")).thenThrow(
-                new SourceAccessException("https://www.google.com/alerts/feeds/SECRET-TOKEN"));
+        when(runner.run(CollectionSource.RSS, "https://example.org/feed?token=SECRET-TOKEN")).thenThrow(
+                new SourceAccessException("https://example.org/feed?token=SECRET-TOKEN"));
 
         MvcResult created = mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                         .contentType("application/json")
-                        .content("{\"source\":\"GOOGLE_ALERTS\",\"input\":\"alert-input\"}"))
+                        .content("{\"source\":\"RSS\",\"input\":\"https://example.org/feed?token=SECRET-TOKEN\"}"))
                 .andExpect(status().isAccepted()).andReturn();
 
         JsonNode failed = awaitStatus(created.getResponse().getHeader("Location"), "FAILED");

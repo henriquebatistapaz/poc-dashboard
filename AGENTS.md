@@ -38,11 +38,11 @@ Portas padrão do Compose: 15432 (banco), 8084 (API), 8085 (painel). Deploy no R
 
 - Pacotes por papel: `api` (controllers + records de request/response), `service`, `repository` (Spring Data), `domain` (entidades JPA com Lombok), `security`, `integration` (ponte com o runner embutido).
 - Schema só via Flyway (`src/main/resources/db/migration/V<n>__*.sql`); o dashboard é dono de `collected_item`, `collection_run` e `item_removal`.
-- Fontes são enums com nomes exatos (`RSS`, `GOOGLE_NEWS`, `GOOGLE_ALERTS`, `WORDPRESS`, `ALPHA`, `BETA`; `ISSUU` desligado).
+- Fontes são enums com nomes exatos (`RSS`, `GOOGLE_NEWS`, `WORDPRESS`, `ALPHA`, `BETA`; `ISSUU` desligado).
 - Deduplicação por `(source, external_id)`, preservando o primeiro item; IDs RSS levam hash da URL do feed. Item removido não volta a ser ingerido.
 - Autenticação: usuários `ADMIN` e `OPERATOR` persistidos com BCrypt; JWT HS256 expira em 900 s; `X-API-Key` só leitura e nunca roda coleta. Admin inicial por configuração; cadastro público desativado.
 - Coletas imediatas e agendadas rodam com histórico persistido (`CollectionRun`, `RunStatus`) e recuperação no boot (`CollectionRunRecovery`). Inputs agendados são cifrados com AES-GCM.
-- Segredos: URLs do Google Alerts, chaves e JWT secret nunca vão para log, resposta de erro ou git.
+- Segredos: URLs privadas de feeds, chaves e JWT secret nunca vão para log, resposta de erro ou git.
 - Frontend: todo texto visível em `frontend/src/locales/{pt-BR,en,es}.json`; JWT só em memória; apenas preferências não sensíveis (`coleta.locale` e `poc-dashboard:theme`) vão para o storage.
 
 ## Project skills

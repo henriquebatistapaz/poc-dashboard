@@ -276,7 +276,6 @@ public final class CollectorApiServer implements AutoCloseable {
         var registry = new SourceRegistry();
         var collector = new CollectorService(registry,
                 new GoogleNewsCollector(fetcher, parser),
-                new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
                 new WordPressFeedCollector(fetcher, parser));
         SecretBox secretBox = SecretBox.fromEnvironment(environment.get("COLLECTOR_SECRET_KEY"));
         String apiKey = environment.get("COLLECTOR_API_KEY");
