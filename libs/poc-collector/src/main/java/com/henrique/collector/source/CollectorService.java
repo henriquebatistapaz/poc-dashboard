@@ -10,10 +10,9 @@ public final class CollectorService {
     private final Map<CollectorSource, FeedCollector> collectors = new EnumMap<>(CollectorSource.class);
 
     public CollectorService(SourceRegistry registry, GoogleNewsCollector googleNews,
-                            GoogleAlertsCollector googleAlerts, WordPressFeedCollector wordpress) {
+                            WordPressFeedCollector wordpress) {
         this.registry = registry;
         collectors.put(CollectorSource.GOOGLE_NEWS, googleNews);
-        collectors.put(CollectorSource.GOOGLE_ALERTS, googleAlerts);
         collectors.put(CollectorSource.WORDPRESS, wordpress);
     }
 
