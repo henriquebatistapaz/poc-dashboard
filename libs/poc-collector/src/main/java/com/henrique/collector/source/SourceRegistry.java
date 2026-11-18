@@ -12,6 +12,13 @@ public final class SourceRegistry {
                 "Observed public RSS route; Google does not publish an API contract for it.");
         register(CollectorSource.WORDPRESS, CapabilityStatus.AVAILABLE,
                 "Searches public WordPress.com tag RSS feeds for the supplied keyword.");
+        register(CollectorSource.MASTODON, CapabilityStatus.AVAILABLE, "Uses the public Mastodon.social hashtag timeline.");
+        register(CollectorSource.LEMMY, CapabilityStatus.AVAILABLE, "Uses the public Lemmy.world post search API.");
+        register(CollectorSource.DEV_TO, CapabilityStatus.AVAILABLE, "Uses the public DEV.to articles API.");
+        register(CollectorSource.HACKER_NEWS, CapabilityStatus.AVAILABLE, "Uses the public Hacker News Algolia search API.");
+        register(CollectorSource.STACK_EXCHANGE, CapabilityStatus.AVAILABLE, "Uses the public Stack Exchange API for Stack Overflow.");
+        register(CollectorSource.GITHUB, CapabilityStatus.AVAILABLE, "Uses the public GitHub repository search API.");
+        register(CollectorSource.TABNEWS, CapabilityStatus.AVAILABLE, "Uses the public TabNews contents API.");
         register(CollectorSource.ISSUU, CapabilityStatus.UNAVAILABLE,
                 "Issuu's first-party API requires an account token and does not document public publication search; no public feed route is verified.");
     }

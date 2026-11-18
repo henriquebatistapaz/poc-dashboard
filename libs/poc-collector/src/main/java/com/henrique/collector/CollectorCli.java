@@ -11,7 +11,7 @@ public final class CollectorCli {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: java -jar poc-collector.jar <google-news|wordpress> [query]");
+            System.err.println("Usage: java -jar poc-collector.jar <google-news|wordpress|mastodon|lemmy|dev-to|hacker-news|stack-exchange|github|tabnews> [query]");
             System.exit(2);
         }
         var fetcher = new JdkHttpFeedFetcher();
@@ -23,11 +23,19 @@ public final class CollectorCli {
             CollectorSource source = switch (args[0].toLowerCase()) {
                 case "google-news" -> CollectorSource.GOOGLE_NEWS;
                 case "wordpress" -> CollectorSource.WORDPRESS;
+                case "mastodon" -> CollectorSource.MASTODON;
+                case "lemmy" -> CollectorSource.LEMMY;
+                case "dev-to" -> CollectorSource.DEV_TO;
+                case "hacker-news" -> CollectorSource.HACKER_NEWS;
+                case "stack-exchange" -> CollectorSource.STACK_EXCHANGE;
+                case "github" -> CollectorSource.GITHUB;
+                case "tabnews" -> CollectorSource.TABNEWS;
                 case "issuu" -> CollectorSource.ISSUU;
-                default -> throw new IllegalArgumentException("Unknown source. Use google-news, wordpress, or issuu.");
+                default -> throw new IllegalArgumentException("Unknown or unavailable source.");
             };
             String input = switch (source) {
-                case GOOGLE_NEWS, WORDPRESS -> String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
+                case GOOGLE_NEWS, WORDPRESS, MASTODON, LEMMY, DEV_TO, HACKER_NEWS, STACK_EXCHANGE, GITHUB, TABNEWS ->
+                        String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
                 default -> "";
             };
             List<FeedItem> items = service.collect(source, input);

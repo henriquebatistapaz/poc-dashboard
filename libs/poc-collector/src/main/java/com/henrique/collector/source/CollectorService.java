@@ -11,9 +11,24 @@ public final class CollectorService {
 
     public CollectorService(SourceRegistry registry, GoogleNewsCollector googleNews,
                             WordPressFeedCollector wordpress) {
+        this(registry, googleNews, wordpress, new MastodonCollector(), new LemmyCollector(), new DevToCollector(),
+                new HackerNewsCollector(), new StackExchangeCollector(), new GitHubCollector(), new TabNewsCollector());
+    }
+
+    public CollectorService(SourceRegistry registry, GoogleNewsCollector googleNews,
+                            WordPressFeedCollector wordpress, MastodonCollector mastodon, LemmyCollector lemmy,
+                            DevToCollector devTo, HackerNewsCollector hackerNews,
+                            StackExchangeCollector stackExchange, GitHubCollector github, TabNewsCollector tabNews) {
         this.registry = registry;
         collectors.put(CollectorSource.GOOGLE_NEWS, googleNews);
         collectors.put(CollectorSource.WORDPRESS, wordpress);
+        collectors.put(CollectorSource.MASTODON, mastodon);
+        collectors.put(CollectorSource.LEMMY, lemmy);
+        collectors.put(CollectorSource.DEV_TO, devTo);
+        collectors.put(CollectorSource.HACKER_NEWS, hackerNews);
+        collectors.put(CollectorSource.STACK_EXCHANGE, stackExchange);
+        collectors.put(CollectorSource.GITHUB, github);
+        collectors.put(CollectorSource.TABNEWS, tabNews);
     }
 
     public List<FeedItem> collect(CollectorSource source, String input) {
