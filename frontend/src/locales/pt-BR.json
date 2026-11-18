@@ -11,6 +11,17 @@
     "unavailableLink": "Link indisponível",
     "workspace": "Workspace"
   },
+  "theme": {
+    "label": "Tema",
+    "auto": "Automático",
+    "light": "Claro",
+    "dark": "Escuro"
+  },
+  "nav": {
+    "openMenu": "Abrir menu de navegação",
+    "closeMenu": "Fechar menu de navegação",
+    "menuTitle": "Navegação do workspace"
+  },
   "login": {
     "eyebrow": "SEU WORKSPACE PRIVADO",
     "headline": "Boas fontes. Novas perspectivas.",
@@ -136,7 +147,8 @@
     "previous": "Anterior",
     "next": "Próxima",
     "page": "Página {page} de {pages}",
-    "pageSize": "Itens por página"
+    "pageSize": "Itens por página",
+    "tableRegion": "Tabela de itens coletados"
   },
   "details": {
     "title": "Detalhes do item",
