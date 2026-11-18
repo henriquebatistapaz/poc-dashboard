@@ -11,8 +11,7 @@ Private Java 27 / Maven 3.9 library and standalone synthetic-post API using Spri
 | `RSS` | Public RSS 2.0 / Atom 1.0 URL | Reuses the RSS library's bounded HTTP fetcher and parser |
 | `GOOGLE_NEWS` | Search query, up to 200 characters | Reuses the existing Google News collector |
 | `GOOGLE_ALERTS` | User-owned Google Alerts feed URL | Treat the URL as a secret; do not log or commit it |
-| `WORDPRESS` | Public HTTPS feed URL | Reuses the existing WordPress URL policy and collector |
-| `REDDIT` | Subreddit | Requires official approval and all existing OAuth environment settings |
+| `WORDPRESS` | Search keyword (normalized to tag slug) | Searches public WordPress.com tag RSS feeds (`wordpress.com/tag/<slug>/feed/`) |
 | `ALPHA`, `BETA` | Synthetic fixture JSON | Reuses the existing social adapters, not real social providers |
 | `ISSUU` | Any input | Unavailable until a permitted route is verified |
 
