@@ -4,6 +4,10 @@ import com.example.rsscollector.application.RssFeedLinkValidator;
 import com.henrique.collector.feed.RssFeedParser;
 import com.henrique.collector.source.*;
 import java.nio.charset.StandardCharsets;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -63,5 +67,56 @@ class DefaultCollectionGatewayTest {
         assertThrows(SourceAccessException.class, () -> DefaultCollectionGateway.fromEnvironment(Map.of()).collect(CollectionSource.ISSUU, "anything"));
         assertThrows(IllegalArgumentException.class, () -> gateway.collect(CollectionSource.WORDPRESS, "   "));
         assertThrows(IllegalArgumentException.class, () -> gateway.collect(CollectionSource.RSS, "http://127.0.0.1/feed"));
+    }
+
+    @Test
+    void dispatchesEveryNewRestSourceThroughLocalFixtures() throws IOException {
+        Map<String, String> bodies = Map.of(
+                "/mastodon", "[{\"id\":\"m1\",\"content\":\"<p>Mastodon fixture</p>\",\"url\":\"https://mastodon.social/@x/1\"}]",
+                "/lemmy", "{\"posts\":[{\"post\":{\"id\":1,\"name\":\"Lemmy fixture\",\"url\":\"https://lemmy.world/post/1\"}}]}",
+                "/devto", "[{\"id\":2,\"title\":\"DEV fixture\",\"url\":\"https://dev.to/x/2\"}]",
+                "/hn", "{\"hits\":[{\"objectID\":\"3\",\"title\":\"HN fixture\",\"url\":\"https://news.ycombinator.com/item?id=3\"}]}",
+                "/stack", "{\"items\":[{\"question_id\":4,\"title\":\"Stack fixture\",\"link\":\"https://stackoverflow.com/q/4\"}]}",
+                "/github", "{\"items\":[{\"id\":5,\"full_name\":\"org/repo\",\"html_url\":\"https://github.com/org/repo\"}]}",
+                "/tabnews", "[{\"id\":\"6\",\"owner_username\":\"dev\",\"slug\":\"post\",\"title\":\"TabNews fixture\"}]");
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/", exchange -> {
+            String path = exchange.getRequestURI().getPath();
+            String key = path.startsWith("/mastodon/") ? "/mastodon" : path;
+            byte[] body = bodies.getOrDefault(key, "{}").getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+        try {
+            URI base = URI.create("http://127.0.0.1:" + server.getAddress().getPort());
+            Map<CollectionSource, URI> endpoints = Map.of(
+                    CollectionSource.MASTODON, base.resolve("/mastodon"), CollectionSource.LEMMY, base.resolve("/lemmy"),
+                    CollectionSource.DEV_TO, base.resolve("/devto"), CollectionSource.HACKER_NEWS, base.resolve("/hn"),
+                    CollectionSource.STACK_EXCHANGE, base.resolve("/stack"), CollectionSource.GITHUB, base.resolve("/github"),
+                    CollectionSource.TABNEWS, base.resolve("/tabnews"));
+            var gateway = DefaultCollectionGateway.fromEnvironment(Map.of(), endpoints);
+            Map<CollectionSource, String> inputs = Map.of(
+                    CollectionSource.MASTODON, "java", CollectionSource.LEMMY, "linux", CollectionSource.DEV_TO, "spring",
+                    CollectionSource.HACKER_NEWS, "java", CollectionSource.STACK_EXCHANGE, "java",
+                    CollectionSource.GITHUB, "java", CollectionSource.TABNEWS, "relevant");
+            Map<CollectionSource, String> slugs = Map.of(
+                    CollectionSource.MASTODON, "mastodon", CollectionSource.LEMMY, "lemmy", CollectionSource.DEV_TO, "dev-to",
+                    CollectionSource.HACKER_NEWS, "hacker-news", CollectionSource.STACK_EXCHANGE, "stack-exchange",
+                    CollectionSource.GITHUB, "github", CollectionSource.TABNEWS, "tabnews");
+            for (CollectionSource source : CollectionSource.values()) {
+                if (!inputs.containsKey(source)) continue;
+                try {
+                    var item = gateway.collect(source, inputs.get(source)).getFirst();
+                    assertEquals(slugs.get(source), item.source());
+                } catch (RuntimeException exception) {
+                    throw new AssertionError("Local REST fixture failed for " + source, exception);
+                }
+            }
+        } finally {
+            server.stop(0);
+        }
     }
 }
