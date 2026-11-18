@@ -1,4 +1,4 @@
-export type CollectionSource = 'RSS' | 'GOOGLE_NEWS' | 'GOOGLE_ALERTS' | 'WORDPRESS' | 'ALPHA' | 'BETA'
+export type CollectionSource = 'RSS' | 'GOOGLE_NEWS' | 'WORDPRESS' | 'ALPHA' | 'BETA'
 export interface Item {
   id: number
   source: string

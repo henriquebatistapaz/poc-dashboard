@@ -1,6 +1,6 @@
 # Multi-Source Collector Mini
 
-Private Java 27 / Maven 3.9 command-line collector for public RSS/Atom links. It reads Google News search RSS, a user-provided Google Alerts RSS URL, and public WordPress.com tag RSS feeds. Every returned item contains only source, stable ID, title, link, and timestamps. The collector compiles and runs on Java 27.
+Private Java 27 / Maven 3.9 command-line collector for public RSS/Atom links. It reads Google News search RSS and public WordPress.com tag RSS feeds. Every returned item contains only source, stable ID, title, link, and timestamps. The collector compiles and runs on Java 27.
 
 ## Build and tests
 
@@ -15,22 +15,13 @@ mvn package
 java -jar target/poc-collector-0.1.0-SNAPSHOT.jar google-news "open data Brazil"
 ```
 
-For Google Alerts, create and configure an alert in the Google account first, then provide its RSS feed URL through the environment. The URL is a secret and must not be stored in shell history, Git, logs, or screenshots.
-
-```bash
-read -s GOOGLE_ALERTS_FEED_URL
-export GOOGLE_ALERTS_FEED_URL
-java -jar target/poc-collector-0.1.0-SNAPSHOT.jar google-alerts
-unset GOOGLE_ALERTS_FEED_URL
-```
-
 For public WordPress.com tag search:
 
 ```bash
 java -jar target/poc-collector-0.1.0-SNAPSHOT.jar wordpress java
 ```
 
-The program prints a JSON array of normalized feed items to stdout. Google Alerts fetch/parse errors omit the secret URL. Feed requests have timeouts, a 1 MB response cap, and redirects disabled. Public HTTPS feeds reject private network destinations.
+The program prints a JSON array of normalized feed items to stdout. Feed requests have timeouts, a 1 MB response cap, and redirects disabled. Public HTTPS feeds reject private network destinations.
 
 ## REST API, schedules, and persistence
 
@@ -59,7 +50,6 @@ Scheduled source inputs are encrypted at rest. Losing or changing `COLLECTOR_SEC
 ## Source status
 
 - **Google News:** implemented using its observed search RSS URL shape. Google does not provide an official API contract for this endpoint, so behavior may change.
-- **Google Alerts:** implemented only for a user-supplied feed URL if the user's account exposes one. Current Google help describes email alerts but does not document RSS delivery; no account feed URL is included in this repository.
 - **WordPress:** implemented via public WordPress.com tag RSS feeds (`https://wordpress.com/tag/<slug>/feed/`).
 - **Issuu:** unavailable for public discovery. Issuu's first-party [API SDK](https://github.com/issuu/issuu-api-sdk) uses an account token for authenticated account/publication operations; it does not document an unauthenticated public search/feed API. No scraping or hidden endpoints are used.
 

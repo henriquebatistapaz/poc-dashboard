@@ -9,9 +9,8 @@ class SourceRegistryTest {
     @Test
     void describesCapabilityOfEveryRequestedSource() {
         SourceRegistry registry = new SourceRegistry();
-        assertEquals(4, registry.all().size());
+        assertEquals(3, registry.all().size());
         assertEquals(CapabilityStatus.CONDITIONAL, registry.get(CollectorSource.GOOGLE_NEWS).status());
-        assertEquals(CapabilityStatus.CONDITIONAL, registry.get(CollectorSource.GOOGLE_ALERTS).status());
         assertEquals(CapabilityStatus.AVAILABLE, registry.get(CollectorSource.WORDPRESS).status());
         assertEquals(CapabilityStatus.UNAVAILABLE, registry.get(CollectorSource.ISSUU).status());
     }
@@ -22,9 +21,8 @@ class SourceRegistryTest {
         var fetcher = (com.henrique.collector.feed.FeedFetcher) uri -> new byte[0];
         var parser = new RssFeedParser();
         var news = new GoogleNewsCollector(fetcher, parser);
-        var alerts = new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy());
         var wordpress = new WordPressFeedCollector(fetcher, parser);
-        CollectorService service = new CollectorService(registry, news, alerts, wordpress);
+        CollectorService service = new CollectorService(registry, news, wordpress);
         assertThrows(SourceAccessException.class, () -> service.collect(CollectorSource.ISSUU, "example"));
     }
 }
