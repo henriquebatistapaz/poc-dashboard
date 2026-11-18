@@ -11,6 +11,17 @@
     "unavailableLink": "Link unavailable",
     "workspace": "Workspace"
   },
+  "theme": {
+    "label": "Theme",
+    "auto": "Auto",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "nav": {
+    "openMenu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
+    "menuTitle": "Workspace navigation"
+  },
   "login": {
     "eyebrow": "YOUR PRIVATE WORKSPACE",
     "headline": "Good sources. Fresh perspectives.",
@@ -136,7 +147,8 @@
     "previous": "Previous",
     "next": "Next",
     "page": "Page {page} of {pages}",
-    "pageSize": "Items per page"
+    "pageSize": "Items per page",
+    "tableRegion": "Collected items table"
   },
   "details": {
     "title": "Item details",
