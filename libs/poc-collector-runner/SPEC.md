@@ -8,7 +8,7 @@ Compose the existing RSS/Atom library, source collectors and synthetic social ad
 
 ## Acceptance criteria
 
-- RSS/Atom, Google News, Google Alerts, WordPress and synthetic Alpha/Beta dispatch to their existing implementations.
+- RSS/Atom, Google News, WordPress, Mastodon, Lemmy, DEV.to, Hacker News, Stack Exchange, GitHub, TabNews and synthetic Alpha/Beta dispatch to their existing implementations. Google Alerts collection and scheduling are removed.
 - Official Reddit approval/OAuth gating and Issuu unavailability remain enforced.
 - A source result becomes canonical source, external ID, title, link and optional publication date; the writer adds collection time.
 - PostgreSQL uniqueness enforces first-write-wins `(source, external_id)` across retries, processes and concurrent calls.
