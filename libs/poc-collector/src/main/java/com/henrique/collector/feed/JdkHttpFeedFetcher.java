@@ -79,20 +79,19 @@ public final class JdkHttpFeedFetcher implements FeedFetcher {
             tls.setSSLParameters(parameters);
             tls.startHandshake();
 
-            try (OutputStream output = tls.getOutputStream()) {
-                String path = uri.getRawPath();
-                if (path == null || path.isEmpty()) path = "/";
-                if (uri.getRawQuery() != null) path += "?" + uri.getRawQuery();
-                String hostHeader = uri.getHost() + (port == 443 ? "" : ":" + port);
-                String request = "GET " + path + " HTTP/1.1\r\n"
-                        + "Host: " + hostHeader + "\r\n"
-                        + "Accept: application/rss+xml, application/atom+xml, application/xml, text/xml\r\n"
-                        + "Accept-Encoding: identity\r\n"
-                        + "Connection: close\r\n"
-                        + "User-Agent: MultiSourceCollectorMini/0.1 (+private project feed reader)\r\n\r\n";
-                output.write(request.getBytes(StandardCharsets.US_ASCII));
-                output.flush();
-            }
+            OutputStream output = tls.getOutputStream();
+            String path = uri.getRawPath();
+            if (path == null || path.isEmpty()) path = "/";
+            if (uri.getRawQuery() != null) path += "?" + uri.getRawQuery();
+            String hostHeader = uri.getHost() + (port == 443 ? "" : ":" + port);
+            String request = "GET " + path + " HTTP/1.1\r\n"
+                    + "Host: " + hostHeader + "\r\n"
+                    + "Accept: application/rss+xml, application/atom+xml, application/xml, text/xml\r\n"
+                    + "Accept-Encoding: identity\r\n"
+                    + "Connection: close\r\n"
+                    + "User-Agent: MultiSourceCollectorMini/0.1 (+private project feed reader)\r\n\r\n";
+            output.write(request.getBytes(StandardCharsets.US_ASCII));
+            output.flush();
 
             try (InputStream input = tls.getInputStream()) {
                 HttpHeaders response = readHeaders(input);

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.henrique.collector.feed.RssFeedParser;
 import com.henrique.collector.source.*;
 import com.henrique.dashboard.repository.CollectedItemRepository;
-import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -102,7 +101,7 @@ class DashboardRunnerPostgresIT {
                 {"items":[{"postId":"fixture-1","authorName":"demo","body":"Integration title",
                 "publishedAt":"2026-11-06T00:00:00Z","link":"https://example.org/item"}]}
                 """;
-            case RSS, WORDPRESS -> "https://example.org/feed";
+            case RSS -> "https://example.org/feed";
             case GOOGLE_ALERTS -> "https://www.google.com/alerts/feeds/demo/secret";
             default -> "java";
         };
@@ -139,11 +138,9 @@ class DashboardRunnerPostgresIT {
     @Test
     void disabledSourcesNeverPersistAndPrivateRssUrlsAreRejected() throws Exception {
         String token = login();
-        var reddit = awaitRun(collect(CollectionSource.REDDIT, "java", token), token);
-        assertEquals("FAILED", reddit.path("status").asText());
-        assertEquals("Source unavailable; check approval and runtime configuration", reddit.path("errorMessage").asText());
         var issuu = awaitRun(collect(CollectionSource.ISSUU, "demo", token), token);
         assertEquals("FAILED", issuu.path("status").asText());
+        assertEquals("Source unavailable; check approval and runtime configuration", issuu.path("errorMessage").asText());
         var privateRss = awaitRun(collect(CollectionSource.RSS, "http://127.0.0.1/private", token), token);
         assertEquals("FAILED", privateRss.path("status").asText());
         assertEquals("Invalid source input or unsupported item fields", privateRss.path("errorMessage").asText());
@@ -167,13 +164,9 @@ class DashboardRunnerPostgresIT {
                 """;
             com.henrique.collector.feed.FeedFetcher fetcher = uri -> rss.getBytes(StandardCharsets.UTF_8);
             var parser = new RssFeedParser();
-            var redditConfig = RedditOAuthConfig.fromEnvironment(Map.of());
-            var redditTransport = new JdkRedditHttpTransport();
             var service = new CollectorService(new SourceRegistry(), new GoogleNewsCollector(fetcher, parser),
                     new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
-                    new WordPressFeedCollector(fetcher, parser, new PublicHttpsFeedUrlPolicy(host ->
-                            new InetAddress[]{InetAddress.getByAddress(new byte[]{8,8,8,8})})),
-                    new RedditCollector(redditConfig, new RedditOAuthTokenProvider(redditConfig, redditTransport), redditTransport));
+                    new WordPressFeedCollector(fetcher, parser));
             var urls = new RssFeedLinkValidator();
             // Only upstream fetching/DNS are fixtures: parsers, runner, SQL, Flyway, security and HTTP API are real.
             return new DefaultCollectionGateway(service, url -> atom,
