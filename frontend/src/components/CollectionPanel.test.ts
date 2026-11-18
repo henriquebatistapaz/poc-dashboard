@@ -44,7 +44,7 @@ describe('manual collection', () => {
 
   it('supports all source types, empty results, dismiss and view actions', async () => {
     const wrapper = render()
-    for (const source of ['ALPHA', 'BETA', 'GOOGLE_NEWS', 'WORDPRESS', 'MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS'] as const) {
+    for (const source of ['ALPHA', 'BETA', 'GOOGLE_NEWS', 'WORDPRESS', 'MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS', 'WIKIPEDIA', 'GITLAB', 'LOBSTERS'] as const) {
       await wrapper.get('#collection-source').setValue(source)
       expect(wrapper.find('#collection-input').exists()).toBe(true)
     }
@@ -71,7 +71,7 @@ describe('manual collection', () => {
 
   it('shows two localized REST examples and help for every new source', async () => {
     const wrapper = render()
-    const sources = ['MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS'] as const
+    const sources = ['MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS', 'WIKIPEDIA', 'GITLAB', 'LOBSTERS'] as const
     for (const source of sources) {
       await wrapper.get('#collection-source').setValue(source)
       expect(wrapper.findAll('.feed-examples button')).toHaveLength(2)
@@ -83,7 +83,7 @@ describe('manual collection', () => {
     }
     for (const locale of ['en', 'es'] as const) {
       i18n.global.locale.value = locale
-      await wrapper.get('#collection-source').setValue('GITHUB')
+      await wrapper.get('#collection-source').setValue('WIKIPEDIA')
       await nextTick()
       expect(wrapper.find('.field-help')?.text()).toContain(locale === 'en' ? 'no credentials' : 'sin credenciales')
       expect(wrapper.findAll('.feed-examples button')).toHaveLength(2)

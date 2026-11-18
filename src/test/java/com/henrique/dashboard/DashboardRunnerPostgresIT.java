@@ -117,7 +117,7 @@ class DashboardRunnerPostgresIT {
     }
 
     @ParameterizedTest
-    @EnumSource(value = CollectionSource.class, names = {"ALPHA", "BETA", "RSS", "GOOGLE_NEWS", "WORDPRESS", "MASTODON", "LEMMY", "DEV_TO", "HACKER_NEWS", "STACK_EXCHANGE", "GITHUB", "TABNEWS"})
+    @EnumSource(value = CollectionSource.class, names = {"ALPHA", "BETA", "RSS", "GOOGLE_NEWS", "WORDPRESS", "MASTODON", "LEMMY", "DEV_TO", "HACKER_NEWS", "STACK_EXCHANGE", "GITHUB", "TABNEWS", "WIKIPEDIA", "GITLAB", "LOBSTERS"})
     void collectsParsesPersistsDeduplicatesAndQueriesOverHttp(CollectionSource source) throws Exception {
         String input = switch (source) {
             case ALPHA -> """
@@ -130,11 +130,12 @@ class DashboardRunnerPostgresIT {
                 """;
             case RSS -> "https://example.org/feed";
             case TABNEWS -> "relevant";
+            case LOBSTERS -> "hottest";
             default -> "java";
         };
         String token = login();
         var first = collect(source, input, token);
-        assertEquals(HttpStatus.ACCEPTED, first.getStatusCode(), first.getBody());
+        assertEquals(HttpStatus.ACCEPTED, first.getStatusCode(), source + " input=" + input + ": " + first.getBody());
         JsonNode firstRun = awaitRun(first, token);
         assertEquals("SUCCEEDED", firstRun.path("status").asText(), firstRun.toString());
         assertEquals(1, firstRun.path("inserted").asInt());
@@ -149,12 +150,18 @@ class DashboardRunnerPostgresIT {
         var headers = new HttpHeaders();
         headers.set("X-API-Key", "integration-reader");
         String storedSource = source.name().toLowerCase(java.util.Locale.ROOT).replace('_', '-');
-        var listed = exchange("/v1/items?source=" + storedSource + "&q=integration&size=1", HttpMethod.GET, new HttpEntity<>(headers));
+        var listed = exchange("/v1/items?source=" + storedSource + "&size=1", HttpMethod.GET, new HttpEntity<>(headers));
         assertEquals(HttpStatus.OK, listed.getStatusCode());
         JsonNode body = json.readTree(listed.getBody());
         assertEquals(1, body.path("total").asInt());
         JsonNode item = body.path("items").get(0);
-        String expectedTitle = source == CollectionSource.GITHUB ? "org/repo — Integration title" : "Integration title";
+        String expectedTitle = switch (source) {
+            case GITHUB -> "org/repo — Integration title";
+            case WIKIPEDIA -> "Wikipedia fixture";
+            case GITLAB -> "org/project";
+            case LOBSTERS -> "Lobsters fixture";
+            default -> "Integration title";
+        };
         String expectedLink = switch (source) {
             case MASTODON -> "https://mastodon.social/@demo/1";
             case LEMMY -> "https://lemmy.world/post/1";
@@ -163,11 +170,14 @@ class DashboardRunnerPostgresIT {
             case STACK_EXCHANGE -> "https://stackoverflow.com/q/4";
             case GITHUB -> "https://github.com/org/repo";
             case TABNEWS -> "https://www.tabnews.com.br/demo/post";
+            case WIKIPEDIA -> "https://en.wikipedia.org/?curid=42";
+            case GITLAB -> "https://gitlab.com/org/project";
+            case LOBSTERS -> "https://example.org/lobsters";
             default -> "https://example.org/item";
         };
         assertEquals(expectedTitle, item.path("title").asText());
         assertEquals(expectedLink, item.path("link").asText());
-        var enumListed = exchange("/v1/items?source=" + source.name() + "&q=integration&size=1", HttpMethod.GET,
+        var enumListed = exchange("/v1/items?source=" + source.name() + "&size=1", HttpMethod.GET,
                 new HttpEntity<>(headers));
         assertEquals(1, json.readTree(enumListed.getBody()).path("total").asInt());
         assertFalse(item.path("collectedAt").asText().isBlank());
@@ -216,7 +226,10 @@ class DashboardRunnerPostgresIT {
                         "/hn", "{\"hits\":[{\"objectID\":\"3\",\"title\":\"Integration title\",\"url\":\"https://news.ycombinator.com/item?id=3\"}]}",
                         "/stack", "{\"items\":[{\"question_id\":4,\"title\":\"Integration title\",\"link\":\"https://stackoverflow.com/q/4\"}]}",
                         "/github", "{\"items\":[{\"id\":5,\"full_name\":\"org/repo\",\"description\":\"Integration title\",\"html_url\":\"https://github.com/org/repo\"}]}",
-                        "/tabnews", "[{\"id\":\"6\",\"owner_username\":\"demo\",\"slug\":\"post\",\"title\":\"Integration title\"}]");
+                        "/tabnews", "[{\"id\":\"6\",\"owner_username\":\"demo\",\"slug\":\"post\",\"title\":\"Integration title\"}]",
+                        "/w/api.php", "{\"query\":{\"search\":[{\"pageid\":42,\"title\":\"Wikipedia fixture\",\"timestamp\":\"2026-11-18T12:00:00Z\"}]}}",
+                        "/api/v4/projects", "[{\"id\":7,\"name_with_namespace\":\"org/project\",\"web_url\":\"https://gitlab.com/org/project\",\"last_activity_at\":\"2026-11-18T12:00:00Z\"}]",
+                        "/hottest.json", "[{\"short_id\":\"abc123\",\"title\":\"Lobsters fixture\",\"url\":\"https://example.org/lobsters\",\"created_at\":\"2026-11-18T12:00:00Z\"}]");
                 server.createContext("/", exchange -> {
                     String path = exchange.getRequestURI().getPath();
                     String key = path.startsWith("/mastodon/") ? "/mastodon" : path;
@@ -259,9 +272,11 @@ class DashboardRunnerPostgresIT {
                     CollectionSource.MASTODON, base.resolve("/mastodon"), CollectionSource.LEMMY, base.resolve("/lemmy"),
                     CollectionSource.DEV_TO, base.resolve("/devto"), CollectionSource.HACKER_NEWS, base.resolve("/hn"),
                     CollectionSource.STACK_EXCHANGE, base.resolve("/stack"), CollectionSource.GITHUB, base.resolve("/github"),
-                    CollectionSource.TABNEWS, base.resolve("/tabnews")));
+                    CollectionSource.TABNEWS, base.resolve("/tabnews"), CollectionSource.WIKIPEDIA, base.resolve("/w/api.php"),
+                    CollectionSource.GITLAB, base.resolve("/api/v4/projects"), CollectionSource.LOBSTERS, base));
             CollectionGateway delegate = (source, input) -> switch (source) {
-                case MASTODON, LEMMY, DEV_TO, HACKER_NEWS, STACK_EXCHANGE, GITHUB, TABNEWS -> restSources.collect(source, input);
+                case MASTODON, LEMMY, DEV_TO, HACKER_NEWS, STACK_EXCHANGE, GITHUB, TABNEWS,
+                        WIKIPEDIA, GITLAB, LOBSTERS -> restSources.collect(source, input);
                 default -> existingSources.collect(source, input);
             };
             return new RemovalAwareCollectionGateway(delegate, removals);

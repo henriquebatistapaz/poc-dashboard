@@ -77,18 +77,28 @@ test('RSS collection, deduplication, details and authenticated UI', async ({ pag
   await expect(page.getByRole('heading', { name: 'Entre no seu workspace' })).toBeVisible()
 })
 
-test('shows the seven public REST sources with working examples in the selector', async ({ page }) => {
+test('shows the ten public REST sources with working examples in the selector', async ({ page }) => {
   await mockApi(page); await login(page)
   const select = page.locator('#collection-source')
   for (const [source, sample] of [
     ['MASTODON', 'java'], ['LEMMY', 'linux'], ['DEV_TO', 'spring boot'],
     ['HACKER_NEWS', 'postgres'], ['STACK_EXCHANGE', 'spring boot'], ['GITHUB', 'spring boot'], ['TABNEWS', 'java'],
+    ['WIKIPEDIA', 'sistema solar'], ['GITLAB', 'spring boot'], ['LOBSTERS', 'hottest'],
   ]) {
     await select.selectOption(source)
     await expect(page.locator('.feed-examples button')).toHaveCount(2)
     await page.locator('.feed-examples button').first().click()
     await expect(page.locator('#collection-input')).toHaveValue(sample)
   }
+})
+
+test('submits selected open source and example input without external network access', async ({ page }) => {
+  await mockApi(page); await login(page)
+  await page.locator('#collection-source').selectOption('WIKIPEDIA')
+  await page.getByRole('button', { name: 'sistema solar' }).click()
+  const sent = page.waitForRequest(request => request.url().endsWith('/v1/collections'))
+  await page.getByRole('button', { name: 'Coletar agora' }).click()
+  expect((await sent).postDataJSON()).toEqual({ source: 'WIKIPEDIA', input: 'sistema solar' })
 })
 
 test('resumes tracking an asynchronous collection from recent history', async ({ page }) => {
