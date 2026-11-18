@@ -25,7 +25,7 @@ No separate runner HTTP server is needed. Dashboard migrations own `collected_it
 {"source":"GOOGLE_NEWS","input":"Java Spring Boot"}
 ```
 
-Sources: `RSS` (public RSS/Atom URL), `GOOGLE_NEWS` (query), `GOOGLE_ALERTS` (user-owned secret feed URL), `WORDPRESS` (public HTTPS feed URL), `REDDIT` (subreddit with approved OAuth access), `ALPHA`/`BETA` (synthetic fixture JSON). `ISSUU` remains disabled. Do not log, share or commit Google Alerts URLs. Source inputs are limited to 4,096 characters; a synchronous run supports at most 1,000 items. Requests use enum names exactly as shown.
+Sources: `RSS` (public RSS/Atom URL), `GOOGLE_NEWS` (query), `GOOGLE_ALERTS` (user-owned secret feed URL), `WORDPRESS` (keyword/tag query), `ALPHA`/`BETA` (synthetic fixture JSON). `ISSUU` remains disabled. Do not log, share or commit Google Alerts URLs. Source inputs are limited to 4,096 characters; a synchronous run supports at most 1,000 items. Requests use enum names exactly as shown.
 
 Response: `source`, `fetched`, `inserted`, `duplicates`. Duplicates use `(source, external_id)` and preserve the first stored item. RSS IDs additionally include a feed URL hash namespace. The complete batch rolls back if persistence fails. Calls are synchronous; there is no background job or persistent run history yet.
 
@@ -59,8 +59,6 @@ Paste the printed hash as a single-quoted `.env` value, e.g. `DASHBOARD_ADMIN_PA
 
 Login returns `accessToken`, `tokenType=Bearer`, `expiresIn=900`. JWTs use HS256 and verify issuer, signature and expiration. `DASHBOARD_JWT_SECRET` must contain at least 32 UTF-8 bytes. Login returns 503 until the database has an enabled user and JWT signing is configured. A missing/incorrect/unconfigured API key never grants access. API keys cannot run collections.
 
-Reddit stays disabled by default. Only configure `REDDIT_API_ACCESS_APPROVED`, `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_REFRESH_TOKEN`, `REDDIT_USERNAME` after official access approval. Credentials are passed at runtime and are never committed.
-
 ## Run with Docker Compose
 
 After building the jar and setting local `.env` values:
@@ -81,9 +79,9 @@ mvn test
 mvn -Ppostgres-it verify
 ```
 
-Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP login/collection/query endpoints, actual runner and parsers; only upstream fetches/DNS are deterministic fixtures. They verify RSS/Atom, Google feeds, WordPress and Alpha/Beta; source restrictions remain active. These deterministic tests do not prove live Google/Reddit service availability.
+Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP login/collection/query endpoints, actual runner and parsers; only upstream fetches/DNS are deterministic fixtures. They verify RSS/Atom, Google feeds, WordPress and Alpha/Beta; source restrictions remain active. These deterministic tests do not prove live Google service availability.
 
-A local Compose smoke run also collected real BBC RSS, XKCD Atom, Google News and WordPress feeds (79 items in that run). Repeating each collection inserted zero duplicates, and authenticated queries returned the stored items. External feed contents/counts can change. Google Alerts was validated with fixtures because a user-owned secret feed was not supplied; live Reddit remains gated by official approval and credentials.
+A local Compose smoke run also collected real BBC RSS, XKCD Atom, Google News and WordPress feeds (79 items in that run). Repeating each collection inserted zero duplicates, and authenticated queries returned the stored items. External feed contents/counts can change. Google Alerts was validated with fixtures because a user-owned secret feed was not supplied.
 
 Docker API defaults to 1.44 in the integration profile (`-Ddocker.api.version=...` overrides it).
 

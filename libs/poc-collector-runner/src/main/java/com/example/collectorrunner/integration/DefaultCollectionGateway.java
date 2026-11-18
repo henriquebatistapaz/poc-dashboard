@@ -25,13 +25,10 @@ public final class DefaultCollectionGateway implements CollectionGateway {
     public static DefaultCollectionGateway fromEnvironment(Map<String, String> environment) {
         var fetcher = new JdkHttpFeedFetcher();
         var parser = new com.henrique.collector.feed.RssFeedParser();
-        var transport = new JdkRedditHttpTransport();
-        var redditConfig = RedditOAuthConfig.fromEnvironment(environment);
         var service = new CollectorService(new SourceRegistry(),
                 new GoogleNewsCollector(fetcher, parser),
                 new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
-                new WordPressFeedCollector(fetcher, parser, new PublicHttpsFeedUrlPolicy()),
-                new RedditCollector(redditConfig, new RedditOAuthTokenProvider(redditConfig, transport), transport));
+                new WordPressFeedCollector(fetcher, parser));
         var urls = new RssFeedLinkValidator();
         return new DefaultCollectionGateway(service, new BoundedFeedHttpFetcher(urls),
                 new com.example.rsscollector.application.RssFeedParser(urls), urls);
