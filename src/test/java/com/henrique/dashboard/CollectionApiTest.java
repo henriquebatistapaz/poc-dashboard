@@ -57,6 +57,15 @@ class CollectionApiTest {
     }
 
     @Test
+    void removedGoogleAlertsSourceCannotStartNewCollection() throws Exception {
+        String token = login();
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                .contentType("application/json").content("{\"source\":\"GOOGLE_ALERTS\",\"input\":\"java\"}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(runner);
+    }
+
+    @Test
     void rejectsBadLoginAndInvalidOrExpiredTokens() throws Exception {
         mvc.perform(post("/v1/auth/login").contentType("application/json")
                 .content("{\"email\":\"admin@example.org\",\"password\":\"wrong\"}")).andExpect(status().isUnauthorized());

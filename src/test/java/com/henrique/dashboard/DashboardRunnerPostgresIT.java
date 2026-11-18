@@ -8,6 +8,9 @@ import com.henrique.collector.feed.RssFeedParser;
 import com.henrique.collector.source.*;
 import com.henrique.dashboard.repository.CollectedItemRepository;
 import java.net.URI;
+import java.net.InetSocketAddress;
+import java.io.IOException;
+import com.sun.net.httpserver.HttpServer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,7 +93,7 @@ class DashboardRunnerPostgresIT {
     }
 
     @ParameterizedTest
-    @EnumSource(value = CollectionSource.class, names = {"ALPHA", "BETA", "RSS", "GOOGLE_NEWS", "WORDPRESS"})
+    @EnumSource(value = CollectionSource.class, names = {"ALPHA", "BETA", "RSS", "GOOGLE_NEWS", "WORDPRESS", "MASTODON", "LEMMY", "DEV_TO", "HACKER_NEWS", "STACK_EXCHANGE", "GITHUB", "TABNEWS"})
     void collectsParsesPersistsDeduplicatesAndQueriesOverHttp(CollectionSource source) throws Exception {
         String input = switch (source) {
             case ALPHA -> """
@@ -102,6 +105,7 @@ class DashboardRunnerPostgresIT {
                 "publishedAt":"2026-11-06T00:00:00Z","link":"https://example.org/item"}]}
                 """;
             case RSS -> "https://example.org/feed";
+            case TABNEWS -> "relevant";
             default -> "java";
         };
         String token = login();
@@ -126,8 +130,22 @@ class DashboardRunnerPostgresIT {
         JsonNode body = json.readTree(listed.getBody());
         assertEquals(1, body.path("total").asInt());
         JsonNode item = body.path("items").get(0);
-        assertEquals("Integration title", item.path("title").asText());
-        assertEquals("https://example.org/item", item.path("link").asText());
+        String expectedTitle = source == CollectionSource.GITHUB ? "org/repo — Integration title" : "Integration title";
+        String expectedLink = switch (source) {
+            case MASTODON -> "https://mastodon.social/@demo/1";
+            case LEMMY -> "https://lemmy.world/post/1";
+            case DEV_TO -> "https://dev.to/demo/1";
+            case HACKER_NEWS -> "https://news.ycombinator.com/item?id=3";
+            case STACK_EXCHANGE -> "https://stackoverflow.com/q/4";
+            case GITHUB -> "https://github.com/org/repo";
+            case TABNEWS -> "https://www.tabnews.com.br/demo/post";
+            default -> "https://example.org/item";
+        };
+        assertEquals(expectedTitle, item.path("title").asText());
+        assertEquals(expectedLink, item.path("link").asText());
+        var enumListed = http.exchange("/v1/items?source=" + source.name() + "&q=integration&size=1", HttpMethod.GET,
+                new HttpEntity<>(headers), String.class);
+        assertEquals(1, json.readTree(enumListed.getBody()).path("total").asInt());
         assertFalse(item.path("collectedAt").asText().isBlank());
         var detail = http.exchange("/v1/items/" + item.path("id").asLong(), HttpMethod.GET, new HttpEntity<>(headers), String.class);
         assertEquals(HttpStatus.OK, detail.getStatusCode());
@@ -148,8 +166,36 @@ class DashboardRunnerPostgresIT {
 
     @TestConfiguration(proxyBeanMethods = false)
     static class FixtureConfiguration {
+        @Bean(destroyMethod = "close")
+        FixtureServer restFixtureServer() {
+            try {
+                var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+                Map<String, String> responses = Map.of(
+                        "/mastodon", "[{\"id\":\"rest-1\",\"content\":\"<p>Integration title</p>\",\"url\":\"https://mastodon.social/@demo/1\"}]",
+                        "/lemmy", "{\"posts\":[{\"post\":{\"id\":1,\"name\":\"Integration title\",\"url\":\"https://lemmy.world/post/1\"}}]}",
+                        "/devto", "[{\"id\":2,\"title\":\"Integration title\",\"url\":\"https://dev.to/demo/1\"}]",
+                        "/hn", "{\"hits\":[{\"objectID\":\"3\",\"title\":\"Integration title\",\"url\":\"https://news.ycombinator.com/item?id=3\"}]}",
+                        "/stack", "{\"items\":[{\"question_id\":4,\"title\":\"Integration title\",\"link\":\"https://stackoverflow.com/q/4\"}]}",
+                        "/github", "{\"items\":[{\"id\":5,\"full_name\":\"org/repo\",\"description\":\"Integration title\",\"html_url\":\"https://github.com/org/repo\"}]}",
+                        "/tabnews", "[{\"id\":\"6\",\"owner_username\":\"demo\",\"slug\":\"post\",\"title\":\"Integration title\"}]");
+                server.createContext("/", exchange -> {
+                    String path = exchange.getRequestURI().getPath();
+                    String key = path.startsWith("/mastodon/") ? "/mastodon" : path;
+                    byte[] body = responses.getOrDefault(key, "{}").getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, body.length);
+                    exchange.getResponseBody().write(body);
+                    exchange.close();
+                });
+                server.start();
+                return new FixtureServer(server);
+            } catch (IOException exception) {
+                throw new IllegalStateException(exception);
+            }
+        }
+
         @Bean @Primary
-        CollectionGateway fixtureGateway() {
+        CollectionGateway fixtureGateway(FixtureServer server) {
             String rss = """
                 <rss version="2.0"><channel><title>test</title><item><guid>fixture-1</guid>
                 <title>Integration title</title><link>https://example.org/item</link>
@@ -167,8 +213,22 @@ class DashboardRunnerPostgresIT {
                     new WordPressFeedCollector(fetcher, parser));
             var urls = new RssFeedLinkValidator();
             // Only upstream fetching/DNS are fixtures: parsers, runner, SQL, Flyway, security and HTTP API are real.
-            return new DefaultCollectionGateway(service, url -> atom,
+            var existingSources = new DefaultCollectionGateway(service, url -> atom,
                     new com.example.rsscollector.application.RssFeedParser(urls), urls);
+            URI base = URI.create("http://127.0.0.1:" + server.server().getAddress().getPort());
+            var restSources = DefaultCollectionGateway.fromEnvironment(Map.of(), Map.of(
+                    CollectionSource.MASTODON, base.resolve("/mastodon"), CollectionSource.LEMMY, base.resolve("/lemmy"),
+                    CollectionSource.DEV_TO, base.resolve("/devto"), CollectionSource.HACKER_NEWS, base.resolve("/hn"),
+                    CollectionSource.STACK_EXCHANGE, base.resolve("/stack"), CollectionSource.GITHUB, base.resolve("/github"),
+                    CollectionSource.TABNEWS, base.resolve("/tabnews")));
+            return (source, input) -> switch (source) {
+                case MASTODON, LEMMY, DEV_TO, HACKER_NEWS, STACK_EXCHANGE, GITHUB, TABNEWS -> restSources.collect(source, input);
+                default -> existingSources.collect(source, input);
+            };
         }
+    }
+
+    record FixtureServer(HttpServer server) implements AutoCloseable {
+        @Override public void close() { server.stop(0); }
     }
 }

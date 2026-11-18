@@ -158,8 +158,10 @@ class CollectionRunServiceTest {
         CollectionRun scheduled = new CollectionRun("WORDPRESS", java.time.Instant.now(),
                 java.time.Instant.now().plusSeconds(10), "encrypted");
         scheduled.markRunning(java.time.Instant.now());
+        CollectionRun removedSource = new CollectionRun("GOOGLE_ALERTS", java.time.Instant.now(),
+                java.time.Instant.now().plusSeconds(10), "encrypted-alert-input");
         when(repository.findByStatusIn(List.of(RunStatus.PENDING, RunStatus.RUNNING)))
-                .thenReturn(List.of(pending, running, scheduled));
+                .thenReturn(List.of(pending, running, scheduled, removedSource));
 
         new CollectionRunRecovery(repository).run(null);
 
@@ -167,7 +169,10 @@ class CollectionRunServiceTest {
         assertThat(running.getErrorMessage()).isEqualTo("Interrupted by application restart");
         assertThat(scheduled.getStatus()).isEqualTo(RunStatus.PENDING);
         assertThat(scheduled.getEncryptedInput()).isEqualTo("encrypted");
-        verify(repository).saveAll(List.of(pending, running, scheduled));
+        assertThat(removedSource.getStatus()).isEqualTo(RunStatus.FAILED);
+        assertThat(removedSource.getEncryptedInput()).isNull();
+        assertThat(removedSource.getErrorMessage()).isEqualTo("Scheduled collection source is no longer supported");
+        verify(repository).saveAll(List.of(pending, running, scheduled, removedSource));
     }
 
     @Test
