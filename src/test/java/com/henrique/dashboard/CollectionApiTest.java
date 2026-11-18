@@ -6,6 +6,8 @@ import com.henrique.collector.source.SourceAccessException;
 import java.sql.SQLException;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,6 +63,32 @@ class CollectionApiTest {
         String token = login();
         mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                 .contentType("application/json").content("{\"source\":\"GOOGLE_ALERTS\",\"input\":\"java\"}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(runner);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"WIKIPEDIA, sistema solar", "GITLAB, spring boot", "LOBSTERS, hottest"})
+    void acceptsOpenSourcesWithValidInputs(String source, String input) throws Exception {
+        String token = login();
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                        .contentType("application/json").content(json.writeValueAsString(new CollectionControllerBody(source, input))))
+                .andExpect(status().isAccepted());
+        verify(runner, timeout(2_000)).run(CollectionSource.valueOf(source), input);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"WIKIPEDIA, blank", "WIKIPEDIA, too-long", "GITLAB, too-long", "LOBSTERS, blank", "LOBSTERS, invalid-tag", "LOBSTERS, too-long"})
+    void rejectsInvalidOpenSourceInputsBeforeStartingRun(String source, String invalidKind) throws Exception {
+        String input = switch (invalidKind) {
+            case "blank" -> "   ";
+            case "too-long" -> "x".repeat("LOBSTERS".equals(source) ? 101 : 201);
+            case "invalid-tag" -> "tag-with-hyphen";
+            default -> throw new IllegalArgumentException(invalidKind);
+        };
+        String token = login();
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                        .contentType("application/json").content(json.writeValueAsString(new CollectionControllerBody(source, input))))
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(runner);
     }
