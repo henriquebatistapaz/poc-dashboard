@@ -23,7 +23,6 @@ class DefaultCollectionGatewayTest {
         com.henrique.collector.feed.FeedFetcher fetcher = uri -> RSS.getBytes(StandardCharsets.UTF_8);
         var parser = new RssFeedParser();
         var collectors = new CollectorService(new SourceRegistry(), new GoogleNewsCollector(fetcher, parser),
-                new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
                 new WordPressFeedCollector(fetcher, parser));
         var urls = new RssFeedLinkValidator();
         return new DefaultCollectionGateway(collectors, url -> ATOM,
@@ -35,7 +34,6 @@ class DefaultCollectionGatewayTest {
         var gateway = gateway();
         assertEquals("google-news", gateway.collect(CollectionSource.GOOGLE_NEWS, "java").getFirst().source());
         assertEquals("wordpress", gateway.collect(CollectionSource.WORDPRESS, "java").getFirst().source());
-        assertEquals("google-alerts", gateway.collect(CollectionSource.GOOGLE_ALERTS, "https://www.google.com/alerts/feeds/demo/secret").getFirst().source());
         var rss = gateway.collect(CollectionSource.RSS, "https://example.org/feed").getFirst();
         assertEquals("rss", rss.source());
         assertEquals("Atom title", rss.title());
@@ -65,6 +63,5 @@ class DefaultCollectionGatewayTest {
         assertThrows(SourceAccessException.class, () -> DefaultCollectionGateway.fromEnvironment(Map.of()).collect(CollectionSource.ISSUU, "anything"));
         assertThrows(IllegalArgumentException.class, () -> gateway.collect(CollectionSource.WORDPRESS, "   "));
         assertThrows(IllegalArgumentException.class, () -> gateway.collect(CollectionSource.RSS, "http://127.0.0.1/feed"));
-        assertThrows(IllegalArgumentException.class, () -> gateway.collect(CollectionSource.GOOGLE_ALERTS, "https://example.org/feed"));
     }
 }

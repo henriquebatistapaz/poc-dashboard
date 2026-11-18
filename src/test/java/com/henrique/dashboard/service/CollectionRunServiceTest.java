@@ -72,12 +72,12 @@ class CollectionRunServiceTest {
 
     @Test
     void inputIsNeverPersisted() throws Exception {
-        when(runner.run(CollectionSource.GOOGLE_ALERTS, "secret-query"))
-                .thenReturn(new CollectionRunner.CollectionResult(CollectionSource.GOOGLE_ALERTS, 0, 0, 0));
+        when(runner.run(CollectionSource.RSS, "https://example.org/feed?token=secret-query"))
+                .thenReturn(new CollectionRunner.CollectionResult(CollectionSource.RSS, 0, 0, 0));
 
-        service.start(CollectionSource.GOOGLE_ALERTS, "secret-query");
+        service.start(CollectionSource.RSS, "https://example.org/feed?token=secret-query");
 
-        assertThat(stored.getSource()).isEqualTo("GOOGLE_ALERTS");
+        assertThat(stored.getSource()).isEqualTo("RSS");
         assertThat(stored.toString()).doesNotContain("secret-query");
         assertThat(stored.getErrorMessage()).isNull();
     }
@@ -114,7 +114,7 @@ class CollectionRunServiceTest {
     void sourceAccessFailureStoresFixedMessageWithoutSecretUrl() throws Exception {
         when(runner.run(any(), any())).thenThrow(new SourceAccessException("https://alerts.example/feed?token=SECRET"));
 
-        service.start(CollectionSource.GOOGLE_ALERTS, "ignored");
+        service.start(CollectionSource.RSS, "ignored");
 
         assertThat(stored.getStatus()).isEqualTo(RunStatus.FAILED);
         assertThat(stored.getErrorMessage()).isEqualTo("Source unavailable; check approval and runtime configuration");

@@ -1,6 +1,6 @@
 # Multi-Source Collector Mini — Initial Specification
 
-**Status:** Initial implementation delivered for Google News, Google Alerts, and WordPress tag search
+**Status:** Initial implementation delivered for Google News and WordPress tag search
 **Repository:** Private  
 **Scope:** Minimal RSS/Atom CLI collection for permitted feed sources; unverified sources remain disabled.
 
@@ -9,9 +9,8 @@
 Define a small, private service that discovers and collects public links and limited metadata from the requested sources:
 
 1. Google News
-2. Google Alerts
-3. Issuu
-4. WordPress
+2. Issuu
+3. WordPress
 
 The service must use only access methods that are currently documented or explicitly permitted. A requested source is not a promise that anonymous collection is technically available or allowed. If a source requires a token, written permission, or a platform-approved integration, its anonymous connector must remain disabled instead of bypassing the restriction.
 
@@ -38,10 +37,9 @@ The service must use only access methods that are currently documented or explic
 |---|---|---|---|
 | WordPress | Public WordPress.com tag RSS feeds | **Implemented.** Searches public `wordpress.com/tag/<slug>/feed/` feeds by normalized keyword. | Normalize query to ASCII lowercase slug (1–200 chars). |
 | Google News | Public RSS search feed | **Implemented as conditional.** The observed RSS search route has no official Google API contract and may change. | Use the fixed Google News RSS host and query parameters only; do not scrape HTML. Recheck behavior before production use. |
-| Google Alerts | RSS delivery for a user-configured alert | **Implemented as conditional.** Current official help documents email alerts but does not document RSS delivery. | Accept only a feed URL explicitly obtained by the user from their account. Treat it as a secret; never commit, return, or log it. |
 | Issuu | Anonymous public feed/API | **Unverified.** No official, stable tokenless feed or API contract has been established for this project. | Research official documentation and terms first. No HTML scraping or hidden endpoints; mark unavailable if no permitted route exists. |
 
-**Access modes:** Google News, WordPress tag feeds, and user-supplied Google Alerts RSS feeds use public HTTPS RSS/Atom feeds. Google Alerts feed URLs are treated as secrets.
+**Access modes:** Google News and WordPress tag feeds use public HTTPS RSS/Atom feeds.
 
 ## 4. Functional requirements
 
@@ -73,7 +71,7 @@ Future implementation must:
 - **Connector interface:** validates configuration, fetches within configured limits, and returns normalized candidates.
 - **Feed parser:** secure JDK StAX parser for RSS and Atom, with DTD/external entities disabled, item links restricted to HTTP(S), and a 100-item cap.
 - **Fetch client:** JDK HTTP client with 5-second connect timeout, 10-second request timeout, 1 MB response cap, and redirects disabled.
-- **Source collectors:** Google News search RSS, account-provided Google Alerts RSS URL (conditional), and public WordPress.com tag RSS search.
+- **Source collectors:** Google News search RSS and public WordPress.com tag RSS search.
 - **Source registry/service:** reports capability and prevents collection from disabled sources; Issuu remains unverified.
 - **Output:** CLI emits a minimal JSON array; no persistence or deduplication store is introduced in this slice.
 - **Storage:** undecided; start in memory only if a first implementation slice is approved. Choose durable storage only after retention and deletion requirements are agreed.
@@ -89,7 +87,7 @@ Confirm each public access path, the applicable terms/robots rules, response for
 
 ### Phase 1 — First permitted feed slice (implemented)
 
-Implemented: Google News, Google Alerts (conditional), and WordPress tag search, URL safety checks, deterministic JUnit fixtures, and a CLI.
+Implemented: Google News, WordPress tag search, URL safety checks, deterministic JUnit fixtures, and a CLI.
 
 ### Phase 2 — API and persistence
 
@@ -106,9 +104,8 @@ Define a small OpenAPI contract and persistence model only after collection beha
 ## 9. References
 
 - [WordPress: Feeds](https://developer.wordpress.org/advanced-administration/wordpress/feeds/) — documents built-in RSS and Atom feed types and URLs.
-- [Google Search Help: Create an alert](https://support.google.com/websearch/answer/4815696) — documents alert creation and notification settings; does not define an RSS API.
 - [Google News RSS search route](https://news.google.com/rss/search?q=technology) — observed feed URL example; not an official API reference.
 - [RFC 4287: The Atom Syndication Format](https://www.rfc-editor.org/rfc/rfc4287) — future parser format reference.
 - [RSS 2.0 Specification](https://www.rssboard.org/rss-specification) — future parser format reference.
 
-**Review note:** This matrix is an engineering starting point, not legal advice. Re-check platform documentation and policies before enabling connectors in production. The Google News RSS route is observed and undocumented; Google Alerts RSS is conditional on the user's account exposing it.
+**Review note:** This matrix is an engineering starting point, not legal advice. Re-check platform documentation and policies before enabling connectors in production. The Google News RSS route is observed and undocumented.

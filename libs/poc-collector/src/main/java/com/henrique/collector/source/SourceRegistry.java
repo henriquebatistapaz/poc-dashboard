@@ -10,8 +10,6 @@ public final class SourceRegistry {
     public SourceRegistry() {
         register(CollectorSource.GOOGLE_NEWS, CapabilityStatus.CONDITIONAL,
                 "Observed public RSS route; Google does not publish an API contract for it.");
-        register(CollectorSource.GOOGLE_ALERTS, CapabilityStatus.CONDITIONAL,
-                "Requires a user-provided RSS URL exposed by that user's Google Alerts account.");
         register(CollectorSource.WORDPRESS, CapabilityStatus.AVAILABLE,
                 "Searches public WordPress.com tag RSS feeds for the supplied keyword.");
         register(CollectorSource.ISSUU, CapabilityStatus.UNAVAILABLE,
