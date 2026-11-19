@@ -17,16 +17,16 @@ Backend Java 27 / Spring Boot 4.1.2 (Maven, pacote raiz `com.henrique.dashboard`
 docker compose up --build -d          # só o banco: docker compose up -d postgres
 
 # Testes (sempre rodar antes de considerar uma tarefa concluída) — H2
-mvn test # doc-check: run
+./mvnw test # doc-check: run
 
 # Integração real com PostgreSQL via Testcontainers (exige Docker)
-mvn -Ppostgres-it verify
+./mvnw -Ppostgres-it verify
 
 # Frontend (Node 22.12+)
 cd frontend && npm ci && npm test && npm run build      # e2e: npm run test:e2e
 
 # Rodar localmente (API em loopback; Swagger em /swagger-ui.html)
-mvn spring-boot:run
+./mvnw spring-boot:run
 
 # Hash BCrypt da senha do admin (sem eco)
 ./scripts/hash-admin-password.sh
