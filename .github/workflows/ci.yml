@@ -55,12 +55,12 @@ jobs:
       - name: Instalar bibliotecas locais (libs/)
         run: |
           for repo in poc-collector poc-rss-collector poc-collector-runner; do
-            mvn -B -q -f "libs/${repo}/pom.xml" -DskipTests install
+            ./mvnw -B -q -f "libs/${repo}/pom.xml" -DskipTests install
           done
       - name: Testes
-        run: mvn -B test
+        run: ./mvnw -B test
       - name: Build do jar
-        run: mvn -B -DskipTests package
+        run: ./mvnw -B -DskipTests package
 
   frontend-quality:
     name: Frontend Quality (Lint, Cobertura >=95%, Build)
@@ -232,7 +232,7 @@ jobs:
       - name: Instalar bibliotecas locais (libs/)
         run: |
           for repo in poc-collector poc-rss-collector poc-collector-runner; do
-            mvn -B -q -f "libs/${repo}/pom.xml" -DskipTests install
+            ./mvnw -B -q -f "libs/${repo}/pom.xml" -DskipTests install
           done
       - name: Instalar frontend e navegadores
         working-directory: frontend
