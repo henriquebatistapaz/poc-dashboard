@@ -1,16 +1,15 @@
 name: poc-dashboard
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:16-alpine
     environment:
-      PGDATA: /var/lib/postgresql/data
       POSTGRES_DB: dashboard
       POSTGRES_USER: dashboard
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD locally}
     ports:
       - "127.0.0.1:${DB_PORT:-15432}:5432"
     volumes:
-      - dashboard_postgres:/var/lib/postgresql
+      - dashboard_postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dashboard -d dashboard"]
       interval: 3s
@@ -39,6 +38,11 @@ services:
       DASHBOARD_ADMIN_EMAIL: ${DASHBOARD_ADMIN_EMAIL:-}
       DASHBOARD_ADMIN_PASSWORD_HASH: ${DASHBOARD_ADMIN_PASSWORD_HASH:-}
       DASHBOARD_JWT_SECRET: ${DASHBOARD_JWT_SECRET:-dev-only-local-jwt-secret-not-for-production}
+      REDDIT_API_ACCESS_APPROVED: ${REDDIT_API_ACCESS_APPROVED:-false}
+      REDDIT_CLIENT_ID: ${REDDIT_CLIENT_ID:-}
+      REDDIT_CLIENT_SECRET: ${REDDIT_CLIENT_SECRET:-}
+      REDDIT_REFRESH_TOKEN: ${REDDIT_REFRESH_TOKEN:-}
+      REDDIT_USERNAME: ${REDDIT_USERNAME:-}
   frontend:
     build: ./frontend
     depends_on:
