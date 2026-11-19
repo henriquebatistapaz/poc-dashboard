@@ -128,6 +128,28 @@ describe('manual collection', () => {
     await nextTick()
     expect(wrapper.text()).toContain('Collection complete')
   })
+
+  it('handles sources without examples, null result counts and fixture validation errors', async () => {
+    const wrapper = mount(CollectionPanel, {
+      props: { busy: false, result: null, error: '' },
+      global: { plugins: [i18n] },
+    })
+    // Source without examples fallback ?? []
+    await wrapper.get('#collection-source').setValue('GOOGLE_ALERTS')
+    expect(wrapper.findAll('.feed-examples button')).toHaveLength(0)
+
+    // Fixture error to cover textarea :aria-describedby true branch
+    await wrapper.setProps({ error: 'Erro de validação' })
+    await wrapper.get('#collection-source').setValue('ALPHA')
+    expect(wrapper.get('#collection-input').attributes('aria-describedby')).toBe('collection-error')
+
+    // Result with null counts to cover ?? 0 fallbacks
+    await wrapper.setProps({
+      error: '',
+      result: { id: 99, source: 'ALPHA', status: 'SUCCEEDED', fetched: null as never, inserted: null as never, duplicates: null as never, errorMessage: null },
+    })
+    expect(wrapper.find('.collection-result').exists()).toBe(true)
+  })
 })
 
 describe('collection history', () => {
