@@ -80,6 +80,24 @@ async function assertLayoutAndTargets(page: Page, stateLabel: string) {
       }
     }
 
+    if (window.innerWidth <= 375) {
+      for (const form of Array.from(document.querySelectorAll<HTMLFormElement>('form'))) {
+        const formFields = Array.from(form.querySelectorAll<HTMLElement>('input, select, textarea'))
+          .map((el) => el.getBoundingClientRect())
+          .filter((rect) => rect.width > 0 && rect.height > 0)
+          .sort((a, b) => a.top - b.top)
+
+        for (let i = 1; i < formFields.length; i++) {
+          const previous = formFields[i - 1]!
+          const current = formFields[i]!
+          if (current.top < previous.bottom - 2) {
+            issues.push(`${label}: form fields are not in a single column`)
+            break
+          }
+        }
+      }
+    }
+
     const targets = Array.from(document.querySelectorAll<HTMLElement>('button, a[href], select, input, textarea'))
       .filter((el) => {
         if (el.closest('[inert]')) return false
