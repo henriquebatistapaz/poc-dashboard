@@ -1,15 +1,16 @@
 name: poc-dashboard
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
+      PGDATA: /var/lib/postgresql/data
       POSTGRES_DB: dashboard
       POSTGRES_USER: dashboard
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD locally}
     ports:
       - "127.0.0.1:${DB_PORT:-15432}:5432"
     volumes:
-      - dashboard_postgres:/var/lib/postgresql/data
+      - dashboard_postgres:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dashboard -d dashboard"]
       interval: 3s
