@@ -43,6 +43,11 @@ class ItemControllerUnitTest {
         assertThatThrownBy(() -> controller.list("RSS", null, future, now, 0, 20))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("from must be before or equal to to");
+
+        // from == null, to != null (covers short-circuit branch of from != null && to != null)
+        when(queryService.listItems(any(), any(), any(), any(), eq(0), eq(20)))
+                .thenReturn(new PageImpl<>(List.of()));
+        assertThat(controller.list("RSS", null, null, now, 0, 20)).isNotNull();
     }
 
     @Test
@@ -79,5 +84,9 @@ class ItemControllerUnitTest {
         controller.remove(5L, new ItemRemovalRequest("spam"), auth);
 
         verify(removalService).remove(5L, "spam", "admin-user");
+
+        // Null body and null auth branches
+        controller.remove(5L, null, null);
+        verify(removalService).remove(5L, null, "anonymous");
     }
 }
