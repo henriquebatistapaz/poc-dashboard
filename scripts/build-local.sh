@@ -10,10 +10,10 @@ for repo_dir in "$collector_repo" "$rss_repo" "$runner_repo"; do
         exit 1
     fi
 done
-mvn -f "$collector_repo/pom.xml" install
-mvn -f "$rss_repo/pom.xml" install
-mvn -f "$runner_repo/pom.xml" clean install
-mvn -f "$project_dir/pom.xml" clean package
+"$project_dir/mvnw" -f "$collector_repo/pom.xml" install
+"$project_dir/mvnw" -f "$rss_repo/pom.xml" install
+"$project_dir/mvnw" -f "$runner_repo/pom.xml" clean install
+"$project_dir/mvnw" -f "$project_dir/pom.xml" clean package
 (
     cd "$project_dir/frontend"
     npm ci
