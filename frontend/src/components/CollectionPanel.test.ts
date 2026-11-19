@@ -49,7 +49,7 @@ describe('manual collection', () => {
       expect(wrapper.find('#collection-input').exists()).toBe(true)
     }
     await wrapper.get('#collection-source').setValue('WORDPRESS')
-    expect(wrapper.get('label[for="collection-input"]').text()).toContain('O que você quer buscar')
+    expect(wrapper.get('label[for="collection-input"]').text()).toContain('Termo de busca')
     await wrapper.findAll('.feed-examples button')[0]!.trigger('click')
     expect((wrapper.get('#collection-input').element as HTMLInputElement).value).toBe('java')
     await wrapper.get('#collection-source').setValue('ALPHA')
@@ -150,11 +150,13 @@ describe('collection history', () => {
       error: '',
       tracking: true,
       runs: [
-        { id: 1, source: 'RSS', status: 'SUCCEEDED', fetched: null as never, inserted: null as never, duplicates: null as never, errorMessage: null },
+        { id: 1, source: 'RSS', status: 'SUCCEEDED', input: 'https://example.org/feed.xml', fetched: null as never, inserted: null as never, duplicates: null as never, errorMessage: null },
         { id: 2, source: 'WORDPRESS', status: 'FAILED', fetched: null, inserted: null, duplicates: null, errorMessage: 'hidden' },
       ],
     })
     expect(wrapper.text()).toContain('Concluída')
+    expect(wrapper.text()).toContain('https://example.org/feed.xml')
+    expect(wrapper.text()).toContain('Entrada da coleta')
     expect(wrapper.text()).toContain('Falhou')
     expect(wrapper.text()).not.toContain('hidden')
     expect(wrapper.get('.history-tracking').text()).toContain('Acompanhando')
@@ -165,6 +167,7 @@ describe('collection history', () => {
       id: 17,
       source: 'GOOGLE_NEWS' as const,
       status: 'RUNNING' as const,
+      input: 'spring boot',
       createdAt: '2026-11-06T12:00:00Z',
       fetched: null,
       inserted: null,
@@ -176,6 +179,7 @@ describe('collection history', () => {
       global: { plugins: [i18n] },
     })
     expect(wrapper.text()).toContain('Google News')
+    expect(wrapper.text()).toContain('spring boot')
     expect(wrapper.text()).toContain('Em andamento')
     await wrapper.get('button.history-resume').trigger('click')
     expect(wrapper.emitted('resume')![0]).toEqual([run])
@@ -183,5 +187,6 @@ describe('collection history', () => {
     await nextTick()
     expect(wrapper.text()).toContain('In progress')
     expect(wrapper.text()).toContain('Track run')
+    expect(wrapper.text()).toContain('Collection input')
   })
 })
