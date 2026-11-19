@@ -29,9 +29,10 @@ public class CollectionRunService {
     private final ExecutorService collectionExecutor;
     private final ScheduleInputCipher scheduleInputCipher;
 
-    /** Saves a PENDING run and starts it in the background. The input is kept only in memory. */
+    /** Saves a PENDING run and starts it in the background. The input remains encrypted for audit history. */
     public CollectionRun start(CollectionSource source, String input) {
-        CollectionRun run = repository.save(new CollectionRun(source.name(), Instant.now()));
+        CollectionRun run = repository.save(new CollectionRun(source.name(), Instant.now(), null,
+                scheduleInputCipher.encryptForHistory(input)));
         Long id = run.getId();
         collectionExecutor.submit(() -> execute(id, source, input));
         return run;
@@ -82,6 +83,10 @@ public class CollectionRunService {
                 .getContent();
     }
 
+    public String inputForDisplay(CollectionRun run) {
+        return scheduleInputCipher.decryptForHistory(run.getEncryptedInput());
+    }
+
     void execute(Long id, CollectionSource source, String input) {
         CollectionRun run = repository.findById(id).orElseThrow();
         run.markRunning(Instant.now());
@@ -100,7 +105,6 @@ public class CollectionRunService {
                     exception.getClass().getName(), root.getClass().getName());
             run.markFailed(Instant.now(), safeMessage(exception));
         }
-        run.clearEncryptedInput();
         repository.save(run);
     }
 
