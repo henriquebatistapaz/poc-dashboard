@@ -32,11 +32,15 @@ public class ScheduleInputCipher {
         if (scheduleKey.length != 0 && scheduleKey.length != 32) {
             throw new IllegalArgumentException("DASHBOARD_SCHEDULE_KEY must be 64 hexadecimal characters");
         }
+        byte[] material = ("poc-dashboard:collection-input:v1\0" + jwtSecret).getBytes(StandardCharsets.UTF_8);
+        this.historyKey = digest("SHA-256", material);
+    }
+
+    byte[] digest(String algorithm, byte[] material) {
         try {
-            byte[] material = ("poc-dashboard:collection-input:v1\0" + jwtSecret).getBytes(StandardCharsets.UTF_8);
-            this.historyKey = MessageDigest.getInstance("SHA-256").digest(material);
-        } catch (Exception exception) {
-            throw new IllegalStateException("Could not configure collection input protection", exception);
+            return MessageDigest.getInstance(algorithm).digest(material);
+        } catch (java.security.NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("Algorithm is not available", exception);
         }
     }
 
@@ -73,7 +77,7 @@ public class ScheduleInputCipher {
             byte[] encrypted = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
             return java.util.Base64.getEncoder().encodeToString(ByteBuffer.allocate(nonce.length + encrypted.length)
                     .put(nonce).put(encrypted).array());
-        } catch (Exception exception) {
+        } catch (java.security.GeneralSecurityException exception) {
             throw new IllegalStateException("Could not protect collection input", exception);
         }
     }

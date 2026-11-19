@@ -49,6 +49,10 @@ class ItemQueryServiceTest {
 
         assertThat(result).isNotNull();
         verify(repository).findAll(any(Specification.class), any(Pageable.class));
+
+        // Test with null and blank q
+        service.listItems(null, null, null, null, 0, 10);
+        service.listItems(null, "   ", null, null, 0, 10);
     }
 
     @Test
