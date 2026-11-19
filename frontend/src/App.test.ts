@@ -134,7 +134,6 @@ describe('App', () => {
     await wrapper.get('#login-password').setValue('pw')
     await wrapper.get('form.login-form').trigger('submit')
     await flushPromises()
-
     // Valid filters with q, source, from, to
     await wrapper.get('#filter-query').setValue('cidades')
     await wrapper.get('#filter-source').setValue('rss')
@@ -216,19 +215,19 @@ describe('App', () => {
       }
       if (url.startsWith('/v1/collections?')) {
         return jsonResponse([
-          { id: 10, source: 'RSS', status: 'RUNNING', createdAt: '2026-11-17T12:00:00Z', fetched: null, inserted: null, duplicates: null, errorMessage: null },
+          { id: 10, source: 'RSS', status: 'RUNNING', createdAt: '2026-11-17T12:00:00Z', input: 'https://example.test/feed.xml', fetched: null, inserted: null, duplicates: null, errorMessage: null },
         ])
       }
       if (url === '/v1/collections' && init?.method === 'POST') {
-        return jsonResponse({ id: 20, source: 'RSS', status: 'PENDING', fetched: null, inserted: null, duplicates: null, errorMessage: null }, 202)
+        return jsonResponse({ id: 20, source: 'RSS', status: 'PENDING', input: 'https://example.test/feed.xml', fetched: null, inserted: null, duplicates: null, errorMessage: null }, 202)
       }
       if (url === '/v1/collections/20') {
-        return jsonResponse({ id: 20, source: 'RSS', status: 'SUCCEEDED', fetched: 1, inserted: null, duplicates: null, errorMessage: null })
+        return jsonResponse({ id: 20, source: 'RSS', status: 'SUCCEEDED', input: 'https://example.test/feed.xml', fetched: 1, inserted: null, duplicates: null, errorMessage: null })
       }
       if (url === '/v1/collections/10') {
         runPoll++
         if (runPoll === 1) {
-          return jsonResponse({ id: 10, source: 'RSS', status: 'SUCCEEDED', fetched: 2, inserted: 1, duplicates: 1, errorMessage: null })
+          return jsonResponse({ id: 10, source: 'RSS', status: 'SUCCEEDED', input: 'https://example.test/feed.xml', fetched: 2, inserted: 1, duplicates: 1, errorMessage: null })
         }
         return jsonResponse({}, 401)
       }
@@ -241,6 +240,7 @@ describe('App', () => {
     await wrapper.get('#login-password').setValue('pw')
     await wrapper.get('form.login-form').trigger('submit')
     await flushPromises()
+    expect(wrapper.get('.collection-context').text()).toContain('https://example.test/feed.xml')
 
     // Mobile drawer open, Tab trap, Escape close, reopen & navigate
     const toggleBtn = wrapper.get('[data-testid="mobile-menu-toggle"]')
