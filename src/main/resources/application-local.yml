@@ -1,0 +1,2 @@
+dashboard:
+  jwt-secret: dev-only-local-jwt-secret-not-for-production
