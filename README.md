@@ -69,7 +69,7 @@ docker compose up --build -d
 
 Open the Vue panel at `http://localhost:8085` or Swagger at `http://localhost:8084/swagger-ui.html`. Compose starts PostgreSQL 16, the Dashboard with the embedded runner, and the Vue/Nginx frontend. Database and API ports bind to loopback; ports default to 15432 (database), 8084 (API) and 8085 (panel). Set `FRONTEND_PORT` to change the panel port. A named database volume preserves collected items. `docker compose down` stops the stack without deleting that volume.
 
-Alternatively start only PostgreSQL with `docker compose up -d postgres`; export `DB_URL=jdbc:postgresql://localhost:15432/dashboard`, `DB_USER=dashboard`, `DB_PASSWORD` and the dashboard credential variables, then run `mvn spring-boot:run`. Maven does not load `.env` automatically. The Java application defaults to listening on loopback.
+Alternatively start only PostgreSQL with `docker compose up -d postgres`; export `DB_URL=jdbc:postgresql://localhost:15432/dashboard`, `DB_USER=dashboard`, `DB_PASSWORD` and the dashboard credential variables, then run `mvn spring-boot:run -Dspring-boot.run.profiles=dev,local`. Maven does not load `.env` automatically. The Java application defaults to listening on loopback. The local profile provides the `local` / `local` account.
 
 ## Verification
 

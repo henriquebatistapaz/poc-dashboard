@@ -31,13 +31,14 @@ services:
       - "127.0.0.1:${DASHBOARD_PORT:-8084}:8080"
     environment:
       SERVER_ADDRESS: 0.0.0.0
+      SPRING_PROFILES_ACTIVE: dev,local
       DB_URL: jdbc:postgresql://postgres:5432/dashboard
       DB_USER: dashboard
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD locally}
       DASHBOARD_API_KEY: ${DASHBOARD_API_KEY:?Set DASHBOARD_API_KEY locally}
       DASHBOARD_ADMIN_EMAIL: ${DASHBOARD_ADMIN_EMAIL:-}
       DASHBOARD_ADMIN_PASSWORD_HASH: ${DASHBOARD_ADMIN_PASSWORD_HASH:-}
-      DASHBOARD_JWT_SECRET: ${DASHBOARD_JWT_SECRET:-}
+      DASHBOARD_JWT_SECRET: ${DASHBOARD_JWT_SECRET:-dev-only-local-jwt-secret-not-for-production}
   frontend:
     build: ./frontend
     depends_on:
