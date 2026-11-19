@@ -66,7 +66,7 @@ scripts/railway-deploy-develop.sh        # branch develop, sem confirmação
 scripts/railway-deploy-production.sh     # branch main, pede para digitar "production"
 ```
 
-Os scripts recusam deploy com árvore suja ou na branch errada, rodam `mvn test`, `npm test` e `npm run build`, e então enviam API e web com `railway up`.
+Os scripts recusam deploy com árvore suja ou na branch errada, rodam `./mvnw test`, `npm test` e `npm run build`, e então enviam API e web com `railway up`.
 
 ## 5. Verificação
 
