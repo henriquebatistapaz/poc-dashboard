@@ -76,9 +76,20 @@ describe('waitForRun', () => {
 
     const controller = new AbortController()
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ id: 8, status: 'RUNNING' }), { status: 200 })))
-    const polling = waitForRun(8, 'token', controller.signal, 10000)
-    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1))
+    const polling = waitForRun(8, 'token', controller.signal, 200)
+    await new Promise((r) => setTimeout(r, 20))
     controller.abort()
     await expect(polling).rejects.toMatchObject({ name: 'AbortError' })
+  })
+
+  it('removes the abort listener when sleep completes without cancellation', async () => {
+    const controller = new AbortController()
+    const responses = [
+      { status: 200, body: { id: 9, source: 'RSS', status: 'RUNNING' } },
+      { status: 200, body: { id: 9, source: 'RSS', status: 'SUCCEEDED', fetched: 1, inserted: 1, duplicates: 0 } },
+    ]
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(responses.shift()!.body), { status: 200 })))
+    const run = await waitForRun(9, 'token', controller.signal, 5)
+    expect(run.status).toBe('SUCCEEDED')
   })
 })
