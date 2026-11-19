@@ -13,22 +13,58 @@ const statusKey = (status: CollectionRun['status']) => `history.status.${status.
 <template>
   <section class="history-card" aria-labelledby="history-title">
     <div class="history-heading">
-      <div><span class="history-icon"><Clock3 :size="17" /></span><div><h2 id="history-title">{{ t('history.title') }}</h2><p>{{ t('history.subtitle') }}</p></div></div>
-      <button class="button quiet" :disabled="busy" @click="emit('refresh')"><RefreshCw :size="14" :class="{ spinning: busy }" />{{ t('dashboard.refresh') }}</button>
+      <div>
+        <span class="history-icon"><Clock3 :size="17" aria-hidden="true" /></span>
+        <div>
+          <h2 id="history-title">{{ t('history.title') }}</h2>
+          <p>{{ t('history.subtitle') }}</p>
+        </div>
+      </div>
+      <button class="button quiet" type="button" :disabled="busy" :aria-label="t('dashboard.refresh')" @click="emit('refresh')">
+        <RefreshCw :size="14" :class="{ spinning: busy }" aria-hidden="true" />
+        <span>{{ t('dashboard.refresh') }}</span>
+      </button>
     </div>
-    <div v-if="error" class="notice error history-notice" role="alert">{{ error }}<button class="text-button" @click="emit('refresh')">{{ t('common.retry') }}</button></div>
-    <div v-else-if="busy && !runs.length" class="history-empty" role="status"><span class="spinner dark"></span>{{ t('common.loading') }}</div>
-    <div v-else-if="!runs.length" class="history-empty">{{ t('history.empty') }}</div>
+    <div v-if="error" class="notice error history-notice" role="alert">
+      <span>{{ error }}</span>
+      <button class="text-button" type="button" @click="emit('refresh')">{{ t('common.retry') }}</button>
+    </div>
+    <div v-else-if="busy && !runs.length" class="history-empty" role="status">
+      <span class="spinner dark" aria-hidden="true"></span>{{ t('common.loading') }}
+    </div>
+    <div v-else-if="!runs.length" class="history-empty" role="status">{{ t('history.empty') }}</div>
     <ul v-else class="history-list" aria-live="polite">
       <li v-for="run in runs" :key="run.id" class="history-row">
-        <span class="history-run-icon" :class="`status-${run.status.toLowerCase()}`"><LoaderCircle v-if="['PENDING', 'RUNNING'].includes(run.status)" :size="16" class="spinning" /><Clock3 v-else :size="16" /></span>
-        <div class="history-run-main"><strong>{{ sourceLabel(run.source) }}</strong><small>{{ t('history.run', { id: run.id }) }} · {{ displayDate(run.createdAt ?? null) }}</small></div>
+        <span class="history-run-icon" :class="`status-${run.status.toLowerCase()}`" aria-hidden="true">
+          <LoaderCircle v-if="['PENDING', 'RUNNING'].includes(run.status)" :size="16" class="spinning" />
+          <Clock3 v-else :size="16" />
+        </span>
+        <div class="history-run-main">
+          <strong>{{ sourceLabel(run.source) }}</strong>
+          <small>{{ t('history.run', { id: run.id }) }} · {{ displayDate(run.createdAt ?? null) }}</small>
+          <small v-if="run.input" class="history-run-input">
+            <span>{{ t('history.input') }}:</span>
+            <code :title="run.input">{{ run.input }}</code>
+          </small>
+        </div>
         <span class="history-status" :class="`status-${run.status.toLowerCase()}`">{{ t(statusKey(run.status)) }}</span>
-        <span v-if="run.status === 'SUCCEEDED'" class="history-counts">{{ t('history.counts', { fetched: n(run.fetched ?? 0), inserted: n(run.inserted ?? 0), duplicates: n(run.duplicates ?? 0) }) }}</span>
+        <span v-if="run.status === 'SUCCEEDED'" class="history-counts">
+          {{
+            t('history.counts', {
+              fetched: n(run.fetched ?? 0),
+              inserted: n(run.inserted ?? 0),
+              duplicates: n(run.duplicates ?? 0),
+            })
+          }}
+        </span>
         <span v-else-if="run.status === 'FAILED'" class="history-counts">{{ t('history.failed') }}</span>
-        <button v-else class="text-button history-resume" :disabled="tracking" @click="emit('resume', run)">{{ t(tracking ? 'history.tracking' : 'history.resume') }}</button>
+        <button v-else class="text-button history-resume" type="button" :disabled="tracking" @click="emit('resume', run)">
+          {{ t(tracking ? 'history.tracking' : 'history.resume') }}
+        </button>
       </li>
     </ul>
-    <p v-if="tracking" class="history-tracking" role="status"><span class="spinner dark"></span>{{ t('history.tracking') }}</p>
+    <p v-if="tracking" class="history-tracking" role="status">
+      <span class="spinner dark" aria-hidden="true"></span>{{ t('history.tracking') }}
+    </p>
   </section>
 </template>

@@ -1,6 +1,6 @@
 # POC Dashboard
 
-Private Java 27 / Maven backend on Spring Boot 4.1.2 that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
+Private Java 27 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
 
 ## Vue panel — Portuguese, English and Spanish
 
@@ -45,7 +45,7 @@ Clone all four private repositories as siblings: `poc-collector`, `poc-rss-colle
 ./scripts/build-local.sh
 ```
 
-It runs Maven installs in dependency order (collector, RSS, runner), then packages the dashboard. Alternative locations can be supplied with `COLLECTOR_REPO`, `RSS_REPO` and `RUNNER_REPO`. OpenJDK 27.0.1.0.3 and Maven 3.9 or later are required. Artifacts resolve through the local Maven repository; no private Maven package registry is configured.
+It runs Maven installs in dependency order (collector, RSS, runner), then packages the dashboard. Alternative locations can be supplied with `COLLECTOR_REPO`, `RSS_REPO` and `RUNNER_REPO`. Java 27 and Maven are required. Artifacts resolve through the local Maven repository; no private Maven package registry is configured.
 
 ## Local credentials
 
@@ -71,14 +71,14 @@ docker compose up --build -d
 
 Open the Vue panel at `http://localhost:8085` or Swagger at `http://localhost:8084/swagger-ui.html`. Compose starts PostgreSQL 16, the Dashboard with the embedded runner, and the Vue/Nginx frontend. Database and API ports bind to loopback; ports default to 15432 (database), 8084 (API) and 8085 (panel). Set `FRONTEND_PORT` to change the panel port. A named database volume preserves collected items. `docker compose down` stops the stack without deleting that volume.
 
-Alternatively start only PostgreSQL with `docker compose up -d postgres`; export `DB_URL=jdbc:postgresql://localhost:15432/dashboard`, `DB_USER=dashboard`, `DB_PASSWORD` and the dashboard credential variables, then run `mvn spring-boot:run`. Maven does not load `.env` automatically. The Java application defaults to listening on loopback.
+Alternatively start only PostgreSQL with `docker compose up -d postgres`; export `DB_URL=jdbc:postgresql://localhost:15432/dashboard`, `DB_USER=dashboard`, `DB_PASSWORD` and the dashboard credential variables, then run `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,local`. Maven does not load `.env` automatically. The Java application defaults to listening on loopback. In the local profile, use `local` / `local`.
 
 ## Verification
 
 ```sh
-mvn test
+./mvnw test
 # Requires Docker; runs actual HTTP + PostgreSQL integration tests.
-mvn -Ppostgres-it verify
+./mvnw -Ppostgres-it verify
 ```
 
 Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP login/collection/query endpoints, actual runner and parsers; only upstream fetches/DNS are deterministic fixtures. They verify RSS/Atom, Google feeds, WordPress and Alpha/Beta; source restrictions remain active. These deterministic tests do not prove live Google/Reddit service availability.

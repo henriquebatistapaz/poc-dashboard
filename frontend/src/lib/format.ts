@@ -12,7 +12,7 @@ export function displayDate(value: string | null): string {
   return Number.isNaN(date.getTime()) ? i18n.global.t('common.none') : date.toLocaleString(i18n.global.locale.value, { dateStyle: 'short', timeStyle: 'short' })
 }
 
-const sources = ['rss', 'google-news', 'google-alerts', 'wordpress', 'reddit', 'alpha', 'beta']
+const sources = ['rss', 'google-news', 'wordpress', 'alpha', 'beta', 'mastodon', 'lemmy', 'dev-to', 'hacker-news', 'stack-exchange', 'github', 'tabnews']
 export const sourceLabel = (source: string) => {
   const normalized = source.toLowerCase().replaceAll('_', '-')
   return sources.includes(normalized) ? i18n.global.t(`sources.${normalized}`) : source

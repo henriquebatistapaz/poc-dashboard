@@ -29,7 +29,7 @@ class CollectorApiServerTest {
     @Test
     void exposesOpenApiAndProtectsAndManagesScheduledFeeds() throws Exception {
         var registry = new SourceRegistry();
-        var collector = new CollectorService(registry, null, null, null, null);
+        var collector = new CollectorService(registry, null, null);
         var store = new CollectorStateStore(temporaryDirectory.resolve("collector.json"));
         var secretBox = new SecretBox(ENCRYPTION_KEY);
         try (var api = new CollectorApiServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0),

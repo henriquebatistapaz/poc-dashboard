@@ -5,7 +5,7 @@ Contexto detalhado: @README.md, @SPEC.md, @DEPLOY.md, @frontend/README.md, @docs
 
 ## O projeto em uma linha
 
-Backend Java 27 / Spring Boot 4.1.2 (Maven, pacote raiz `com.henrique.dashboard`, PostgreSQL + Flyway) que embute o `poc-collector-runner` para coletar feeds RSS/Atom, fontes suportadas e fixtures sociais, persistir itens e consultá-los, com painel Vue 3 (pt-BR/en/es); código em inglês, SPEC em pt-BR.
+Backend Java 27 / Spring Boot 4.1.2 (Maven, pacote raiz `com.henrique.dashboard`, PostgreSQL + Flyway) que embute o `poc-collector-runner` para coletar feeds RSS/Atom, Google News, WordPress, sete APIs REST públicas e fixtures sociais; Google Alerts foi removido. O sistema persiste e consulta itens, com painel Vue 3 (pt-BR/en/es); código em inglês, SPEC em pt-BR.
 
 ## Comandos essenciais
 
@@ -17,16 +17,16 @@ Backend Java 27 / Spring Boot 4.1.2 (Maven, pacote raiz `com.henrique.dashboard`
 docker compose up --build -d          # só o banco: docker compose up -d postgres
 
 # Testes (sempre rodar antes de considerar uma tarefa concluída) — H2
-mvn test # doc-check: run
+./mvnw test # doc-check: run
 
 # Integração real com PostgreSQL via Testcontainers (exige Docker)
-mvn -Ppostgres-it verify
+./mvnw -Ppostgres-it verify
 
 # Frontend (Node 22.12+)
 cd frontend && npm ci && npm test && npm run build      # e2e: npm run test:e2e
 
 # Rodar localmente (API em loopback; Swagger em /swagger-ui.html)
-mvn spring-boot:run
+./mvnw spring-boot:run
 
 # Hash BCrypt da senha do admin (sem eco)
 ./scripts/hash-admin-password.sh
@@ -38,12 +38,12 @@ Portas padrão do Compose: 15432 (banco), 8084 (API), 8085 (painel). Deploy no R
 
 - Pacotes por papel: `api` (controllers + records de request/response), `service`, `repository` (Spring Data), `domain` (entidades JPA com Lombok), `security`, `integration` (ponte com o runner embutido).
 - Schema só via Flyway (`src/main/resources/db/migration/V<n>__*.sql`); o dashboard é dono de `collected_item`, `collection_run` e `item_removal`.
-- Fontes são enums com nomes exatos (`RSS`, `GOOGLE_NEWS`, `GOOGLE_ALERTS`, `WORDPRESS`, `REDDIT`, `ALPHA`, `BETA`; `ISSUU` desligado).
+- Fontes são enums com nomes exatos (`RSS`, `GOOGLE_NEWS`, `WORDPRESS`, `WIKIPEDIA`, `GITLAB`, `LOBSTERS`, `ALPHA`, `BETA`; `ISSUU` desligado).
 - Deduplicação por `(source, external_id)`, preservando o primeiro item; IDs RSS levam hash da URL do feed. Item removido não volta a ser ingerido.
 - Autenticação: usuários `ADMIN` e `OPERATOR` persistidos com BCrypt; JWT HS256 expira em 900 s; `X-API-Key` só leitura e nunca roda coleta. Admin inicial por configuração; cadastro público desativado.
 - Coletas imediatas e agendadas rodam com histórico persistido (`CollectionRun`, `RunStatus`) e recuperação no boot (`CollectionRunRecovery`). Inputs agendados são cifrados com AES-GCM.
-- Segredos: URLs do Google Alerts, chaves, JWT secret e credenciais Reddit nunca vão para log, resposta de erro ou git.
-- Frontend: todo texto visível em `frontend/src/locales/{pt-BR,en,es}.json`; JWT só em memória; só o idioma vai para o storage.
+- Segredos: URLs privadas de feeds, chaves e JWT secret nunca vão para log, resposta de erro ou git.
+- Frontend: todo texto visível em `frontend/src/locales/{pt-BR,en,es}.json`; JWT só em memória; apenas preferências não sensíveis (`coleta.locale` e `poc-dashboard:theme`) vão para o storage.
 
 ## Project skills
 

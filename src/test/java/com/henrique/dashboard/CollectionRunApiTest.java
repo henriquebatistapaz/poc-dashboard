@@ -1,7 +1,6 @@
 package com.henrique.dashboard;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -81,35 +80,49 @@ class CollectionRunApiTest {
                 .andReturn();
         String location = created.getResponse().getHeader("Location");
         assertTrue(location.contains("/v1/collections/"));
-        assertFalse(created.getResponse().getContentAsString().contains("open data"), "input must not be echoed");
+        assertEquals("open data", json.readTree(created.getResponse().getContentAsString()).path("input").asText());
 
         JsonNode done = awaitStatus(location, "SUCCEEDED");
         assertEquals(4, done.path("fetched").asInt());
         assertEquals(3, done.path("inserted").asInt());
         assertEquals(1, done.path("duplicates").asInt());
+        assertEquals("open data", done.path("input").asText());
         assertTrue(done.path("errorMessage").isNull() || done.path("errorMessage").isMissingNode());
     }
 
     @Test
     void failedRunShowsSafeMessageWithoutSecret() throws Exception {
-        when(runner.run(CollectionSource.GOOGLE_ALERTS, "alert-input")).thenThrow(
-                new SourceAccessException("https://www.google.com/alerts/feeds/SECRET-TOKEN"));
+        when(runner.run(CollectionSource.RSS, "https://example.org/feed?token=SECRET-TOKEN")).thenThrow(
+                new SourceAccessException("https://example.org/feed?token=SECRET-TOKEN"));
 
         MvcResult created = mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                         .contentType("application/json")
-                        .content("{\"source\":\"GOOGLE_ALERTS\",\"input\":\"alert-input\"}"))
+                        .content("{\"source\":\"RSS\",\"input\":\"https://example.org/feed?token=SECRET-TOKEN\"}"))
                 .andExpect(status().isAccepted()).andReturn();
 
         JsonNode failed = awaitStatus(created.getResponse().getHeader("Location"), "FAILED");
         assertEquals("Source unavailable; check approval and runtime configuration", failed.path("errorMessage").asText());
-        assertFalse(failed.toString().contains("SECRET-TOKEN"));
+        assertEquals("https://example.org/feed?token=SECRET-TOKEN", failed.path("input").asText());
     }
 
     @Test
-    void rejectsBlankInputBeforeStarting() throws Exception {
+    void rejectsBlankAndInvalidScheduleInputsBeforeStarting() throws Exception {
         mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                         .contentType("application/json")
-                        .content("{\"source\":\"REDDIT\",\"input\":\"  \"}"))
+                        .content("{\"source\":\"GOOGLE_NEWS\",\"input\":\"  \"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content("{\"source\":\"UNKNOWN\",\"input\":\"https://example.org/feed\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/v1/collections/schedules").header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(json.writeValueAsBytes(java.util.Map.of("source", "RSS", "input", "https://example.org/feed",
+                                "scheduledAt", Instant.now().minusSeconds(60).toString()))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -134,7 +147,7 @@ class CollectionRunApiTest {
     }
 
     @Test
-    void schedulesCollectionAndReturnsOnlyRunMetadata() throws Exception {
+    void schedulesCollectionAndReturnsItsInputForAuthenticatedHistory() throws Exception {
         String input = "https://feed.example/private?token=scheduled-secret";
         MvcResult created = mvc.perform(post("/v1/collections/schedules").header("Authorization", "Bearer " + token)
                         .contentType("application/json")
@@ -144,13 +157,13 @@ class CollectionRunApiTest {
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.scheduledAt").isNotEmpty())
                 .andReturn();
-        assertFalse(created.getResponse().getContentAsString().contains("scheduled-secret"));
+        assertEquals(input, json.readTree(created.getResponse().getContentAsString()).path("input").asText());
     }
 
     @Test
     void apiKeyCannotReadOrStartRuns() throws Exception {
         mvc.perform(get("/v1/collections").header("X-API-Key", "reader-key")).andExpect(status().isForbidden());
         mvc.perform(post("/v1/collections").header("X-API-Key", "reader-key").contentType("application/json")
-                .content("{\"source\":\"REDDIT\",\"input\":\"x\"}")).andExpect(status().isForbidden());
+                .content("{\"source\":\"GOOGLE_NEWS\",\"input\":\"x\"}")).andExpect(status().isForbidden());
     }
 }

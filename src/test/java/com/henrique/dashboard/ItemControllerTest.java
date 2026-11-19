@@ -95,8 +95,10 @@ class ItemControllerTest {
     }
 
     @Test
-    void clampsPageSize() throws Exception {
-        mvc.perform(authorized("/v1/items").param("size", "500"))
+    void clampsPageSizeAndNegativePage() throws Exception {
+        mvc.perform(authorized("/v1/items").param("page", "-1").param("size", "1000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.size").value(100));
     }
 

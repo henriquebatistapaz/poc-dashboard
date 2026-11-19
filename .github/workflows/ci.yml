@@ -10,8 +10,40 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Detectar escopo de alteracoes
+    runs-on: ubuntu-latest
+    outputs:
+      code_changed: ${{ steps.filter.outputs.code_changed }}
+      frontend_changed: ${{ steps.filter.outputs.frontend_changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: filter
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+            echo "frontend_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          if echo "$CHANGED" | grep -qvE '^(docs/|.*\.md$)'; then
+            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$CHANGED" | grep -qE '^(frontend/|\.github/workflows/ci\.yml|src/|pom\.xml|libs/)'; then
+            echo "frontend_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "frontend_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   backend:
     name: Backend (Maven)
+    needs: changes
+    if: needs.changes.outputs.code_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,15 +55,17 @@ jobs:
       - name: Instalar bibliotecas locais (libs/)
         run: |
           for repo in poc-collector poc-rss-collector poc-collector-runner; do
-            mvn -B -q -f "libs/${repo}/pom.xml" -DskipTests install
+            ./mvnw -B -q -f "libs/${repo}/pom.xml" -DskipTests install
           done
       - name: Testes
-        run: mvn -B test
+        run: ./mvnw -B test
       - name: Build do jar
-        run: mvn -B -DskipTests package
+        run: ./mvnw -B -DskipTests package
 
-  frontend:
-    name: Frontend (Vue)
+  frontend-quality:
+    name: Frontend Quality (Lint, Cobertura >=95%, Build)
+    needs: changes
+    if: needs.changes.outputs.frontend_changed == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,12 +74,214 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.13'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Instalar dependências
+      - name: Instalar dependencias
         run: npm ci
-      - name: Testes unitários
-        run: npm test
+      - name: Lint
+        run: npm run lint
+      - name: Testes unitarios e cobertura global
+        run: npm run test:coverage
       - name: Build
         run: npm run build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/coverage-summary.json
+          retention-days: 14
+
+  frontend-playwright:
+    name: Playwright Matriz & Axe (${{ matrix.engine }} ${{ matrix.shard }})
+    needs: [changes, frontend-quality]
+    if: needs.changes.outputs.frontend_changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - engine: chromium
+            shard: --shard=1/2
+          - engine: chromium
+            shard: --shard=2/2
+          - engine: webkit
+            shard: --shard=1/2
+          - engine: webkit
+            shard: --shard=2/2
+          - engine: firefox
+            shard: ''
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias e navegador
+        run: |
+          npm ci
+          npx playwright install --with-deps "${{ matrix.engine }}"
+      - name: Build
+        run: npm run build
+      - name: Matriz Playwright e Axe
+        run: npx playwright test --config=playwright.config.ts --project="${{ matrix.engine }}" ${{ matrix.shard }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-failures-${{ matrix.engine }}-${{ strategy.job-index }}
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 14
+
+  frontend-visual:
+    name: Regressao Visual Playwright
+    needs: [changes, frontend-quality]
+    if: needs.changes.outputs.frontend_changed == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias e navegadores
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium webkit
+      - name: Build
+        run: npm run build
+      - name: Comparar snapshots visuais
+        run: npm run test:visual
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-diffs
+          path: frontend/test-results/
+          retention-days: 14
+
+  frontend-lighthouse:
+    name: Auditoria Lighthouse Mobile
+    needs: [changes, frontend-quality]
+    if: needs.changes.outputs.frontend_changed == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias e Chromium
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Build
+        run: npm run build
+      - name: Executar Lighthouse (3 cold runs por tela principal + acessibilidade)
+        run: npm run audit:lighthouse
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: docs/auditorias/
+          retention-days: 14
+
+  frontend-smoke:
+    name: Smoke Real Isolado (PostgreSQL + Backend + Playwright)
+    needs: [changes, backend, frontend-quality]
+    if: needs.changes.outputs.frontend_changed == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: dashboard_smoke
+          POSTGRES_USER: smoke_user
+          POSTGRES_PASSWORD: smoke_ephemeral_ci_only_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '27'
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar bibliotecas locais (libs/)
+        run: |
+          for repo in poc-collector poc-rss-collector poc-collector-runner; do
+            ./mvnw -B -q -f "libs/${repo}/pom.xml" -DskipTests install
+          done
+      - name: Instalar frontend e navegadores
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium webkit firefox
+          npm run build
+      - name: Executar smoke real isolado
+        working-directory: frontend
+        env:
+          SMOKE_DB_URL: jdbc:postgresql://127.0.0.1:5432/dashboard_smoke
+          SMOKE_DB_USER: smoke_user
+          SMOKE_DB_PASSWORD: smoke_ephemeral_ci_only_password
+        run: npm run test:smoke
+
+  ci-gate:
+    name: Gate Agregado Obrigatorio
+    if: always()
+    needs:
+      - changes
+      - backend
+      - frontend-quality
+      - frontend-playwright
+      - frontend-visual
+      - frontend-lighthouse
+      - frontend-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar resultados obrigatorios sem skip ou cancelamento indevido
+        run: |
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "changes job failed: ${{ needs.changes.result }}"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.code_changed }}" = "true" ] && [ "${{ needs.backend.result }}" != "success" ]; then
+            echo "backend job did not succeed: ${{ needs.backend.result }}"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.frontend_changed }}" = "true" ]; then
+            for res in \
+              "${{ needs.frontend-quality.result }}" \
+              "${{ needs.frontend-playwright.result }}" \
+              "${{ needs.frontend-visual.result }}" \
+              "${{ needs.frontend-lighthouse.result }}" \
+              "${{ needs.frontend-smoke.result }}"; do
+              if [ "$res" != "success" ]; then
+                echo "Required frontend gate job did not succeed (result=$res)"
+                exit 1
+              fi
+            done
+          fi
+          echo "All required CI gates succeeded."

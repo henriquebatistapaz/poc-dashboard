@@ -26,7 +26,7 @@ step "Guardrails"
 if [ -f .ai-init/hooks/guard.sh ]; then bash .ai-init/hooks/guard.sh install-git-hook; else echo "(not installed)"; fi
 
 step "Smoke test"
-mvn -B -q -DskipTests compile
+$MVN -B -q -DskipTests compile
 
 echo
 echo "Agent environment ready."

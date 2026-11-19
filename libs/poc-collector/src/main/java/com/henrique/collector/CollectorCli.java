@@ -11,32 +11,35 @@ public final class CollectorCli {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: java -jar poc-collector.jar <google-news|google-alerts|wordpress|reddit> [query-or-subreddit]");
+            System.err.println("Usage: java -jar poc-collector.jar <google-news|wordpress|mastodon|lemmy|dev-to|hacker-news|stack-exchange|github|tabnews|wikipedia|gitlab|lobsters> [query]");
             System.exit(2);
         }
         var fetcher = new JdkHttpFeedFetcher();
-        var redditTransport = new JdkRedditHttpTransport();
-        var redditConfig = RedditOAuthConfig.fromEnvironment(System.getenv());
         var parser = new RssFeedParser();
         var service = new CollectorService(new SourceRegistry(),
                 new GoogleNewsCollector(fetcher, parser),
-                new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
-                new WordPressFeedCollector(fetcher, parser, new PublicHttpsFeedUrlPolicy()),
-                new RedditCollector(redditConfig, new RedditOAuthTokenProvider(redditConfig, redditTransport), redditTransport));
+                new WordPressFeedCollector(fetcher, parser));
         try {
             CollectorSource source = switch (args[0].toLowerCase()) {
                 case "google-news" -> CollectorSource.GOOGLE_NEWS;
-                case "google-alerts" -> CollectorSource.GOOGLE_ALERTS;
                 case "wordpress" -> CollectorSource.WORDPRESS;
-                case "reddit" -> CollectorSource.REDDIT;
+                case "mastodon" -> CollectorSource.MASTODON;
+                case "lemmy" -> CollectorSource.LEMMY;
+                case "dev-to" -> CollectorSource.DEV_TO;
+                case "hacker-news" -> CollectorSource.HACKER_NEWS;
+                case "stack-exchange" -> CollectorSource.STACK_EXCHANGE;
+                case "github" -> CollectorSource.GITHUB;
+                case "tabnews" -> CollectorSource.TABNEWS;
+                case "wikipedia" -> CollectorSource.WIKIPEDIA;
+                case "gitlab" -> CollectorSource.GITLAB;
+                case "lobsters" -> CollectorSource.LOBSTERS;
                 case "issuu" -> CollectorSource.ISSUU;
-                default -> throw new IllegalArgumentException("Unknown source. Use google-news, google-alerts, wordpress, reddit, or issuu.");
+                default -> throw new IllegalArgumentException("Unknown or unavailable source.");
             };
             String input = switch (source) {
-                case GOOGLE_NEWS -> String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
-                case GOOGLE_ALERTS -> requiredEnvironment("GOOGLE_ALERTS_FEED_URL");
-                case WORDPRESS -> requiredEnvironment("WORDPRESS_FEED_URL");
-                case REDDIT -> args.length > 1 ? args[1] : requiredEnvironment("REDDIT_SUBREDDIT");
+                case GOOGLE_NEWS, WORDPRESS, MASTODON, LEMMY, DEV_TO, HACKER_NEWS, STACK_EXCHANGE, GITHUB, TABNEWS,
+                        WIKIPEDIA, GITLAB, LOBSTERS ->
+                        String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
                 default -> "";
             };
             List<FeedItem> items = service.collect(source, input);
@@ -45,11 +48,5 @@ public final class CollectorCli {
             System.err.println(e.getMessage());
             System.exit(1);
         }
-    }
-
-    private static String requiredEnvironment(String name) {
-        String value = System.getenv(name);
-        if (value == null || value.isBlank()) throw new IllegalArgumentException(name + " environment variable is required.");
-        return value;
     }
 }

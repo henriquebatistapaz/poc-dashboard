@@ -6,6 +6,7 @@ import com.example.rsscollector.application.RssFeedLinkValidator;
 import com.henrique.collector.feed.JdkHttpFeedFetcher;
 import com.henrique.collector.source.*;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,18 +24,34 @@ public final class DefaultCollectionGateway implements CollectionGateway {
     private final RssFeedLinkValidator rssUrls;
 
     public static DefaultCollectionGateway fromEnvironment(Map<String, String> environment) {
+        return fromEnvironment(environment, Map.of());
+    }
+
+    /** Test seam for local HttpServer fixtures; production always uses the providers' fixed HTTPS endpoints. */
+    public static DefaultCollectionGateway fromEnvironment(Map<String, String> environment,
+                                                            Map<CollectionSource, URI> restEndpoints) {
         var fetcher = new JdkHttpFeedFetcher();
         var parser = new com.henrique.collector.feed.RssFeedParser();
-        var transport = new JdkRedditHttpTransport();
-        var redditConfig = RedditOAuthConfig.fromEnvironment(environment);
         var service = new CollectorService(new SourceRegistry(),
                 new GoogleNewsCollector(fetcher, parser),
-                new GoogleAlertsCollector(fetcher, parser, new GoogleAlertsUrlPolicy()),
-                new WordPressFeedCollector(fetcher, parser, new PublicHttpsFeedUrlPolicy()),
-                new RedditCollector(redditConfig, new RedditOAuthTokenProvider(redditConfig, transport), transport));
+                new WordPressFeedCollector(fetcher, parser),
+                new MastodonCollector(endpoint(restEndpoints, CollectionSource.MASTODON, "https://mastodon.social/api/v1/timelines/tag")),
+                new LemmyCollector(endpoint(restEndpoints, CollectionSource.LEMMY, "https://lemmy.world/api/v3/search")),
+                new DevToCollector(endpoint(restEndpoints, CollectionSource.DEV_TO, "https://dev.to/api/articles")),
+                new HackerNewsCollector(endpoint(restEndpoints, CollectionSource.HACKER_NEWS, "https://hn.algolia.com/api/v1/search")),
+                new StackExchangeCollector(endpoint(restEndpoints, CollectionSource.STACK_EXCHANGE, "https://api.stackexchange.com/2.3/search")),
+                new GitHubCollector(endpoint(restEndpoints, CollectionSource.GITHUB, "https://api.github.com/search/repositories")),
+                new TabNewsCollector(endpoint(restEndpoints, CollectionSource.TABNEWS, "https://www.tabnews.com.br/api/v1/contents")),
+                new WikipediaCollector(endpoint(restEndpoints, CollectionSource.WIKIPEDIA, "https://en.wikipedia.org/w/api.php")),
+                new GitLabCollector(endpoint(restEndpoints, CollectionSource.GITLAB, "https://gitlab.com/api/v4/projects")),
+                new LobstersCollector(endpoint(restEndpoints, CollectionSource.LOBSTERS, "https://lobste.rs")));
         var urls = new RssFeedLinkValidator();
         return new DefaultCollectionGateway(service, new BoundedFeedHttpFetcher(urls),
                 new com.example.rsscollector.application.RssFeedParser(urls), urls);
+    }
+
+    private static URI endpoint(Map<CollectionSource, URI> overrides, CollectionSource source, String production) {
+        return overrides.getOrDefault(source, URI.create(production));
     }
 
     @Override

@@ -37,7 +37,8 @@ class CollectionRunServiceTest {
 
     @BeforeEach
     void setUp() {
-        scheduleCipher = new ScheduleInputCipher("0000000000000000000000000000000000000000000000000000000000000000");
+        scheduleCipher = new ScheduleInputCipher("0000000000000000000000000000000000000000000000000000000000000000",
+                "integration-test-secret-at-least-32-bytes");
         service = new CollectionRunService(repository, runner, executor, scheduleCipher);
         // Persist as the database would: assign an id and keep one shared instance.
         lenient().when(repository.save(any(CollectionRun.class))).thenAnswer(invocation -> {
@@ -71,14 +72,15 @@ class CollectionRunServiceTest {
     }
 
     @Test
-    void inputIsNeverPersisted() throws Exception {
-        when(runner.run(CollectionSource.REDDIT, "secret-query"))
-                .thenReturn(new CollectionRunner.CollectionResult(CollectionSource.REDDIT, 0, 0, 0));
+    void inputIsEncryptedAndKeptForHistory() throws Exception {
+        when(runner.run(CollectionSource.RSS, "https://example.org/feed?token=secret-query"))
+                .thenReturn(new CollectionRunner.CollectionResult(CollectionSource.RSS, 0, 0, 0));
 
-        service.start(CollectionSource.REDDIT, "secret-query");
+        service.start(CollectionSource.RSS, "https://example.org/feed?token=secret-query");
 
-        assertThat(stored.getSource()).isEqualTo("REDDIT");
-        assertThat(stored.toString()).doesNotContain("secret-query");
+        assertThat(stored.getSource()).isEqualTo("RSS");
+        assertThat(stored.getEncryptedInput()).doesNotContain("secret-query");
+        assertThat(service.inputForDisplay(stored)).isEqualTo("https://example.org/feed?token=secret-query");
         assertThat(stored.getErrorMessage()).isNull();
     }
 
@@ -106,7 +108,8 @@ class CollectionRunServiceTest {
         service.dispatchDueSchedules();
 
         assertThat(stored.getStatus()).isEqualTo(RunStatus.SUCCEEDED);
-        assertThat(stored.getEncryptedInput()).isNull();
+        assertThat(stored.getEncryptedInput()).isNotNull();
+        assertThat(scheduleCipher.decryptForHistory(stored.getEncryptedInput())).isEqualTo("https://feed.example/");
         verify(runner).run(CollectionSource.WORDPRESS, "https://feed.example/");
     }
 
@@ -114,7 +117,7 @@ class CollectionRunServiceTest {
     void sourceAccessFailureStoresFixedMessageWithoutSecretUrl() throws Exception {
         when(runner.run(any(), any())).thenThrow(new SourceAccessException("https://alerts.example/feed?token=SECRET"));
 
-        service.start(CollectionSource.GOOGLE_ALERTS, "ignored");
+        service.start(CollectionSource.RSS, "ignored");
 
         assertThat(stored.getStatus()).isEqualTo(RunStatus.FAILED);
         assertThat(stored.getErrorMessage()).isEqualTo("Source unavailable; check approval and runtime configuration");
@@ -153,13 +156,15 @@ class CollectionRunServiceTest {
     @Test
     void recoveryMarksInterruptedRunsAsFailed() {
         CollectionRun pending = new CollectionRun("WORDPRESS", java.time.Instant.now());
-        CollectionRun running = new CollectionRun("REDDIT", java.time.Instant.now());
+        CollectionRun running = new CollectionRun("GOOGLE_NEWS", java.time.Instant.now());
         running.markRunning(java.time.Instant.now());
         CollectionRun scheduled = new CollectionRun("WORDPRESS", java.time.Instant.now(),
                 java.time.Instant.now().plusSeconds(10), "encrypted");
         scheduled.markRunning(java.time.Instant.now());
+        CollectionRun removedSource = new CollectionRun("GOOGLE_ALERTS", java.time.Instant.now(),
+                java.time.Instant.now().plusSeconds(10), "encrypted-alert-input");
         when(repository.findByStatusIn(List.of(RunStatus.PENDING, RunStatus.RUNNING)))
-                .thenReturn(List.of(pending, running, scheduled));
+                .thenReturn(List.of(pending, running, scheduled, removedSource));
 
         new CollectionRunRecovery(repository).run(null);
 
@@ -167,7 +172,10 @@ class CollectionRunServiceTest {
         assertThat(running.getErrorMessage()).isEqualTo("Interrupted by application restart");
         assertThat(scheduled.getStatus()).isEqualTo(RunStatus.PENDING);
         assertThat(scheduled.getEncryptedInput()).isEqualTo("encrypted");
-        verify(repository).saveAll(List.of(pending, running, scheduled));
+        assertThat(removedSource.getStatus()).isEqualTo(RunStatus.FAILED);
+        assertThat(removedSource.getEncryptedInput()).isNull();
+        assertThat(removedSource.getErrorMessage()).isEqualTo("Scheduled collection source is no longer supported");
+        verify(repository).saveAll(List.of(pending, running, scheduled, removedSource));
     }
 
     @Test

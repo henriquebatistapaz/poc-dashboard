@@ -1,8 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
+import { installNetworkIsolation } from './helpers/mock-api'
 
 const item = { id: 1, source: 'rss', externalId: 'sample-1', title: 'Novas perspectivas para cidades mais verdes',
   link: 'https://example.org/cidades', publishedAt: '2026-11-06T12:00:00Z', collectedAt: '2026-11-06T13:00:00Z' }
 async function mockApi(page: Page, initialHistory: Array<Record<string, unknown>> = []) {
+  await installNetworkIsolation(page)
   let collected = false
   let runs = 0
   const history = [...initialHistory]
@@ -33,7 +35,10 @@ async function mockApi(page: Page, initialHistory: Array<Record<string, unknown>
       return route.fulfill({ json: { id: 41, source: 'RSS', status: 'SUCCEEDED', fetched: 1, inserted: 1, duplicates: 0, errorMessage: null } })
     }
     if (url.pathname === '/v1/items/1') return route.fulfill({ json: item })
-    return route.fulfill({ json: { items: collected ? [item] : [], total: collected ? 1 : 0, page: 0, size: 10 } })
+    if (url.pathname === '/v1/items') {
+      return route.fulfill({ json: { items: collected ? [item] : [], total: collected ? 1 : 0, page: 0, size: 10 } })
+    }
+    return route.fulfill({ status: 500, json: { error: `Unexpected endpoint: ${url.pathname}` } })
   })
 }
 async function login(page: Page) {
@@ -72,6 +77,30 @@ test('RSS collection, deduplication, details and authenticated UI', async ({ pag
   await expect(page.getByRole('heading', { name: 'Entre no seu workspace' })).toBeVisible()
 })
 
+test('shows the ten public REST sources with working examples in the selector', async ({ page }) => {
+  await mockApi(page); await login(page)
+  const select = page.locator('#collection-source')
+  for (const [source, sample] of [
+    ['MASTODON', 'java'], ['LEMMY', 'linux'], ['DEV_TO', 'spring boot'],
+    ['HACKER_NEWS', 'postgres'], ['STACK_EXCHANGE', 'spring boot'], ['GITHUB', 'spring boot'], ['TABNEWS', 'java'],
+    ['WIKIPEDIA', 'sistema solar'], ['GITLAB', 'spring boot'], ['LOBSTERS', 'hottest'],
+  ]) {
+    await select.selectOption(source)
+    await expect(page.locator('.feed-examples button')).toHaveCount(2)
+    await page.locator('.feed-examples button').first().click()
+    await expect(page.locator('#collection-input')).toHaveValue(sample)
+  }
+})
+
+test('submits selected open source and example input without external network access', async ({ page }) => {
+  await mockApi(page); await login(page)
+  await page.locator('#collection-source').selectOption('WIKIPEDIA')
+  await page.getByRole('button', { name: 'sistema solar' }).click()
+  const sent = page.waitForRequest(request => request.url().endsWith('/v1/collections'))
+  await page.getByRole('button', { name: 'Coletar agora' }).click()
+  expect((await sent).postDataJSON()).toEqual({ source: 'WIKIPEDIA', input: 'sistema solar' })
+})
+
 test('resumes tracking an asynchronous collection from recent history', async ({ page }) => {
   await mockApi(page, [{ id: 41, source: 'RSS', status: 'RUNNING', createdAt: '2026-11-06T12:00:00Z', fetched: null, inserted: null, duplicates: null, errorMessage: null }])
   await login(page)
@@ -82,7 +111,7 @@ test('resumes tracking an asynchronous collection from recent history', async ({
   await expect(page.getByRole('button', { name: item.title })).toBeVisible()
 })
 
-test('switches all three languages at login and in the workspace and remembers preference only', async ({ page }, testInfo) => {
+test('switches all three languages at login and in the workspace and remembers preference only', async ({ page }) => {
   await mockApi(page); await page.goto('/')
   await page.getByLabel('Idioma', { exact: true }).selectOption('en')
   await expect(page.getByRole('heading', { name: 'Sign in to your workspace' })).toBeVisible()
@@ -104,7 +133,7 @@ test('switches all three languages at login and in the workspace and remembers p
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
 })
 
-test('handles bad credentials, source errors and session expiry without exposing private input', async ({ page }, testInfo) => {
+test('handles bad credentials, source errors and session expiry without exposing private input', async ({ page }) => {
   await mockApi(page); await page.goto('/')
   await page.getByLabel('E-mail ou usuário', { exact: true }).fill('admin@example.org')
   await page.getByLabel('Senha', { exact: true }).fill('wrong')
@@ -113,10 +142,10 @@ test('handles bad credentials, source errors and session expiry without exposing
   await expect(page.getByLabel('Senha', { exact: true })).toHaveValue('')
   await page.getByLabel('Senha', { exact: true }).fill('test-password')
   await page.getByRole('button', { name: 'Entrar no workspace' }).click()
-  await page.route('**/v1/collections', route => route.fulfill({ status: 202, json: { id: 9, source: 'GOOGLE_ALERTS', status: 'PENDING', fetched: null, inserted: null, duplicates: null, errorMessage: null } }))
-  await page.route('**/v1/collections/9', route => route.fulfill({ json: { id: 9, source: 'GOOGLE_ALERTS', status: 'FAILED', fetched: null, inserted: null, duplicates: null, errorMessage: 'Source unavailable; check approval and runtime configuration' } }))
-  await page.locator('#collection-source').selectOption('GOOGLE_ALERTS')
-  await page.locator('#collection-input').fill('https://www.google.com/alerts/feeds/demo/private')
+  await page.route('**/v1/collections', route => route.fulfill({ status: 202, json: { id: 9, source: 'RSS', status: 'PENDING', fetched: null, inserted: null, duplicates: null, errorMessage: null } }))
+  await page.route('**/v1/collections/9', route => route.fulfill({ json: { id: 9, source: 'RSS', status: 'FAILED', fetched: null, inserted: null, duplicates: null, errorMessage: 'Source unavailable; check approval and runtime configuration' } }))
+  await page.locator('#collection-source').selectOption('RSS')
+  await page.locator('#collection-input').fill('https://example.org/feed?token=do-not-display')
   await page.getByRole('button', { name: 'Coletar agora' }).click()
   await expect(page.getByRole('alert')).toContainText('A fonte não respondeu')
   await expect(page.locator('body')).not.toContainText('do-not-display')
@@ -128,7 +157,7 @@ test('handles bad credentials, source errors and session expiry without exposing
   await expect(page.getByRole('alert')).toContainText('Tu sesión ha caducado')
 })
 
-test('applies filters with UTC instants and rejects reversed date ranges', async ({ page }, testInfo) => {
+test('applies filters with UTC instants and rejects reversed date ranges', async ({ page }) => {
   await mockApi(page); await login(page)
   await page.locator('#filter-query').fill('cidades')
   await page.locator('#filter-source').selectOption('rss')

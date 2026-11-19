@@ -42,6 +42,12 @@ public class UserManagementService {
     }
 
     @Transactional
+    public void bootstrapDevLocalAdmin() {
+        if (users.findByEmailIgnoreCase("local").isPresent()) return;
+        users.save(new UserAccount("local", passwords.encode("local"), UserRole.ADMIN));
+    }
+
+    @Transactional
     public UserAccount create(String email, String password, UserRole role) {
         if (email == null || email.isBlank() || email.length() > 254 || !email.contains("@")
                 || password == null || password.getBytes(StandardCharsets.UTF_8).length < 12
