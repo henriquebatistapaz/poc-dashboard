@@ -110,6 +110,7 @@ async function performLogin(page, baseUrl) {
 
 async function runColdNavigation(stateName, baseUrl, runIndex, theme = 'light') {
   return withFreshBrowser(async (page, chromeVersion) => {
+    await page.setViewport({ width: 412, height: 823, isMobile: true, hasTouch: true })
     await page.setRequestInterception(true)
     page.on('request', (req) => {
       const reqUrl = req.url()
@@ -141,6 +142,20 @@ async function runColdNavigation(stateName, baseUrl, runIndex, theme = 'light') 
             await page.evaluate(() => document.getElementById('collect')?.scrollIntoView({ behavior: 'instant' }))
           } else if (stateName === 'history') {
             await page.evaluate(() => document.getElementById('activity')?.scrollIntoView({ behavior: 'instant' }))
+      } else if (stateName === 'details') {
+        await page.evaluate(() => {
+          const el = document.querySelector('.item-title')
+          if (el instanceof HTMLElement) {
+            el.scrollIntoView({ block: 'center' })
+            el.click()
+          }
+        })
+        await page.waitForSelector('dialog.detail-dialog[open]')
+      } else if (stateName === 'mobile-menu') {
+        const toggle = await page.$('[data-testid="mobile-menu-toggle"]')
+        if (!toggle) throw new Error('mobile-menu toggle not found')
+        await toggle.click()
+        await page.waitForSelector('#mobile-nav-drawer')
           }
         }
       },
@@ -232,29 +247,33 @@ async function main() {
 
   const server = await startMockServer(distDir)
   try {
-    const mainStates = ['login', 'library', 'collection', 'history']
+    const states = ['login', 'library', 'collection', 'history', 'details', 'mobile-menu']
     const performanceSummary = {}
     let chromeVersion = ''
 
-    for (const state of mainStates) {
-      const runs = []
-      for (let i = 1; i <= 3; i++) {
-        const res = await runColdNavigation(state, server.baseUrl, i, 'light')
-        chromeVersion = res.chromeVersion
-        runs.push({ run: i, performance: res.perf, accessibility: res.acc })
-      }
-      const perfScores = runs.map((r) => r.performance)
-      const accScores = runs.map((r) => r.accessibility)
-      performanceSummary[state] = {
-        runs,
-        performanceScores: perfScores,
-        performanceMedian: median(perfScores),
-        accessibilityMedian: median(accScores),
+    for (const state of states) {
+      performanceSummary[state] = {}
+      for (const theme of ['light', 'dark']) {
+        const runs = []
+        for (let i = 1; i <= 3; i++) {
+          const res = await runColdNavigation(state, server.baseUrl, i, theme)
+          chromeVersion = res.chromeVersion
+          runs.push({ run: i, performance: res.perf, accessibility: res.acc })
+        }
+        const perfScores = runs.map((r) => r.performance)
+        const accScores = runs.map((r) => r.accessibility)
+        performanceSummary[state][theme] = {
+          runs,
+          performanceScores: perfScores,
+          performanceMedian: median(perfScores),
+          accessibilityScores: accScores,
+          accessibilityMedian: median(accScores),
+        }
       }
     }
 
     const accessibilitySnapshots = {}
-    for (const state of ['login', 'library', 'collection', 'history', 'details', 'mobile-menu']) {
+    for (const state of states) {
       accessibilitySnapshots[state] = {}
       for (const theme of ['light', 'dark']) {
         const res = await runSnapshotAcc(state, server.baseUrl, theme)
@@ -281,18 +300,20 @@ async function main() {
 
     if (enforce) {
       const failures = []
-      for (const [state, data] of Object.entries(performanceSummary)) {
-        if (data.performanceMedian < 90) {
-          failures.push(`${state} performance median ${data.performanceMedian} < 90`)
-        }
-        if (data.accessibilityMedian < 95) {
-          failures.push(`${state} accessibility median ${data.accessibilityMedian} < 95`)
+      for (const [state, themes] of Object.entries(performanceSummary)) {
+        for (const [theme, data] of Object.entries(themes)) {
+          if (data.performanceMedian <= 95) {
+            failures.push(`${state} (${theme}) performance median ${data.performanceMedian} <= 95`)
+          }
+          if (data.accessibilityMedian <= 95) {
+            failures.push(`${state} (${theme}) accessibility median ${data.accessibilityMedian} <= 95`)
+          }
         }
       }
       for (const [state, themes] of Object.entries(accessibilitySnapshots)) {
         for (const [theme, score] of Object.entries(themes)) {
-          if (score == null || score < 95) {
-            failures.push(`${state} (${theme}) accessibility snapshot ${score} < 95`)
+          if (score == null || score <= 95) {
+            failures.push(`${state} (${theme}) accessibility snapshot ${score} <= 95`)
           }
         }
       }
