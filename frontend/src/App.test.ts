@@ -399,7 +399,23 @@ describe('App', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const wrapper = mount(App, { attachTo: document.body, global: { plugins: [i18n] } })
-    const vm = wrapper.vm as any
+    type AppVm = {
+      [key: string]: unknown
+      loginBusy?: boolean
+      token?: string
+      collectionBusy?: boolean
+      collectionFailure?: unknown
+      detail?: { id: number }
+      login: (e: string, p: string) => Promise<void>
+      loadItems: () => Promise<void>
+      loadHistory: () => Promise<void>
+      collect: (s: string, i: string) => Promise<void>
+      resumeRun: (r: unknown) => Promise<void>
+      retryDetail: () => Promise<void>
+      logout: () => void
+      openDetail: (id: number, ev?: unknown) => Promise<void>
+    }
+    const vm = wrapper.vm as unknown as AppVm
 
     // Guard branches before login
     await vm.loadItems()
@@ -428,7 +444,7 @@ describe('App', () => {
     expect(vm.token).toBe('tok-5')
 
     // 2. loadItems: abort error and superseded controller in finally
-    let rejectItems1!: (err: any) => void
+    let rejectItems1!: (err: unknown) => void
     let resolveItems2!: (res: Response) => void
     fetchMock
       .mockImplementationOnce(
@@ -532,7 +548,7 @@ describe('App', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ id: 103, source: 'RSS', status: 'PENDING' }))
       .mockResolvedValueOnce(jsonResponse([]))
-    let rejectWaitRun2!: (err: any) => void
+    let rejectWaitRun2!: (err: unknown) => void
     fetchMock.mockImplementationOnce(
       () =>
         new Promise<Response>((_, reject) => {
@@ -584,7 +600,7 @@ describe('App', () => {
     await flushPromises()
 
     // c) logout while waitForRun rejects in resumeRun
-    let rejectResume2!: (err: any) => void
+    let rejectResume2!: (err: unknown) => void
     fetchMock.mockImplementationOnce(
       () =>
         new Promise<Response>((_, reject) => {
@@ -618,7 +634,7 @@ describe('App', () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse({ id: 201, source: 'rss', externalId: 'e201', title: 'T201', link: 'https://example.test/201', publishedAt: null, collectedAt: '2026-11-17T12:00:00Z' }),
     )
-    await vm.openDetail(201, { currentTarget: {} } as any)
+    await vm.openDetail(201, { currentTarget: {} } as unknown as MouseEvent)
     await flushPromises()
     expect(vm.detail?.id).toBe(201)
 
