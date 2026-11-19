@@ -37,7 +37,8 @@ class CollectionRunServiceTest {
 
     @BeforeEach
     void setUp() {
-        scheduleCipher = new ScheduleInputCipher("0000000000000000000000000000000000000000000000000000000000000000");
+        scheduleCipher = new ScheduleInputCipher("0000000000000000000000000000000000000000000000000000000000000000",
+                "integration-test-secret-at-least-32-bytes");
         service = new CollectionRunService(repository, runner, executor, scheduleCipher);
         // Persist as the database would: assign an id and keep one shared instance.
         lenient().when(repository.save(any(CollectionRun.class))).thenAnswer(invocation -> {
@@ -71,14 +72,15 @@ class CollectionRunServiceTest {
     }
 
     @Test
-    void inputIsNeverPersisted() throws Exception {
+    void inputIsEncryptedAndKeptForHistory() throws Exception {
         when(runner.run(CollectionSource.RSS, "https://example.org/feed?token=secret-query"))
                 .thenReturn(new CollectionRunner.CollectionResult(CollectionSource.RSS, 0, 0, 0));
 
         service.start(CollectionSource.RSS, "https://example.org/feed?token=secret-query");
 
         assertThat(stored.getSource()).isEqualTo("RSS");
-        assertThat(stored.toString()).doesNotContain("secret-query");
+        assertThat(stored.getEncryptedInput()).doesNotContain("secret-query");
+        assertThat(service.inputForDisplay(stored)).isEqualTo("https://example.org/feed?token=secret-query");
         assertThat(stored.getErrorMessage()).isNull();
     }
 
@@ -106,7 +108,8 @@ class CollectionRunServiceTest {
         service.dispatchDueSchedules();
 
         assertThat(stored.getStatus()).isEqualTo(RunStatus.SUCCEEDED);
-        assertThat(stored.getEncryptedInput()).isNull();
+        assertThat(stored.getEncryptedInput()).isNotNull();
+        assertThat(scheduleCipher.decryptForHistory(stored.getEncryptedInput())).isEqualTo("https://feed.example/");
         verify(runner).run(CollectionSource.WORDPRESS, "https://feed.example/");
     }
 

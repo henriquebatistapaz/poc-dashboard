@@ -55,6 +55,7 @@ const applied = ref<Filters>({ ...filters })
 const filterError = ref('')
 const sources = ['rss', 'google-news', 'wordpress', 'alpha', 'beta', 'mastodon', 'lemmy', 'dev-to', 'hacker-news', 'stack-exchange', 'github', 'tabnews']
 const pages = computed(() => Math.max(1, Math.ceil(total.value / size.value)))
+const latestCollectionContext = computed(() => result.value ?? collectionRuns.value[0] ?? null)
 const dialogOpen = ref(false)
 const detail = ref<Item | null>(null)
 const detailBusy = ref(false)
@@ -529,6 +530,10 @@ onBeforeUnmount(() => {
                 {{ t('items.title') }}<span class="pill neutral">{{ t('items.count', { count: n(total) }) }}</span>
               </h2>
               <p class="muted">{{ t('items.subtitle') }}</p>
+              <p v-if="latestCollectionContext?.input" class="collection-context">
+                <strong>{{ t('items.lastRun', { source: sourceLabel(latestCollectionContext.source) }) }}</strong>
+                <code :title="latestCollectionContext.input">{{ latestCollectionContext.input }}</code>
+              </p>
             </div>
             <button
               class="button quiet"
