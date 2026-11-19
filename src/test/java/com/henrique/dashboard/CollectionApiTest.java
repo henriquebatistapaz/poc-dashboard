@@ -6,6 +6,8 @@ import com.henrique.collector.source.SourceAccessException;
 import java.sql.SQLException;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -57,6 +59,41 @@ class CollectionApiTest {
     }
 
     @Test
+    void removedGoogleAlertsSourceCannotStartNewCollection() throws Exception {
+        String token = login();
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                .contentType("application/json").content("{\"source\":\"GOOGLE_ALERTS\",\"input\":\"java\"}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(runner);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"WIKIPEDIA, sistema solar", "GITLAB, spring boot", "LOBSTERS, hottest"})
+    void acceptsOpenSourcesWithValidInputs(String source, String input) throws Exception {
+        String token = login();
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                        .contentType("application/json").content(json.writeValueAsString(new CollectionControllerBody(source, input))))
+                .andExpect(status().isAccepted());
+        verify(runner, timeout(2_000)).run(CollectionSource.valueOf(source), input);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"WIKIPEDIA, blank", "WIKIPEDIA, too-long", "GITLAB, too-long", "LOBSTERS, blank", "LOBSTERS, invalid-tag", "LOBSTERS, too-long"})
+    void rejectsInvalidOpenSourceInputsBeforeStartingRun(String source, String invalidKind) throws Exception {
+        String input = switch (invalidKind) {
+            case "blank" -> "   ";
+            case "too-long" -> "x".repeat("LOBSTERS".equals(source) ? 101 : 201);
+            case "invalid-tag" -> "tag-with-hyphen";
+            default -> throw new IllegalArgumentException(invalidKind);
+        };
+        String token = login();
+        mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
+                        .contentType("application/json").content(json.writeValueAsString(new CollectionControllerBody(source, input))))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(runner);
+    }
+
+    @Test
     void rejectsBadLoginAndInvalidOrExpiredTokens() throws Exception {
         mvc.perform(post("/v1/auth/login").contentType("application/json")
                 .content("{\"email\":\"admin@example.org\",\"password\":\"wrong\"}")).andExpect(status().isUnauthorized());
@@ -85,15 +122,15 @@ class CollectionApiTest {
     }
 
     @Test
-    void startDoesNotExposeSecretFeedUrlInResponse() throws Exception {
+    void startReturnsInputInAuthenticatedHistory() throws Exception {
         // Failure mapping now happens per run (see CollectionRunApiTest and CollectionRunServiceTest).
         String token = login();
-        String secret = "https://www.google.com/alerts/feeds/user/secret";
-        String body = json.writeValueAsString(new CollectionControllerBody("GOOGLE_ALERTS", secret));
-        doThrow(new IllegalStateException(secret)).when(runner).run(CollectionSource.GOOGLE_ALERTS, secret);
+        String secret = "https://example.org/feed?token=secret";
+        String body = json.writeValueAsString(new CollectionControllerBody("RSS", secret));
+        doThrow(new IllegalStateException(secret)).when(runner).run(CollectionSource.RSS, secret);
         var result = mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                 .contentType("application/json").content(body)).andExpect(status().isAccepted()).andReturn();
-        assertFalse(result.getResponse().getContentAsString().contains(secret));
+        assertEquals(secret, json.readTree(result.getResponse().getContentAsString()).path("input").asText());
     }
 
     record CollectionControllerBody(String source, String input) { }

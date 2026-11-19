@@ -7,12 +7,17 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "test:coverage": "vitest run --coverage",
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "lint": "eslint \"src/**/*.{ts,vue}\" \"e2e/**/*.ts\" \"scripts/**/*.mjs\"",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:playwright": "playwright test --config=playwright.config.ts",
+    "test:visual": "playwright test --config=playwright.visual.config.ts",
+    "audit:lighthouse": "node scripts/audit-lighthouse.mjs --enforce",
+    "test:smoke": "node scripts/smoke-runner.mjs"
   },
   "dependencies": {
     "@lucide/vue": "1.69.0",
@@ -20,13 +25,20 @@
     "vue-i18n": "11.4.18"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@eslint/js": "10.0.1",
     "@playwright/test": "1.65.0",
     "@types/node": "^24.0.0",
     "@vitejs/plugin-vue": "6.0.10",
     "@vitest/coverage-v8": "5.1.0",
     "@vue/test-utils": "2.4.11",
+    "eslint": "10.15.0",
+    "eslint-plugin-vue": "10.12.1",
+    "globals": "17.14.0",
     "jsdom": "31.0.0",
+    "lighthouse": "13.6.0",
     "typescript": "5.9.3",
+    "typescript-eslint": "8.73.0",
     "vite": "8.3.6",
     "vitest": "5.1.0",
     "vue-tsc": "3.3.14"

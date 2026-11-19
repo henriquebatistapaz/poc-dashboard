@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { ArrowUpRight, CheckCircle2, Link, Play, Rss, X } from '@lucide/vue'
 import type { CollectionRun, CollectionSource } from '../types'
 import { safeLink } from '../lib/format'
+
 const props = defineProps<{ busy: boolean; result: CollectionRun | null; error: string }>()
 const emit = defineEmits<{ collect: [source: CollectionSource, input: string]; view: [] }>()
 const { t, n } = useI18n()
@@ -11,39 +12,239 @@ const source = ref<CollectionSource>('RSS')
 const input = ref('')
 const validation = ref('')
 const hiddenResult = ref(false)
-const isFixture = computed(() => ['ALPHA', 'BETA'].includes(source.value))
-const isUrl = computed(() => ['RSS', 'WORDPRESS', 'GOOGLE_ALERTS'].includes(source.value))
-const placeholder = computed(() => source.value === 'ALPHA' ? '{"posts": […]}' : source.value === 'BETA' ? '{"items": […]}'
-  : t(source.value === 'GOOGLE_NEWS' ? 'collection.queryPlaceholder' : source.value === 'GOOGLE_ALERTS'
-    ? 'collection.alertsPlaceholder' : source.value === 'REDDIT' ? 'collection.redditPlaceholder' : 'collection.feedPlaceholder'))
-watch(source, () => { input.value = ''; validation.value = '' })
-watch(() => props.result, (result) => { if (result) { input.value = ''; hiddenResult.value = false } })
+const isFixture = computed(() => source.value === 'ALPHA' || source.value === 'BETA')
+const isUrl = computed(() => source.value === 'RSS')
+const isRestSource = computed(() => ['MASTODON', 'LEMMY', 'DEV_TO', 'HACKER_NEWS', 'STACK_EXCHANGE', 'GITHUB', 'TABNEWS', 'WIKIPEDIA', 'GITLAB', 'LOBSTERS'].includes(source.value))
+
+const PLACEHOLDER_KEYS: Record<Exclude<CollectionSource, 'ALPHA' | 'BETA'>, string> = {
+  RSS: 'collection.feedPlaceholder',
+  GOOGLE_NEWS: 'collection.queryPlaceholder',
+  WORDPRESS: 'collection.wordpressPlaceholder',
+  MASTODON: 'collection.restPlaceholder', LEMMY: 'collection.restPlaceholder', DEV_TO: 'collection.restPlaceholder',
+  HACKER_NEWS: 'collection.restPlaceholder', STACK_EXCHANGE: 'collection.restPlaceholder', GITHUB: 'collection.restPlaceholder', TABNEWS: 'collection.restPlaceholder',
+  WIKIPEDIA: 'collection.restPlaceholder', GITLAB: 'collection.restPlaceholder', LOBSTERS: 'collection.restPlaceholder',
+}
+
+const placeholder = computed(() =>
+  source.value === 'ALPHA'
+    ? '{"posts": […]}'
+    : source.value === 'BETA'
+      ? '{"items": […]}'
+      : t(PLACEHOLDER_KEYS[source.value] ?? 'collection.feedPlaceholder'),
+)
+
+type SourceExample = { label: string; value: string } | { labelKey: string; value: string } | { valueKey: string }
+
+const EXAMPLES: Partial<Record<CollectionSource, SourceExample[]>> = {
+  RSS: [
+    { label: 'BBC News', value: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
+    { label: 'XKCD · Atom', value: 'https://xkcd.com/atom.xml' },
+    { label: 'TabNews', value: 'https://www.tabnews.com.br/recentes/rss' },
+    { label: 'G1', value: 'https://g1.globo.com/rss/g1/' },
+    { label: 'Hacker News', value: 'https://hnrss.org/frontpage' },
+  ],
+  GOOGLE_NEWS: [
+    { label: 'Java Spring Boot', value: 'Java Spring Boot' },
+    { label: 'Energia renovável', value: 'energia renovável' },
+    { label: 'Inteligência artificial', value: 'inteligência artificial' },
+  ],
+  WORDPRESS: [
+    { label: 'java', value: 'java' },
+    { label: 'technology', value: 'technology' },
+    { label: 'wordpress', value: 'wordpress' },
+  ],
+  MASTODON: [{ valueKey: 'collection.mastodonQuery' }, { valueKey: 'collection.mastodonQuery2' }],
+  LEMMY: [{ valueKey: 'collection.lemmyQuery' }, { valueKey: 'collection.lemmyQuery2' }],
+  DEV_TO: [{ valueKey: 'collection.devToQuery' }, { valueKey: 'collection.devToQuery2' }],
+  HACKER_NEWS: [{ valueKey: 'collection.hackerNewsQuery' }, { valueKey: 'collection.hackerNewsQuery2' }],
+  STACK_EXCHANGE: [{ valueKey: 'collection.stackExchangeQuery' }, { valueKey: 'collection.stackExchangeQuery2' }],
+  GITHUB: [{ valueKey: 'collection.githubQuery' }, { valueKey: 'collection.githubQuery2' }],
+  TABNEWS: [{ valueKey: 'collection.tabnewsQuery' }, { valueKey: 'collection.tabnewsQuery2' }],
+  WIKIPEDIA: [{ valueKey: 'collection.wikipediaQuery' }, { valueKey: 'collection.wikipediaQuery2' }],
+  GITLAB: [{ valueKey: 'collection.gitLabQuery' }, { valueKey: 'collection.gitLabQuery2' }],
+  LOBSTERS: [{ valueKey: 'collection.lobstersQuery' }, { valueKey: 'collection.lobstersQuery2' }],
+  ALPHA: [
+    {
+      labelKey: 'collection.fixtureExample',
+      value: '{"posts":[{"id":"alpha-1","author":{"handle":"@dev"},"text":"Exemplo Alpha","created_at":"2026-11-18T12:00:00Z","url":"https://example.org/alpha/1"}]}',
+    },
+  ],
+  BETA: [
+    {
+      labelKey: 'collection.fixtureExample',
+      value: '{"items":[{"postId":"beta-1","authorName":"Maria","body":"Exemplo Beta","publishedAt":"2026-11-18T12:00:00Z","link":"https://example.org/beta/1"}]}',
+    },
+  ],
+}
+
+const activeExamples = computed(() => EXAMPLES[source.value] ?? [])
+
+function exampleLabel(item: SourceExample) {
+  if ('labelKey' in item) return t(item.labelKey)
+  if ('label' in item) return item.label
+  return t(item.valueKey)
+}
+
+function exampleValue(item: SourceExample) {
+  return 'valueKey' in item ? t(item.valueKey) : item.value
+}
+
+watch(source, () => {
+  input.value = ''
+  validation.value = ''
+})
+watch(
+  () => props.result,
+  (result) => {
+    if (result) {
+      input.value = ''
+      hiddenResult.value = false
+    }
+  },
+)
+
 function submit() {
+  if (props.busy) return
   validation.value = ''
   const value = input.value.trim()
-  if (!value) { validation.value = 'validation.required'; return }
-  if (isUrl.value && !safeLink(value)) { validation.value = 'validation.url'; return }
-  if (value.length > 4096) { validation.value = 'validation.length'; return }
+  if (!value) {
+    validation.value = 'validation.required'
+    return
+  }
+  if (isUrl.value && !safeLink(value)) {
+    validation.value = 'validation.url'
+    return
+  }
+  if (value.length > 4096) {
+    validation.value = 'validation.length'
+    return
+  }
   emit('collect', source.value, value)
 }
-function example(value: string) { input.value = value; validation.value = '' }
+
+function example(value: string) {
+  input.value = value
+  validation.value = ''
+}
 </script>
 
 <template>
   <section id="collect" class="collection-card" aria-labelledby="collection-title">
-    <div class="collection-heading"><span class="source-icon"><Rss :size="22" /></span><div><div class="eyebrow">{{ t('collection.eyebrow') }}</div><h2 id="collection-title">{{ t('collection.title') }}</h2></div><span class="pill neutral">{{ t('collection.manual') }}</span></div>
+    <div class="collection-heading">
+      <span class="source-icon"><Rss :size="22" aria-hidden="true" /></span>
+      <div>
+        <div class="eyebrow">{{ t('collection.eyebrow') }}</div>
+        <h2 id="collection-title">{{ t('collection.title') }}</h2>
+      </div>
+      <span class="pill neutral">{{ t('collection.manual') }}</span>
+    </div>
     <p class="collection-description">{{ t('collection.description') }}</p>
     <form class="collection-form" novalidate @submit.prevent="submit">
-      <div class="field source-field"><label for="collection-source">{{ t('collection.source') }}</label><select id="collection-source" v-model="source" :disabled="busy"><option value="RSS">{{ t('sources.rss') }}</option><option value="GOOGLE_NEWS">{{ t('sources.google-news') }}</option><option value="WORDPRESS">{{ t('sources.wordpress') }}</option><option value="GOOGLE_ALERTS">{{ t('sources.google-alerts') }}</option><option value="REDDIT">{{ t('sources.redditConditional') }}</option><option value="ALPHA">{{ t('sources.alpha') }}</option><option value="BETA">{{ t('sources.beta') }}</option></select></div>
-      <div class="field input-field"><label for="collection-input">{{ t(isFixture ? 'collection.fixture' : isUrl ? 'collection.feedUrl' : source === 'REDDIT' ? 'collection.subreddit' : 'collection.search') }}</label><div class="input-with-icon"><Link v-if="isUrl && source !== 'GOOGLE_ALERTS'" :size="17" /><textarea v-if="isFixture" id="collection-input" v-model="input" :placeholder="placeholder" :disabled="busy" maxlength="4096" rows="2" required></textarea><input v-else id="collection-input" v-model="input" :class="{ 'with-icon': isUrl && source !== 'GOOGLE_ALERTS' }" :type="source === 'GOOGLE_ALERTS' ? 'password' : 'text'" :placeholder="placeholder" :disabled="busy" maxlength="4096" autocomplete="off" spellcheck="false" required /></div></div>
-      <button class="button primary collect-submit" :disabled="busy" type="submit"><span v-if="busy" class="spinner"></span><Play v-else :size="15" />{{ t(busy ? 'collection.busy' : 'collection.submit') }}</button>
+      <div class="field source-field">
+        <label for="collection-source">{{ t('collection.source') }}</label>
+        <select id="collection-source" v-model="source" :disabled="busy">
+          <option value="RSS">{{ t('sources.rss') }}</option>
+          <option value="GOOGLE_NEWS">{{ t('sources.google-news') }}</option>
+          <option value="WORDPRESS">{{ t('sources.wordpress') }}</option>
+          <option value="MASTODON">{{ t('sources.mastodon') }}</option>
+          <option value="LEMMY">{{ t('sources.lemmy') }}</option>
+          <option value="DEV_TO">{{ t('sources.dev-to') }}</option>
+          <option value="HACKER_NEWS">{{ t('sources.hacker-news') }}</option>
+          <option value="STACK_EXCHANGE">{{ t('sources.stack-exchange') }}</option>
+          <option value="GITHUB">{{ t('sources.github') }}</option>
+          <option value="TABNEWS">{{ t('sources.tabnews') }}</option>
+          <option value="WIKIPEDIA">{{ t('sources.wikipedia') }}</option>
+          <option value="GITLAB">{{ t('sources.gitlab') }}</option>
+          <option value="LOBSTERS">{{ t('sources.lobsters') }}</option>
+          <option value="ALPHA">{{ t('sources.alpha') }}</option>
+          <option value="BETA">{{ t('sources.beta') }}</option>
+        </select>
+      </div>
+      <div class="field input-field">
+        <label for="collection-input">{{
+          t(isFixture ? 'collection.fixture' : isUrl ? 'collection.feedUrl' : 'collection.search')
+        }}</label>
+        <div class="input-with-icon">
+          <Link v-if="isUrl" :size="17" aria-hidden="true" />
+          <textarea
+            v-if="isFixture"
+            id="collection-input"
+            v-model="input"
+            :placeholder="placeholder"
+            :disabled="busy"
+            maxlength="4096"
+            rows="2"
+            required
+            :aria-invalid="Boolean(validation || error)"
+            :aria-describedby="validation || error ? 'collection-error' : undefined"
+          ></textarea>
+          <input
+            v-else
+            id="collection-input"
+            v-model="input"
+            :class="{ 'with-icon': isUrl }"
+            :type="isUrl ? 'url' : 'text'"
+            :inputmode="isUrl ? 'url' : 'text'"
+            autocapitalize="none"
+            autocorrect="off"
+            :placeholder="placeholder"
+            :disabled="busy"
+            maxlength="4096"
+            autocomplete="off"
+            spellcheck="false"
+            required
+            :aria-invalid="Boolean(validation || error)"
+            :aria-describedby="validation || error ? 'collection-error' : undefined"
+          />
+        </div>
+      </div>
+      <button class="button primary collect-submit" :disabled="busy" type="submit">
+        <span v-if="busy" class="spinner" aria-hidden="true"></span>
+        <Play v-else :size="15" aria-hidden="true" />
+        {{ t(busy ? 'collection.busy' : 'collection.submit') }}
+      </button>
     </form>
-    <div v-if="source === 'RSS'" class="feed-examples"><span>{{ t('collection.examples') }}</span><button type="button" :disabled="busy" @click="example('https://feeds.bbci.co.uk/news/world/rss.xml')">BBC News <ArrowUpRight :size="12" /></button><button type="button" :disabled="busy" @click="example('https://xkcd.com/atom.xml')">XKCD · Atom <ArrowUpRight :size="12" /></button><button type="button" :disabled="busy" @click="example('https://wordpress.org/news/feed/')">WordPress <ArrowUpRight :size="12" /></button></div>
-    <p v-else-if="source === 'GOOGLE_ALERTS'" class="field-help">{{ t('collection.alertsHelp') }}</p>
-    <p v-else-if="source === 'REDDIT'" class="field-help">{{ t('collection.redditHelp') }}</p>
+    <div v-if="activeExamples.length" class="feed-examples">
+      <span>{{ t('collection.examples') }}</span>
+      <button
+        v-for="item in activeExamples"
+        :key="'valueKey' in item ? item.valueKey : 'labelKey' in item ? item.labelKey : item.label"
+        type="button"
+        :disabled="busy"
+        @click="example(exampleValue(item))"
+      >
+        {{ exampleLabel(item) }} <ArrowUpRight :size="12" aria-hidden="true" />
+      </button>
+    </div>
+    <p v-if="source === 'WORDPRESS'" class="field-help">{{ t('collection.wordpressHelp') }}</p>
+    <p v-else-if="isRestSource" class="field-help">{{ t('collection.restHelp') }}</p>
     <p v-else-if="isFixture" class="field-help">{{ t('collection.fixtureHelp') }}</p>
     <p v-if="busy" class="field-help" role="status">{{ t('collection.wait') }}</p>
-    <div v-if="validation || error" class="notice error" role="alert">{{ validation ? t(validation) : error }}</div>
-    <div v-if="result && !hiddenResult" class="collection-result" role="status"><CheckCircle2 :size="20" /><div><strong>{{ t('collection.done') }}</strong><p>{{ t('collection.counts', { fetched: n(result.fetched ?? 0), inserted: n(result.inserted ?? 0), duplicates: n(result.duplicates ?? 0) }) }}</p><small v-if="result.fetched === 0">{{ t('collection.empty') }}</small><small v-else-if="result.inserted === 0">{{ t('collection.duplicateNote') }}</small></div><button class="text-button" type="button" @click="emit('view')">{{ t('collection.view') }} <ArrowUpRight :size="14" /></button><button class="icon-button" :aria-label="t('collection.dismiss')" @click="hiddenResult = true"><X :size="15" /></button></div>
+    <div v-if="validation || error" id="collection-error" class="notice error" role="alert">
+      {{ validation ? t(validation) : error }}
+    </div>
+    <div v-if="result && !hiddenResult" class="collection-result" role="status">
+      <CheckCircle2 :size="20" aria-hidden="true" />
+      <div>
+        <strong>{{ t('collection.done') }}</strong>
+        <p>
+          {{
+            t('collection.counts', {
+              fetched: n(result.fetched ?? 0),
+              inserted: n(result.inserted ?? 0),
+              duplicates: n(result.duplicates ?? 0),
+            })
+          }}
+        </p>
+        <small v-if="result.fetched === 0">{{ t('collection.empty') }}</small>
+        <small v-else-if="result.inserted === 0">{{ t('collection.duplicateNote') }}</small>
+      </div>
+      <button class="text-button" type="button" @click="emit('view')">
+        {{ t('collection.view') }} <ArrowUpRight :size="14" aria-hidden="true" />
+      </button>
+      <button class="icon-button" type="button" :aria-label="t('collection.dismiss')" @click="hiddenResult = true">
+        <X :size="15" aria-hidden="true" />
+      </button>
+    </div>
   </section>
 </template>

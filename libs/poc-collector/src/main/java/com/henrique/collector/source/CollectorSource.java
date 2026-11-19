@@ -2,8 +2,16 @@ package com.henrique.collector.source;
 
 public enum CollectorSource {
     GOOGLE_NEWS,
-    GOOGLE_ALERTS,
-    REDDIT,
     ISSUU,
-    WORDPRESS
+    WORDPRESS,
+    MASTODON,
+    LEMMY,
+    DEV_TO,
+    HACKER_NEWS,
+    STACK_EXCHANGE,
+    GITHUB,
+    TABNEWS,
+    WIKIPEDIA,
+    GITLAB,
+    LOBSTERS
 }

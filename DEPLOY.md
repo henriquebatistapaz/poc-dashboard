@@ -35,7 +35,6 @@ O serviço web encaminha `/v1/*`, `/swagger-ui` e `/v3/api-docs` para a API. No 
 | `DASHBOARD_JWT_SECRET` | segredo de 32+ bytes (`openssl rand -hex 32`), diferente em cada ambiente |
 | `SERVER_ADDRESS` | `0.0.0.0` (sem isso a aplicação só escuta em 127.0.0.1 e o Railway retorna 502) |
 | `PORT` | `8080` (alinhado ao `API_UPSTREAM` do web) |
-| `REDDIT_API_ACCESS_APPROVED` | `false` até a aprovação do Reddit |
 
 ## 2b. Variáveis do web (`poc-dashboard-web`)
 
@@ -67,7 +66,7 @@ scripts/railway-deploy-develop.sh        # branch develop, sem confirmação
 scripts/railway-deploy-production.sh     # branch main, pede para digitar "production"
 ```
 
-Os scripts recusam deploy com árvore suja ou na branch errada, rodam `mvn test`, `npm test` e `npm run build`, e então enviam API e web com `railway up`.
+Os scripts recusam deploy com árvore suja ou na branch errada, rodam `./mvnw test`, `npm test` e `npm run build`, e então enviam API e web com `railway up`.
 
 ## 5. Verificação
 
@@ -80,7 +79,7 @@ Os scripts recusam deploy com árvore suja ou na branch errada, rodam `mvn test`
 - Use Postgres, `DASHBOARD_JWT_SECRET` (32+ bytes) e `DASHBOARD_API_KEY` fortes, exclusivos para production; nunca reutilize valores de develop.
 - Configure exatamente uma credencial do admin: `DASHBOARD_ADMIN_PASSWORD` com 12–72 bytes ou `DASHBOARD_ADMIN_PASSWORD_HASH` BCrypt. O bootstrap falha se a configuração estiver incompleta ou inválida.
 - Confirme que nenhum serviço está usando os valores locais padrão de banco; configure `DB_URL`, `DB_USER` e `DB_PASSWORD` do Postgres production.
-- Mantenha `REDDIT_API_ACCESS_APPROVED=false` até aprovação oficial e credenciais válidas. Configure `DASHBOARD_SCHEDULE_KEY` apenas se agendamentos forem usados; preserve a mesma chave para não perder agendamentos pendentes.
+- Configure `DASHBOARD_SCHEDULE_KEY` apenas se agendamentos forem usados; preserve a mesma chave para não perder agendamentos pendentes.
 - Web e API usam a mesma origem via proxy nginx; CORS não é necessário. O frontend envia bearer JWT, não cookies; a API é stateless e CSRF fica desativado.
 - Faça login como admin, confirme expiração do JWT de 15 minutos, acesso negado sem token e bloqueio de operações de admin para `OPERATOR`.
 - Revise variáveis e logs nos dois serviços sem revelar os valores. Este checklist não confirma os valores configurados no Railway; a inspeção de production deve ocorrer antes da promoção.
