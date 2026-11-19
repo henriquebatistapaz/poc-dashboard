@@ -39,7 +39,7 @@ public class CollectionController {
         validateSourceInput(request.source(), request.input());
         CollectionRun run = runs.start(request.source(), request.input());
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(run.getId()).toUri();
-        return ResponseEntity.accepted().location(location).body(CollectionRunResponse.from(run));
+        return ResponseEntity.accepted().location(location).body(toResponse(run));
     }
 
     @PostMapping("/schedules")
@@ -54,7 +54,7 @@ public class CollectionController {
         CollectionRun run = runs.schedule(request.source(), request.input(), request.scheduledAt());
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().replacePath("/v1/collections/{id}")
                 .buildAndExpand(run.getId()).toUri();
-        return ResponseEntity.accepted().location(location).body(CollectionRunResponse.from(run));
+        return ResponseEntity.accepted().location(location).body(toResponse(run));
     }
 
     private static void validateSourceInput(CollectionSource source, String input) {
@@ -82,7 +82,7 @@ public class CollectionController {
         if (run == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection run not found");
         }
-        return CollectionRunResponse.from(run);
+        return toResponse(run);
     }
 
     @GetMapping
@@ -90,7 +90,13 @@ public class CollectionController {
     @SecurityRequirement(name = "bearerAuth")
     public List<CollectionRunResponse> list(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "20") int size) {
-        return runs.list(page, size).stream().map(CollectionRunResponse::from).toList();
+        return runs.list(page, size).stream().map(this::toResponse).toList();
+    }
+
+    private CollectionRunResponse toResponse(CollectionRun run) {
+        return new CollectionRunResponse(run.getId(), run.getSource(), run.getStatus().name(), run.getCreatedAt(), run.getScheduledAt(),
+                run.getStartedAt(), run.getFinishedAt(), runs.inputForDisplay(run), run.getFetched(), run.getInserted(),
+                run.getDuplicates(), run.getErrorMessage());
     }
 
     public record CollectionRequest(CollectionSource source, String input) {
@@ -102,12 +108,6 @@ public class CollectionController {
     }
 
     public record CollectionRunResponse(Long id, String source, String status, Instant createdAt, Instant scheduledAt, Instant startedAt,
-                                        Instant finishedAt, Integer fetched, Integer inserted, Integer duplicates,
-                                        String errorMessage) {
-        static CollectionRunResponse from(CollectionRun run) {
-            return new CollectionRunResponse(run.getId(), run.getSource(), run.getStatus().name(), run.getCreatedAt(), run.getScheduledAt(),
-                    run.getStartedAt(), run.getFinishedAt(), run.getFetched(), run.getInserted(), run.getDuplicates(),
-                    run.getErrorMessage());
-        }
-    }
+                                        Instant finishedAt, String input, Integer fetched, Integer inserted, Integer duplicates,
+                                        String errorMessage) { }
 }

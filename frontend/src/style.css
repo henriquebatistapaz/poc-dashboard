@@ -1206,6 +1206,37 @@ h3 {
   font-size: 12px;
 }
 
+.history-run-input {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+
+.history-run-input code,
+.collection-context code {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.collection-context strong {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
 .history-status {
   justify-self: start;
   border-radius: 12px;
