@@ -14,7 +14,7 @@ root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root_dir"
 
 command -v railway >/dev/null || { echo "Railway CLI missing. Install: brew install railway" >&2; exit 1; }
-command -v mvn >/dev/null || { echo "Maven missing" >&2; exit 1; }
+[ -x "$root_dir/mvnw" ] || { echo "Maven wrapper missing or not executable at $root_dir/mvnw" >&2; exit 1; }
 command -v npm >/dev/null || { echo "npm missing" >&2; exit 1; }
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
@@ -34,7 +34,7 @@ if [ "$target" = production ]; then
 fi
 
 echo "==> Backend tests"
-mvn -B -q test
+"$root_dir/mvnw" -B -q test
 echo "==> Frontend tests and build"
 (cd frontend && npm ci --silent && npm test --silent && npm run build --silent)
 
