@@ -30,7 +30,7 @@ const placeholder = computed(() =>
     ? '{"posts": […]}'
     : source.value === 'BETA'
       ? '{"items": […]}'
-      : t(PLACEHOLDER_KEYS[source.value]),
+      : t(PLACEHOLDER_KEYS[source.value] ?? 'collection.feedPlaceholder'),
 )
 
 type SourceExample = { label: string; value: string } | { labelKey: string; value: string } | { valueKey: string }

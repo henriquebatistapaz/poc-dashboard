@@ -108,6 +108,11 @@ describe('theme management', () => {
     meta.remove()
   })
 
+  it('safely handles environments without document', () => {
+    vi.stubGlobal('document', undefined)
+    expect(() => applyResolvedTheme('dark')).not.toThrow()
+  })
+
   it('renders ThemePicker and switches themes cleanly', async () => {
     i18n.global.locale.value = 'pt-BR'
     const wrapper = mount(ThemePicker, { global: { plugins: [i18n] } })
