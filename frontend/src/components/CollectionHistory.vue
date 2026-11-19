@@ -42,6 +42,10 @@ const statusKey = (status: CollectionRun['status']) => `history.status.${status.
         <div class="history-run-main">
           <strong>{{ sourceLabel(run.source) }}</strong>
           <small>{{ t('history.run', { id: run.id }) }} · {{ displayDate(run.createdAt ?? null) }}</small>
+          <small v-if="run.input" class="history-run-input">
+            <span>{{ t('history.input') }}:</span>
+            <code :title="run.input">{{ run.input }}</code>
+          </small>
         </div>
         <span class="history-status" :class="`status-${run.status.toLowerCase()}`">{{ t(statusKey(run.status)) }}</span>
         <span v-if="run.status === 'SUCCEEDED'" class="history-counts">

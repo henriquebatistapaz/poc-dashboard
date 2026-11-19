@@ -9,7 +9,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 class ScheduleInputCipherTest {
     private final ScheduleInputCipher cipher = new ScheduleInputCipher(
-            "0000000000000000000000000000000000000000000000000000000000000000");
+            "0000000000000000000000000000000000000000000000000000000000000000",
+            "integration-test-secret-at-least-32-bytes");
 
     @Test
     void encryptsInputsAndAuthenticatesCiphertext() {
@@ -22,7 +23,19 @@ class ScheduleInputCipherTest {
 
     @Test
     void refusesSchedulingWhenKeyIsNotConfigured() {
-        ScheduleInputCipher unavailable = new ScheduleInputCipher("");
+        ScheduleInputCipher unavailable = new ScheduleInputCipher("", "integration-test-secret-at-least-32-bytes");
         assertThrows(ResponseStatusException.class, () -> unavailable.encrypt("input"));
+    }
+
+    @Test
+    void protectsCollectionHistoryWithoutEnablingScheduling() {
+        String input = "https://feed.example/?token=synthetic-secret";
+        String encrypted = cipher.encryptForHistory(input);
+        assertNotEquals(input, encrypted);
+        assertEquals(input, cipher.decryptForHistory(encrypted));
+
+        ScheduleInputCipher withoutScheduleKey = new ScheduleInputCipher("", "integration-test-secret-at-least-32-bytes");
+        String historyValue = withoutScheduleKey.encryptForHistory(input);
+        assertEquals(input, withoutScheduleKey.decryptForHistory(historyValue));
     }
 }

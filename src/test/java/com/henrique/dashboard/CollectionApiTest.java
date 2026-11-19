@@ -122,7 +122,7 @@ class CollectionApiTest {
     }
 
     @Test
-    void startDoesNotExposeSecretFeedUrlInResponse() throws Exception {
+    void startReturnsInputInAuthenticatedHistory() throws Exception {
         // Failure mapping now happens per run (see CollectionRunApiTest and CollectionRunServiceTest).
         String token = login();
         String secret = "https://example.org/feed?token=secret";
@@ -130,7 +130,7 @@ class CollectionApiTest {
         doThrow(new IllegalStateException(secret)).when(runner).run(CollectionSource.RSS, secret);
         var result = mvc.perform(post("/v1/collections").header("Authorization", "Bearer " + token)
                 .contentType("application/json").content(body)).andExpect(status().isAccepted()).andReturn();
-        assertFalse(result.getResponse().getContentAsString().contains(secret));
+        assertEquals(secret, json.readTree(result.getResponse().getContentAsString()).path("input").asText());
     }
 
     record CollectionControllerBody(String source, String input) { }

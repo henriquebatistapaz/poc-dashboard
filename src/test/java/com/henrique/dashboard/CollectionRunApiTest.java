@@ -1,7 +1,6 @@
 package com.henrique.dashboard;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -81,12 +80,13 @@ class CollectionRunApiTest {
                 .andReturn();
         String location = created.getResponse().getHeader("Location");
         assertTrue(location.contains("/v1/collections/"));
-        assertFalse(created.getResponse().getContentAsString().contains("open data"), "input must not be echoed");
+        assertEquals("open data", json.readTree(created.getResponse().getContentAsString()).path("input").asText());
 
         JsonNode done = awaitStatus(location, "SUCCEEDED");
         assertEquals(4, done.path("fetched").asInt());
         assertEquals(3, done.path("inserted").asInt());
         assertEquals(1, done.path("duplicates").asInt());
+        assertEquals("open data", done.path("input").asText());
         assertTrue(done.path("errorMessage").isNull() || done.path("errorMessage").isMissingNode());
     }
 
@@ -102,7 +102,7 @@ class CollectionRunApiTest {
 
         JsonNode failed = awaitStatus(created.getResponse().getHeader("Location"), "FAILED");
         assertEquals("Source unavailable; check approval and runtime configuration", failed.path("errorMessage").asText());
-        assertFalse(failed.toString().contains("SECRET-TOKEN"));
+        assertEquals("https://example.org/feed?token=SECRET-TOKEN", failed.path("input").asText());
     }
 
     @Test
@@ -147,7 +147,7 @@ class CollectionRunApiTest {
     }
 
     @Test
-    void schedulesCollectionAndReturnsOnlyRunMetadata() throws Exception {
+    void schedulesCollectionAndReturnsItsInputForAuthenticatedHistory() throws Exception {
         String input = "https://feed.example/private?token=scheduled-secret";
         MvcResult created = mvc.perform(post("/v1/collections/schedules").header("Authorization", "Bearer " + token)
                         .contentType("application/json")
@@ -157,7 +157,7 @@ class CollectionRunApiTest {
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.scheduledAt").isNotEmpty())
                 .andReturn();
-        assertFalse(created.getResponse().getContentAsString().contains("scheduled-secret"));
+        assertEquals(input, json.readTree(created.getResponse().getContentAsString()).path("input").asText());
     }
 
     @Test

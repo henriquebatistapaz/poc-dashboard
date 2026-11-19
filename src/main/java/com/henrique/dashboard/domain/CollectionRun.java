@@ -13,7 +13,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/** One collection request. The input text is never stored, only the source and the outcome. */
+/** One collection request. Input is encrypted at rest and exposed only through authenticated history. */
 @Entity
 @Table(name = "collection_run")
 @Getter
