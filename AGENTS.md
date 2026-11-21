@@ -5,12 +5,12 @@ Contexto detalhado: @README.md, @SPEC.md, @DEPLOY.md, @frontend/README.md, @docs
 
 ## O projeto em uma linha
 
-Backend Java 27 / Spring Boot 4.1.2 (Maven, pacote raiz `com.henrique.dashboard`, PostgreSQL + Flyway) que embute o `poc-collector-runner` para coletar feeds RSS/Atom, Google News, WordPress, sete APIs REST públicas e fixtures sociais; Google Alerts foi removido. O sistema persiste e consulta itens, com painel Vue 3 (pt-BR/en/es); código em inglês, SPEC em pt-BR.
+Backend Java 27 / Spring Boot 4.1.2 (Maven, pacote raiz `com.henrique.dashboard`, PostgreSQL + Flyway) que embute o `poc-collector-runner` para coletar feeds RSS/Atom, Google News, WordPress, dez APIs REST públicas e fixtures sociais; Google Alerts foi removido. O sistema persiste e consulta itens, com painel Vue 3 (pt-BR/en/es); código em inglês, SPEC em pt-BR.
 
 ## Comandos essenciais
 
 ```bash
-# Bibliotecas privadas irmãs (poc-collector → poc-rss-collector → poc-collector-runner) + package do dashboard
+# Bibliotecas públicas irmãs (poc-collector → poc-rss-collector → poc-collector-runner) + package do dashboard
 ./scripts/build-local.sh
 
 # Infraestrutura local (PostgreSQL 16 + API + painel Vue/Nginx) — exige .env preenchido
