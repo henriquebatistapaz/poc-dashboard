@@ -1,12 +1,12 @@
 # POC Dashboard
 
-Private Java 27 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
+Java 27 / Maven backend that embeds `poc-collector-runner` to collect RSS/Atom, supported source feeds and synthetic social fixtures, persist normalized items and query them. PostgreSQL/Flyway owns the canonical schema. Lombok reduces entity/constructor boilerplate; request/response models use records.
 
 ## Vue panel — Portuguese, English and Spanish
 
 The local panel at `http://localhost:8085` includes administrator login, a feed test form, source selection, real RSS/Atom examples, new/duplicate counts, recent asynchronous collection history (including tracking a pending run again after login), filtered/paginated items and a detail dialog linking to the original. Paste a public RSS/Atom URL and select **Collect now**: the Vue app calls the authenticated Dashboard endpoint, which embeds the runner and uses the existing `poc-rss-collector` library. Successful collection refreshes the list automatically.
 
-All user-facing labels, validation, errors, dates and counts support `pt-BR`, `en` and `es`. Change language on the login screen or in the workspace without reloading. Only the selected locale is saved in browser storage. JWT and login credentials remain in memory; reloading, signing out or session expiration requires a new login. Google Alerts URLs are masked and cleared after success/source change; source inputs are not persisted in the browser.
+All user-facing labels, validation, errors, dates and counts support `pt-BR`, `en` and `es`. Change language on the login screen or in the workspace without reloading. Only the selected locale is saved in browser storage. JWT and login credentials remain in memory; reloading, signing out or session expiration requires a new login. Source inputs are not persisted in the browser.
 
 See [frontend/README.md](frontend/README.md) for development, browser tests and translation conventions. The backend remains Java/Maven; Node.js 22.12+ is needed only for frontend development/builds. Compose builds the UI with Node 24 and serves it through Nginx, proxying API calls on the same origin without a permissive CORS rule.
 
@@ -25,7 +25,7 @@ No separate runner HTTP server is needed. Dashboard migrations own `collected_it
 {"source":"GOOGLE_NEWS","input":"Java Spring Boot"}
 ```
 
-Sources: `RSS` (public RSS/Atom URL), `GOOGLE_NEWS` (query), `GOOGLE_ALERTS` (user-owned secret feed URL), `WORDPRESS` (public HTTPS feed URL), `REDDIT` (subreddit with approved OAuth access), `ALPHA`/`BETA` (synthetic fixture JSON). `ISSUU` remains disabled. Do not log, share or commit Google Alerts URLs. Source inputs are limited to 4,096 characters; a synchronous run supports at most 1,000 items. Requests use enum names exactly as shown.
+Sources: `RSS` (public RSS/Atom URL), `GOOGLE_NEWS` (query; conditional public RSS route), `WORDPRESS` (public HTTPS feed URL), `MASTODON`, `LEMMY`, `DEV_TO`, `HACKER_NEWS`, `STACK_EXCHANGE`, `GITHUB`, `TABNEWS`, `WIKIPEDIA`, `GITLAB` and `LOBSTERS` (public REST APIs), plus `ALPHA`/`BETA` (synthetic fixtures). `ISSUU` remains disabled. Source inputs are limited to 4,096 characters; a synchronous run supports at most 1,000 items. Requests use enum names exactly as shown.
 
 Response: `source`, `fetched`, `inserted`, `duplicates`. Duplicates use `(source, external_id)` and preserve the first stored item. RSS IDs additionally include a feed URL hash namespace. The complete batch rolls back if persistence fails. Calls are synchronous; there is no background job or persistent run history yet.
 
@@ -37,9 +37,9 @@ Errors: 400 invalid input/item fields, 401 missing/invalid credentials, 403 a re
 
 Swagger UI: `/swagger-ui.html`; OpenAPI: `/v3/api-docs`. Both are available without authentication for local development. Swagger Authorize supports the read API key and Bearer JWT.
 
-## Build the private libraries
+## Build the public libraries
 
-Clone all four private repositories as siblings: `poc-collector`, `poc-rss-collector`, `poc-collector-runner`, `poc-dashboard`. From this repository:
+Clone all four public repositories as siblings: `poc-collector`, `poc-rss-collector`, `poc-collector-runner`, `poc-dashboard`. From this repository:
 
 ```sh
 ./scripts/build-local.sh
@@ -81,12 +81,12 @@ Alternatively start only PostgreSQL with `docker compose up -d postgres`; export
 ./mvnw -Ppostgres-it verify
 ```
 
-Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP login/collection/query endpoints, actual runner and parsers; only upstream fetches/DNS are deterministic fixtures. They verify RSS/Atom, Google feeds, WordPress and Alpha/Beta; source restrictions remain active. These deterministic tests do not prove live Google/Reddit service availability.
+Ordinary tests use H2. PostgreSQL tests use the real Flyway migration, real HTTP login/collection/query endpoints, actual runner and parsers; upstream fetches/DNS use deterministic fixtures. They cover RSS/Atom, Google News, WordPress, the ten public REST sources and Alpha/Beta; source restrictions remain active. Fixture-based tests do not prove live upstream service availability.
 
-A local Compose smoke run also collected real BBC RSS, XKCD Atom, Google News and WordPress feeds (79 items in that run). Repeating each collection inserted zero duplicates, and authenticated queries returned the stored items. External feed contents/counts can change. Google Alerts was validated with fixtures because a user-owned secret feed was not supplied; live Reddit remains gated by official approval and credentials.
+A local Compose smoke run collected real BBC RSS, XKCD Atom, Google News and WordPress feeds (79 items in that run). Repeating each collection inserted zero duplicates, and authenticated queries returned the stored items. External feed contents/counts can change.
 
 Docker API defaults to 1.44 in the integration profile (`-Ddocker.api.version=...` overrides it).
 
 ## Pending
 
-Historical social-row migration and public deployment review. Scheduling is available when `DASHBOARD_SCHEDULE_KEY` is configured with 64 hexadecimal characters; scheduled inputs are encrypted at rest. The repositories stay private. AI-Init assets and generated `/docs/` are excluded from Git.
+Historical social-row migration and public deployment review. Scheduling is available when `DASHBOARD_SCHEDULE_KEY` is configured with 64 hexadecimal characters; scheduled inputs are encrypted at rest. AI-Init assets and generated `/docs/` are excluded from Git.
