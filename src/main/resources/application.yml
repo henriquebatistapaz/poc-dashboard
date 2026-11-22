@@ -21,6 +21,10 @@ dashboard:
   schedule-key: ${DASHBOARD_SCHEDULE_KEY:}
   schedule:
     poll-ms: ${DASHBOARD_SCHEDULE_POLL_MS:5000}
+  public-url: ${DASHBOARD_PUBLIC_URL:http://localhost:8084}
+  mastodon:
+    allowed-instances: ${DASHBOARD_MASTODON_ALLOWED_INSTANCES:https://mastodon.social}
+    return-url: ${DASHBOARD_MASTODON_RETURN_URL:http://localhost:8085/}
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}
   port: ${PORT:8080}
