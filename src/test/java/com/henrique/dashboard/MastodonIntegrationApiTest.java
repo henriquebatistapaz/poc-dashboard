@@ -5,7 +5,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.henrique.dashboard.domain.MastodonOauthState;
 import com.henrique.dashboard.repository.MastodonConnectionRepository;
+import com.henrique.dashboard.repository.MastodonOauthStateRepository;
+import com.henrique.dashboard.service.ScheduleInputCipher;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,6 +48,9 @@ class MastodonIntegrationApiTest {
     @Autowired JwtEncoder encoder;
     @Autowired MastodonConnectionRepository connections;
     @Autowired JdbcTemplate jdbc;
+    @Autowired MastodonConnectionRepository connectionRows;
+    @Autowired MastodonOauthStateRepository stateRows;
+    @Autowired ScheduleInputCipher cipher;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -154,6 +160,42 @@ class MastodonIntegrationApiTest {
                 .andExpect(jsonPath("$.connected").value(false));
         mvc.perform(post("/v1/integrations/mastodon/search").header("Authorization", "Bearer " + bearer)
                 .contentType("application/json").content("{\"query\":\"java\"}")).andExpect(status().isConflict());
+    }
+
+    @Test
+    void authorizationUrlCarriesClientRedirectScopeAndState() throws Exception {
+        String url = mvc.perform(post("/v1/integrations/mastodon/connect")
+                        .header("Authorization", "Bearer " + token("scope-check@example.org"))
+                        .contentType("application/json").content("{\"instance\":\"" + instance() + "\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        Map<String, String> params = query(json.readTree(url).path("authorizationUrl").asText());
+        assertEquals("cid", params.get("client_id"));
+        assertTrue(params.get("redirect_uri").endsWith("/v1/integrations/mastodon/callback"));
+        assertTrue(params.get("scope").contains("read:search"));
+        assertFalse(params.get("state").isBlank());
+    }
+
+    @Test
+    void expiredStateIsRejected() throws Exception {
+        stateRows.save(new MastodonOauthState("expired-state-value", "expiry@example.org", instance(),
+                Instant.now().minusSeconds(60)));
+        String result = callback(GOOD_CODE, "expired-state-value");
+        assertTrue(result.contains("mastodon=error"), result);
+        assertFalse(connectionRows.findById("expiry@example.org").isPresent());
+    }
+
+    @Test
+    void revokedTokenAtMastodonReturnsBadGatewayWithoutLeakingToken() throws Exception {
+        String owner = "revoked@example.org";
+        String bearer = token(owner);
+        assertTrue(callback(GOOD_CODE, connectAndGetState(bearer)).contains("mastodon=connected"));
+        var row = connectionRows.findById(owner).orElseThrow();
+        row.replaceToken(row.getInstance(), cipher.encrypt("revoked-token"), Instant.now());
+        connectionRows.save(row);
+        var result = mvc.perform(post("/v1/integrations/mastodon/search").header("Authorization", "Bearer " + bearer)
+                        .contentType("application/json").content("{\"query\":\"java\"}"))
+                .andExpect(status().isBadGateway()).andReturn();
+        assertFalse(result.getResponse().getContentAsString().contains("revoked-token"));
     }
 
     private static Map<String, String> query(String url) {
