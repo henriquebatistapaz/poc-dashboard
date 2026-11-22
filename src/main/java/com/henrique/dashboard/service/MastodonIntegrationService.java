@@ -25,9 +25,9 @@ import java.util.Set;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /** Conecta a conta Mastodon de cada usuário do dashboard e faz buscas com o token dela. */
@@ -71,7 +71,6 @@ public class MastodonIntegrationService {
         this.clock = Clock.systemUTC();
     }
 
-    @Transactional
     public URI startConnection(String userId, String instanceInput) {
         requireCipher();
         String origin = allowedOrigin(instanceInput);
@@ -85,7 +84,6 @@ public class MastodonIntegrationService {
     }
 
     /** Chamado pelo navegador após o Mastodon. Sempre devolve a URL de retorno ao painel. */
-    @Transactional
     public String completeConnection(String code, String state) {
         if (!cipher.isConfigured() || state == null || code == null || code.isBlank()) return failure();
         MastodonOauthState pending = states.findById(state).orElse(null);
@@ -99,22 +97,26 @@ public class MastodonIntegrationService {
             String token = new MastodonOAuthClient(URI.create(pending.getInstance())).exchangeCode(oauthApp, code);
             Instant now = Instant.now(clock);
             String encrypted = cipher.encrypt(token);
-            connections.findById(pending.getUserId())
-                    .ifPresentOrElse(existing -> existing.replaceToken(pending.getInstance(), encrypted, now),
-                            () -> connections.save(new MastodonConnection(pending.getUserId(), pending.getInstance(), encrypted, now)));
+            var connection = connections.findById(pending.getUserId())
+                    .map(existing -> {
+                        existing.replaceToken(pending.getInstance(), encrypted, now);
+                        return existing;
+                    })
+                    .orElseGet(() -> new MastodonConnection(pending.getUserId(), pending.getInstance(), encrypted, now));
+            connections.save(connection);
             return returnUrl + (returnUrl.contains("?") ? "&" : "?") + "mastodon=connected";
         } catch (RuntimeException exception) {
             return failure();
         }
     }
 
-    @Transactional(readOnly = true)
     public Optional<MastodonConnection> connection(String userId) {
+        requireCipher();
         return connections.findById(userId);
     }
 
-    @Transactional
     public void disconnect(String userId) {
+        requireCipher();
         connections.findById(userId).ifPresent(connections::delete);
     }
 
@@ -140,11 +142,21 @@ public class MastodonIntegrationService {
         }
         Set<String> existing = fresh.isEmpty() ? Set.of()
                 : collectedItems.findExistingExternalIds(SOURCE, fresh.keySet());
-        List<CollectedItem> toStore = fresh.entrySet().stream()
-                .filter(entry -> !existing.contains(entry.getKey()))
-                .map(Map.Entry::getValue).toList();
-        collectedItems.saveAll(toStore);
-        return new SearchOutcome(posts.size(), toStore.size(), fresh.size() - toStore.size());
+        int inserted = 0;
+        int duplicates = 0;
+        for (Map.Entry<String, CollectedItem> entry : fresh.entrySet()) {
+            if (existing.contains(entry.getKey())) {
+                duplicates++;
+                continue;
+            }
+            try {
+                collectedItems.saveAndFlush(entry.getValue());
+                inserted++;
+            } catch (DataIntegrityViolationException concurrentDuplicate) {
+                duplicates++;
+            }
+        }
+        return new SearchOutcome(posts.size(), inserted, duplicates);
     }
 
     public record SearchOutcome(int fetched, int inserted, int duplicates) { }
@@ -159,7 +171,11 @@ public class MastodonIntegrationService {
     private MastodonApp registerApp(String origin, MastodonOAuthClient client) {
         var registered = client.registerApp(APP_NAME, redirectUri);
         var app = new MastodonApp(origin, registered.clientId(), cipher.encrypt(registered.clientSecret()), Instant.now(clock));
-        return apps.save(app);
+        try {
+            return apps.saveAndFlush(app);
+        } catch (DataIntegrityViolationException concurrentRegistration) {
+            return apps.findById(origin).orElseThrow(() -> concurrentRegistration);
+        }
     }
 
     private String allowedOrigin(String input) {
