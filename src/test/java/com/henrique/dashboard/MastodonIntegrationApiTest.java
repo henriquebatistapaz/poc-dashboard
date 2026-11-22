@@ -171,7 +171,7 @@ class MastodonIntegrationApiTest {
         Map<String, String> params = query(json.readTree(url).path("authorizationUrl").asText());
         assertEquals("cid", params.get("client_id"));
         assertTrue(params.get("redirect_uri").endsWith("/v1/integrations/mastodon/callback"));
-        assertTrue(params.get("scope").contains("read:search"));
+        assertEquals("read write follow push", params.get("scope"));
         assertFalse(params.get("state").isBlank());
     }
 
