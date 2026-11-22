@@ -206,8 +206,15 @@
     "searching": "Searching…",
     "disconnect": "Disconnect",
     "result": "{fetched} posts found · {inserted} new · {duplicates} already stored",
-    "needConnection": "Connect a Mastodon account before searching."
-  },
+    "needConnection": "Connect a Mastodon account before searching.",
+    "postTitle": "Publish a post",
+    "postText": "Post text",
+    "postVisibility": "Visibility",
+    "visibilityUnlisted": "Unlisted",
+    "visibilityPublic": "Public",
+    "post": "Publish post",
+    "posting": "Publishing…",
+    "posted": "Post published:"  },
   "errors": {
     "generic": "Unable to complete the request. Try again.",
     "0": "Could not connect to the API. Check that the service is running.",
