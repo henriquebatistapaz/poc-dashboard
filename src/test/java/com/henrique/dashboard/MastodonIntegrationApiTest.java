@@ -42,6 +42,7 @@ class MastodonIntegrationApiTest {
     private static final String GOOD_CODE = "good-code";
     private static final String USER_TOKEN = "user-token-A";
     private static final HttpServer FAKE_MASTODON = startFakeMastodon();
+    private static volatile String lastStatusBody = "";
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
@@ -198,6 +199,64 @@ class MastodonIntegrationApiTest {
         assertFalse(result.getResponse().getContentAsString().contains("revoked-token"));
     }
 
+    @Test
+    void postPublishesUnlistedStatusWithTheUserToken() throws Exception {
+        String owner = "poster@example.org";
+        String bearer = token(owner);
+        assertTrue(callback(GOOD_CODE, connectAndGetState(bearer)).contains("mastodon=connected"));
+        mvc.perform(post("/v1/integrations/mastodon/post").header("Authorization", "Bearer " + bearer)
+                        .contentType("application/json").content("{\"text\":\"Teste de integração\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.url").value("https://mastodon.example/@me/900"));
+        assertTrue(lastStatusBody.contains("visibility=unlisted"), lastStatusBody);
+        assertTrue(lastStatusBody.contains("status=Teste+de+integra%C3%A7%C3%A3o"), lastStatusBody);
+    }
+
+    @Test
+    void postCanBePublicWhenRequestedAndRejectsUnknownVisibility() throws Exception {
+        String owner = "public-poster@example.org";
+        String bearer = token(owner);
+        assertTrue(callback(GOOD_CODE, connectAndGetState(bearer)).contains("mastodon=connected"));
+        mvc.perform(post("/v1/integrations/mastodon/post").header("Authorization", "Bearer " + bearer)
+                        .contentType("application/json").content("{\"text\":\"Público\",\"visibility\":\"public\"}"))
+                .andExpect(status().isOk());
+        assertTrue(lastStatusBody.contains("visibility=public"), lastStatusBody);
+        mvc.perform(post("/v1/integrations/mastodon/post").header("Authorization", "Bearer " + bearer)
+                        .contentType("application/json").content("{\"text\":\"x\",\"visibility\":\"private\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void postWithoutConnectionIsConflict() throws Exception {
+        mvc.perform(post("/v1/integrations/mastodon/post").header("Authorization", "Bearer " + token("no-post@example.org"))
+                .contentType("application/json").content("{\"text\":\"oi\"}")).andExpect(status().isConflict());
+    }
+
+    @Test
+    void postRejectsMissingOrTooLongText() throws Exception {
+        String bearer = token("validation-post@example.org");
+        mvc.perform(post("/v1/integrations/mastodon/post").header("Authorization", "Bearer " + bearer)
+                .contentType("application/json").content("{\"text\":\"  \"}")).andExpect(status().isBadRequest());
+        mvc.perform(post("/v1/integrations/mastodon/post").header("Authorization", "Bearer " + bearer)
+                .contentType("application/json").content("{}")).andExpect(status().isBadRequest());
+        mvc.perform(post("/v1/integrations/mastodon/post").header("Authorization", "Bearer " + bearer)
+                .contentType("application/json").content("{\"text\":\"" + "x".repeat(501) + "\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void postRejectedByMastodonReturnsBadGatewayWithoutLeakingToken() throws Exception {
+        String owner = "post-revoked@example.org";
+        String bearer = token(owner);
+        assertTrue(callback(GOOD_CODE, connectAndGetState(bearer)).contains("mastodon=connected"));
+        var row = connectionRows.findById(owner).orElseThrow();
+        row.replaceToken(row.getInstance(), cipher.encrypt("revoked-token"), Instant.now());
+        connectionRows.save(row);
+        var result = mvc.perform(post("/v1/integrations/mastodon/post").header("Authorization", "Bearer " + bearer)
+                        .contentType("application/json").content("{\"text\":\"oi\"}"))
+                .andExpect(status().isBadGateway()).andReturn();
+        assertFalse(result.getResponse().getContentAsString().contains("revoked-token"));
+    }
+
     private static Map<String, String> query(String url) {
         Map<String, String> params = new java.util.HashMap<>();
         for (String pair : URI.create(url).getRawQuery().split("&")) {
@@ -229,6 +288,15 @@ class MastodonIntegrationApiTest {
                 } else {
                     reply(exchange, 401, "{\"error\":\"unauthorized\"}");
                 }
+            });
+            server.createContext("/api/v1/statuses", exchange -> {
+                String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+                if (!("Bearer " + USER_TOKEN).equals(exchange.getRequestHeaders().getFirst("Authorization"))) {
+                    reply(exchange, 401, "{\"error\":\"The access token is invalid\"}");
+                    return;
+                }
+                lastStatusBody = body;
+                reply(exchange, 200, "{\"id\":\"900\",\"url\":\"https://mastodon.example/@me/900\"}");
             });
             server.start();
             return server;

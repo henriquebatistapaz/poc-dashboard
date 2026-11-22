@@ -13,7 +13,15 @@ import com.henrique.mastodon.MastodonException;
 import com.henrique.mastodon.MastodonOAuthClient;
 import com.henrique.mastodon.MastodonPost;
 import com.henrique.mastodon.MastodonSearchService;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -160,6 +168,40 @@ public class MastodonIntegrationService {
     }
 
     public record SearchOutcome(int fetched, int inserted, int duplicates) { }
+
+    /** Publica um post (public ou unlisted) na conta Mastodon do usuário. Devolve a URL do post criado. */
+    public String post(String userId, String text, String visibility) {
+        requireCipher();
+        if (!Set.of("public", "unlisted").contains(visibility)) throw badRequest("visibility must be public or unlisted");
+        MastodonConnection connection = connections.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Mastodon account is not connected"));
+        String token = cipher.decrypt(connection.getEncryptedAccessToken());
+        String body = "status=" + URLEncoder.encode(text, StandardCharsets.UTF_8)
+                + "&visibility=" + visibility;
+        URI endpoint = URI.create(stripTrailingSlash(connection.getInstance()) + "/api/v1/statuses");
+        HttpRequest request = HttpRequest.newBuilder(endpoint)
+                .timeout(Duration.ofSeconds(15))
+                .header("Authorization", "Bearer " + token)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        try {
+            HttpResponse<String> response = HttpClient.newBuilder()
+                    .followRedirects(HttpClient.Redirect.NEVER)
+                    .build()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() / 100 != 2) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Mastodon rejected the post");
+            }
+            JsonNode json = JSON.readTree(response.body());
+            return json.path("url").asText(json.path("uri").asText(""));
+        } catch (IOException | InterruptedException exception) {
+            if (exception instanceof InterruptedException) Thread.currentThread().interrupt();
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Mastodon post failed");
+        }
+    }
+
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private static CollectedItem toEntity(MastodonPost post, Instant collectedAt) {
         String text = post.text() == null ? "" : post.text().replaceAll("\\s+", " ").trim();
