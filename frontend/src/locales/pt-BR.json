@@ -206,8 +206,15 @@
     "searching": "Buscando…",
     "disconnect": "Desconectar",
     "result": "{fetched} posts encontrados · {inserted} novos · {duplicates} já existentes",
-    "needConnection": "Conecte uma conta Mastodon antes de buscar."
-  },
+    "needConnection": "Conecte uma conta Mastodon antes de buscar.",
+    "postTitle": "Publicar um post",
+    "postText": "Texto do post",
+    "postVisibility": "Visibilidade",
+    "visibilityUnlisted": "Não listado",
+    "visibilityPublic": "Público",
+    "post": "Publicar post",
+    "posting": "Publicando…",
+    "posted": "Post publicado:"  },
   "errors": {
     "generic": "Não foi possível concluir. Tente novamente.",
     "0": "Não foi possível conectar à API. Confira se o serviço está em execução.",
