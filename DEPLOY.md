@@ -83,3 +83,7 @@ Os scripts recusam deploy com árvore suja ou na branch errada, rodam `./mvnw te
 - Web e API usam a mesma origem via proxy nginx; CORS não é necessário. O frontend envia bearer JWT, não cookies; a API é stateless e CSRF fica desativado.
 - Faça login como admin, confirme expiração do JWT de 15 minutos, acesso negado sem token e bloqueio de operações de admin para `OPERATOR`.
 - Revise variáveis e logs nos dois serviços sem revelar os valores. Este checklist não confirma os valores configurados no Railway; a inspeção de production deve ocorrer antes da promoção.
+
+## Regra de nome de subdomínio (domínio h7.app.br)
+
+Se o deploy usar domínio próprio, o subdomínio leva o nome do projeto no formato `<projeto>-<ambiente>`, ex.: `fight-archive-develop.h7.app.br`, não só `develop.h7.app.br`. Assim projetos diferentes não colidem nos ambientes develop e production. Regra e exemplo completos em `multiapp-infra/infra/docs/DEPLOY_RAILWAY.md` (seção 3.4).
