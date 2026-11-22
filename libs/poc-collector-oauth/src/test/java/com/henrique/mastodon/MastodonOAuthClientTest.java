@@ -58,7 +58,7 @@ class MastodonOAuthClientTest {
         assertEquals("cid", app.clientId());
         assertEquals("csec", app.clientSecret());
         assertEquals("/api/v1/apps", paths.get(0));
-        assertTrue(bodies.get(0).contains("scopes=read%3Asearch"));
+        assertTrue(bodies.get(0).contains("scopes=read+write+follow+push"));
         assertFalse(app.toString().contains("csec"));
     }
 
@@ -71,7 +71,7 @@ class MastodonOAuthClientTest {
         assertTrue(url.contains("/oauth/authorize?"));
         assertTrue(url.contains("client_id=cid"));
         assertTrue(url.contains("response_type=code"));
-        assertTrue(url.contains("scope=read%3Asearch"));
+        assertTrue(url.contains("scope=read+write+follow+push"));
         assertTrue(url.contains("state=" + request.state()));
         assertTrue(request.state().length() >= 32);
     }
