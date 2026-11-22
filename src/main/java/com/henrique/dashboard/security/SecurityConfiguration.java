@@ -51,6 +51,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/v1/collections", "/v1/collections/**").hasAuthority("SCOPE_collections:write")
                         .requestMatchers(HttpMethod.GET, "/v1/items", "/v1/items/**").hasAnyAuthority("ROLE_API_READER", "SCOPE_items:read")
                         .requestMatchers(HttpMethod.DELETE, "/v1/items/**").hasAuthority("SCOPE_items:delete")
+                        .requestMatchers(HttpMethod.GET, "/v1/integrations/mastodon/callback").permitAll()
+                        .requestMatchers("/v1/integrations/mastodon/**").hasAuthority("SCOPE_collections:write")
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.decoder(jwtDecoder)))
                 .exceptionHandling(errors -> errors.authenticationEntryPoint((request, response, error) -> response.sendError(401)))
