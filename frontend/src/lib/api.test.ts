@@ -93,3 +93,12 @@ describe('waitForRun', () => {
     expect(run.status).toBe('SUCCEEDED')
   })
 })
+
+describe('request method and empty responses', () => {
+  it('sends DELETE and accepts a 204 without a body', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetch)
+    await expect(request<void>('/v1/integrations/mastodon/connection', 'token', undefined, undefined, 'DELETE')).resolves.toBeUndefined()
+    expect(fetch.mock.calls[0]![1].method).toBe('DELETE')
+  })
+})
