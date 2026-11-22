@@ -37,6 +37,17 @@ Errors: 400 invalid input/item fields, 401 missing/invalid credentials, 403 a re
 
 Swagger UI: `/swagger-ui.html`; OpenAPI: `/v3/api-docs`. Both are available without authentication for local development. Swagger Authorize supports the read API key and Bearer JWT.
 
+## Mastodon com conta própria (OAuth)
+
+O painel conecta a conta Mastodon de cada usuário pelo login OAuth da biblioteca `poc-collector-oauth` (instalada no Maven local). Depois de conectar, a busca usa o token do próprio usuário e grava os posts públicos com `source = mastodon-oauth`, deduplicados por `(source, external_id)`.
+
+- Endpoints: `POST /v1/integrations/mastodon/connect`, `GET /v1/integrations/mastodon/callback`, `GET|DELETE /v1/integrations/mastodon/connection`, `POST /v1/integrations/mastodon/search`.
+- O token e o `client_secret` ficam cifrados com `DASHBOARD_SCHEDULE_KEY`. Sem essa chave, os endpoints respondem 503.
+- Instâncias são limitadas a `DASHBOARD_MASTODON_ALLOWED_INSTANCES` (padrão `https://mastodon.social`), sempre em HTTPS, exceto loopback para testes.
+- `DASHBOARD_PUBLIC_URL` (padrão `http://localhost:8084`) define o `redirect_uri`; `DASHBOARD_MASTODON_RETURN_URL` (padrão `http://localhost:8085/`) é para onde o callback volta ao painel.
+
+Como o JWT fica só em memória, depois do retorno do Mastodon o usuário precisa entrar de novo para ver o status da conexão.
+
 ## Build the public libraries
 
 Clone all four public repositories as siblings: `poc-collector`, `poc-rss-collector`, `poc-collector-runner`, `poc-dashboard`. From this repository:
