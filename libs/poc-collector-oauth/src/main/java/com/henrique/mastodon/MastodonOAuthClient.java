@@ -22,7 +22,7 @@ import java.util.Map;
  * Redirects não são seguidos e segredos nunca entram em mensagens de erro.
  */
 public final class MastodonOAuthClient {
-    static final String SCOPE = "read:search write:statuses write:favourites";
+    static final String SCOPE = "read write follow push";
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
     private static final int MAX_RESPONSE_BYTES = 256 * 1024;
 
