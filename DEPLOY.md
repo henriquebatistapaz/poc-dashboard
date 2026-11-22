@@ -86,4 +86,4 @@ Os scripts recusam deploy com árvore suja ou na branch errada, rodam `./mvnw te
 
 ## Regra de nome de subdomínio (domínio h7.app.br)
 
-Se o deploy usar domínio próprio, o subdomínio leva o nome do projeto no formato `<projeto>-<ambiente>`, ex.: `fight-archive-develop.h7.app.br`, não só `develop.h7.app.br`. Assim projetos diferentes não colidem nos ambientes develop e production. Regra e exemplo completos em `multiapp-infra/infra/docs/DEPLOY_RAILWAY.md` (seção 3.4).
+Se o deploy usar domínio próprio, o subdomínio leva o nome do projeto no formato `<projeto>-<ambiente>`, ex.: `poc-dashboard-develop.h7.app.br`, não só `develop.h7.app.br`. Assim projetos diferentes não colidem nos ambientes develop e production. Regra completa em `multiapp-infra/infra/docs/DEPLOY_RAILWAY.md` (seção 3.4).
