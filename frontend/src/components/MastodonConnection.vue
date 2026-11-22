@@ -13,6 +13,9 @@ const query = ref('')
 const limit = ref(20)
 const status = ref<ConnectionStatus>({ connected: false, instance: null })
 const result = ref<SearchResult | null>(null)
+const postText = ref('')
+const visibility = ref<'public' | 'unlisted'>('unlisted')
+const postedUrl = ref('')
 const busy = ref(false)
 const error = ref('')
 const notice = computed(() => new URLSearchParams(window.location.search).get('mastodon'))
@@ -48,6 +51,22 @@ async function disconnect() {
     await request<void>('/v1/integrations/mastodon/connection', props.token, undefined, undefined, 'DELETE')
     status.value = { connected: false, instance: null }
     result.value = null
+  } catch (failure) {
+    error.value = describe(failure)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function publish() {
+  busy.value = true
+  error.value = ''
+  postedUrl.value = ''
+  try {
+    const { url } = await request<{ url: string }>('/v1/integrations/mastodon/post', props.token,
+      { text: postText.value.trim(), visibility: visibility.value })
+    postedUrl.value = url
+    postText.value = ''
   } catch (failure) {
     error.value = describe(failure)
   } finally {
@@ -93,6 +112,19 @@ async function search() {
       <button type="button" :disabled="!token || busy" @click="disconnect">{{ t('mastodon.disconnect') }}</button>
     </form>
 
+    <form v-if="status.connected" @submit.prevent="publish">
+      <h3>{{ t('mastodon.postTitle') }}</h3>
+      <label for="mastodon-post-text">{{ t('mastodon.postText') }}</label>
+      <textarea id="mastodon-post-text" v-model="postText" maxlength="500" required :disabled="busy"></textarea>
+      <label for="mastodon-visibility">{{ t('mastodon.postVisibility') }}</label>
+      <select id="mastodon-visibility" v-model="visibility" :disabled="busy">
+        <option value="unlisted">{{ t('mastodon.visibilityUnlisted') }}</option>
+        <option value="public">{{ t('mastodon.visibilityPublic') }}</option>
+      </select>
+      <button type="submit" :disabled="!token || busy">{{ busy ? t('mastodon.posting') : t('mastodon.post') }}</button>
+    </form>
+
+    <p v-if="postedUrl" role="status">{{ t('mastodon.posted') }} <a :href="postedUrl" target="_blank" rel="noopener">{{ postedUrl }}</a></p>
     <p v-if="result" role="status">
       {{ t('mastodon.result', { fetched: n(result.fetched), inserted: n(result.inserted), duplicates: n(result.duplicates) }) }}
     </p>
