@@ -5,11 +5,11 @@ export class ApiError extends Error {
 }
 
 // No credentials in URLs, browser storage or error messages. All API calls stay on the same origin.
-export async function request<T>(path: string, token?: string, body?: unknown, signal?: AbortSignal): Promise<T> {
+export async function request<T>(path: string, token?: string, body?: unknown, signal?: AbortSignal, method?: 'DELETE'): Promise<T> {
   let response: Response
   try {
     response = await fetch(path, {
-      method: body === undefined ? 'GET' : 'POST',
+      method: method ?? (body === undefined ? 'GET' : 'POST'),
       headers: { ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -20,6 +20,7 @@ export async function request<T>(path: string, token?: string, body?: unknown, s
     throw new ApiError(0)
   }
   if (!response.ok) throw new ApiError(response.status)
+  if (response.status === 204) return undefined as T
   try { return await response.json() as T }
   catch { throw new ApiError(502) }
 }
