@@ -99,3 +99,10 @@ async function search() {
     <p v-if="error" role="alert">{{ error }}</p>
   </section>
 </template>
+
+<style scoped>
+/* Alvos de toque com pelo menos 40px de altura em telas pequenas. */
+#mastodon button {
+  min-height: 40px;
+}
+</style>
