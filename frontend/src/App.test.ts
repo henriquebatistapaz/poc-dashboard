@@ -701,4 +701,55 @@ describe('App', () => {
 
     wrapper.unmount()
   })
+  it('shows the Mastodon connection on its own screen and back to the dashboard by hash', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/v1/auth/login')) return jsonResponse({ accessToken: 'tok-m', tokenType: 'Bearer', expiresIn: 900 })
+      if (url.includes('/mastodon/connection')) return jsonResponse({ connected: false, instance: null })
+      if (url.includes('/v1/collections?')) return jsonResponse([])
+      return jsonResponse({ items: [], total: 0, page: 0, size: 10 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    window.history.replaceState({}, '', '/')
+    const wrapper = mount(App, { attachTo: document.body, global: { plugins: [i18n] } })
+    await wrapper.get('#login-email').setValue('admin@example.test')
+    await wrapper.get('#login-password').setValue('pw')
+    await wrapper.get('form.login-form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('#mastodon').exists()).toBe(false)
+    expect(wrapper.find('#library').exists()).toBe(true)
+
+    window.location.hash = '#mastodon'
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    await flushPromises()
+    expect(wrapper.find('#mastodon').exists()).toBe(true)
+    expect(wrapper.find('#library').exists()).toBe(false)
+    expect(wrapper.get('.sidebar .nav-item.active').text()).toContain('Mastodon com sua conta')
+
+    window.location.hash = '#library'
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    await flushPromises()
+    expect(wrapper.find('#mastodon').exists()).toBe(false)
+    expect(wrapper.find('#library').exists()).toBe(true)
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled()
+
+    window.location.hash = '#inexistente'
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    await flushPromises()
+    expect(wrapper.find('#mastodon').exists()).toBe(false)
+
+    window.location.hash = ''
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    await flushPromises()
+    expect(wrapper.find('#mastodon').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="mobile-menu-toggle"]').trigger('click')
+    await flushPromises()
+    const drawerLink = wrapper.findAll('#mobile-nav-drawer a').find((link) => link.attributes('href') === '#mastodon')!
+    await drawerLink.trigger('click')
+    await flushPromises()
+    expect(wrapper.find('#mobile-nav-drawer').exists()).toBe(false)
+    wrapper.unmount()
+    window.history.replaceState({}, '', '/')
+  })
 })
