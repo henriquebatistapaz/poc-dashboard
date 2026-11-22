@@ -23,6 +23,7 @@ import {
 } from '@lucide/vue'
 import LoginView from './components/LoginView.vue'
 import CollectionPanel from './components/CollectionPanel.vue'
+import MastodonConnection from './components/MastodonConnection.vue'
 import LanguagePicker from './components/LanguagePicker.vue'
 import ThemePicker from './components/ThemePicker.vue'
 import ItemDetails from './components/ItemDetails.vue'
@@ -512,6 +513,8 @@ onBeforeUnmount(() => {
           @collect="collect"
           @view="scrollTo('library')"
         />
+
+        <MastodonConnection :token="token" />
 
         <CollectionHistory
           id="activity"
