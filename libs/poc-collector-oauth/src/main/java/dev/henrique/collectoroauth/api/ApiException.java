@@ -1,4 +1,4 @@
-package dev.henrique.mastodon.api;
+package dev.henrique.collectoroauth.api;
 
 /** Erro de API com status HTTP explícito. A mensagem é segura para o cliente. */
 public final class ApiException extends RuntimeException {
