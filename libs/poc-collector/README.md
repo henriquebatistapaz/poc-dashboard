@@ -53,6 +53,7 @@ Scheduled source inputs are encrypted at rest. Losing or changing `COLLECTOR_SEC
 - **WordPress:** implemented via public WordPress.com tag RSS feeds (`https://wordpress.com/tag/<slug>/feed/`).
 - **Issuu:** unavailable for public discovery. Issuu's first-party [API SDK](https://github.com/issuu/issuu-api-sdk) uses an account token for authenticated account/publication operations; it does not document an unauthenticated public search/feed API. No scraping or hidden endpoints are used.
 
+See [SPEC.md](SPEC.md) for the source evidence, access limits, and implementation scope.
 
 ## Integration planning
 
