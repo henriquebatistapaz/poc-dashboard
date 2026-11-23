@@ -73,6 +73,24 @@ public class MastodonIntegrationController {
         return new SearchResponse(outcome.fetched(), outcome.inserted(), outcome.duplicates());
     }
 
+    @Operation(summary = "Publish a post (public or unlisted, default unlisted) on the current user's Mastodon account")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/post")
+    public PostResponse post(Authentication authentication, @RequestBody PostRequest request) {
+        if (request == null || request.text() == null || request.text().isBlank()) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "text is required");
+        }
+        if (request.text().length() > 500) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "text is too long");
+        }
+        String visibility = request.visibility() == null ? "unlisted" : request.visibility();
+        return new PostResponse(integration.post(authentication.getName(), request.text(), visibility));
+    }
+
+    public record PostRequest(String text, String visibility) { }
+
+    public record PostResponse(String url) { }
+
     public record ConnectRequest(String instance) { }
 
     public record ConnectResponse(String authorizationUrl) { }
