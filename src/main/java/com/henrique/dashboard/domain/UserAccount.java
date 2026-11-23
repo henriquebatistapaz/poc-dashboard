@@ -1,5 +1,6 @@
 package com.henrique.dashboard.domain;
 
+import lombok.Data;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "user_account")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Data
 public class UserAccount {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
