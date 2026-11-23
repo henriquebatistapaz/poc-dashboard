@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Share2 } from '@lucide/vue'
 import { ApiError, errorMessage, request } from '../lib/api'
 
 interface ConnectionStatus { connected: boolean; instance: string | null }
@@ -13,6 +14,9 @@ const query = ref('')
 const limit = ref(20)
 const status = ref<ConnectionStatus>({ connected: false, instance: null })
 const result = ref<SearchResult | null>(null)
+const postText = ref('')
+const visibility = ref<'public' | 'unlisted'>('unlisted')
+const postedUrl = ref('')
 const busy = ref(false)
 const error = ref('')
 const notice = computed(() => new URLSearchParams(window.location.search).get('mastodon'))
@@ -55,6 +59,22 @@ async function disconnect() {
   }
 }
 
+async function publish() {
+  busy.value = true
+  error.value = ''
+  postedUrl.value = ''
+  try {
+    const { url } = await request<{ url: string }>('/v1/integrations/mastodon/post', props.token,
+      { text: postText.value.trim(), visibility: visibility.value })
+    postedUrl.value = url
+    postText.value = ''
+  } catch (failure) {
+    error.value = describe(failure)
+  } finally {
+    busy.value = false
+  }
+}
+
 async function search() {
   busy.value = true
   error.value = ''
@@ -70,33 +90,61 @@ async function search() {
 </script>
 
 <template>
-  <section id="mastodon" class="library-card" aria-labelledby="mastodon-title">
-    <h2 id="mastodon-title">{{ t('mastodon.title') }}</h2>
-    <p>{{ t('mastodon.description') }}</p>
-    <p v-if="notice === 'connected'" role="status">{{ t('mastodon.connectedNotice') }}</p>
-    <p v-if="notice === 'error'" role="alert">{{ t('mastodon.connectError') }}</p>
-    <p v-if="status.connected">{{ t('mastodon.connectedTo', { instance: status.instance }) }}</p>
-    <p v-else>{{ t('mastodon.notConnected') }}</p>
+  <section id="mastodon" class="collection-card" aria-labelledby="mastodon-title">
+    <div class="collection-heading">
+      <span class="source-icon"><Share2 :size="22" aria-hidden="true" /></span>
+      <div>
+        <div class="eyebrow">{{ t('common.private') }}</div>
+        <h2 id="mastodon-title">{{ t('mastodon.title') }}</h2>
+      </div>
+    </div>
+    <p class="collection-description">{{ t('mastodon.description') }}</p>
+    <p v-if="notice === 'connected'" class="notice" role="status">{{ t('mastodon.connectedNotice') }}</p>
+    <p v-if="notice === 'error'" class="notice error" role="alert">{{ t('mastodon.connectError') }}</p>
+    <p class="field-help">{{ status.connected ? t('mastodon.connectedTo', { instance: status.instance }) : t('mastodon.notConnected') }}</p>
 
-    <form v-if="!status.connected" @submit.prevent="connect">
-      <label for="mastodon-instance">{{ t('mastodon.instance') }}</label>
-      <input id="mastodon-instance" v-model="instance" type="url" required :disabled="!token || busy">
-      <button type="submit" :disabled="!token || busy">{{ t('mastodon.connect') }}</button>
+    <form v-if="!status.connected" class="collection-form" novalidate @submit.prevent="connect">
+      <div class="field input-field">
+        <label for="mastodon-instance">{{ t('mastodon.instance') }}</label>
+        <input id="mastodon-instance" v-model="instance" type="url" required :disabled="!token || busy">
+      </div>
+      <button class="button primary" type="submit" :disabled="!token || busy">{{ t('mastodon.connect') }}</button>
     </form>
 
-    <form v-else @submit.prevent="search">
-      <label for="mastodon-query">{{ t('mastodon.query') }}</label>
-      <input id="mastodon-query" v-model="query" maxlength="500" required :disabled="busy">
-      <label for="mastodon-limit">{{ t('mastodon.limit') }}</label>
-      <input id="mastodon-limit" v-model.number="limit" type="number" min="1" max="40" :disabled="busy">
-      <button type="submit" :disabled="!token || busy">{{ busy ? t('mastodon.searching') : t('mastodon.search') }}</button>
-      <button type="button" :disabled="!token || busy" @click="disconnect">{{ t('mastodon.disconnect') }}</button>
+    <form v-else class="collection-form" novalidate @submit.prevent="search">
+      <div class="field input-field">
+        <label for="mastodon-query">{{ t('mastodon.query') }}</label>
+        <input id="mastodon-query" v-model="query" maxlength="500" required :disabled="busy">
+      </div>
+      <div class="field source-field">
+        <label for="mastodon-limit">{{ t('mastodon.limit') }}</label>
+        <input id="mastodon-limit" v-model.number="limit" type="number" min="1" max="40" :disabled="busy">
+      </div>
+      <button class="button primary" type="submit" :disabled="!token || busy">{{ busy ? t('mastodon.searching') : t('mastodon.search') }}</button>
+      <button class="button secondary" type="button" :disabled="!token || busy" @click="disconnect">{{ t('mastodon.disconnect') }}</button>
     </form>
 
-    <p v-if="result" role="status">
+    <p v-if="result" class="collection-result" role="status">
       {{ t('mastodon.result', { fetched: n(result.fetched), inserted: n(result.inserted), duplicates: n(result.duplicates) }) }}
     </p>
-    <p v-if="error" role="alert">{{ error }}</p>
+
+    <form v-if="status.connected" class="collection-form" novalidate @submit.prevent="publish">
+      <div class="field input-field">
+        <label for="mastodon-post-text">{{ t('mastodon.postText') }}</label>
+        <textarea id="mastodon-post-text" v-model="postText" maxlength="500" required :disabled="busy" rows="3"></textarea>
+      </div>
+      <div class="field source-field">
+        <label for="mastodon-visibility">{{ t('mastodon.postVisibility') }}</label>
+        <select id="mastodon-visibility" v-model="visibility" :disabled="busy">
+          <option value="unlisted">{{ t('mastodon.visibilityUnlisted') }}</option>
+          <option value="public">{{ t('mastodon.visibilityPublic') }}</option>
+        </select>
+      </div>
+      <button class="button primary" type="submit" :disabled="!token || busy">{{ busy ? t('mastodon.posting') : t('mastodon.post') }}</button>
+    </form>
+
+    <p v-if="postedUrl" class="collection-result" role="status">{{ t('mastodon.posted') }} <a :href="postedUrl" target="_blank" rel="noopener">{{ postedUrl }}</a></p>
+    <p v-if="error" class="notice error" role="alert">{{ error }}</p>
   </section>
 </template>
 
