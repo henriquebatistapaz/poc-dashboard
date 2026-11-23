@@ -1,5 +1,6 @@
 package com.henrique.dashboard.domain;
 
+import lombok.Data;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,6 +16,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "collected_item",
         uniqueConstraints = @UniqueConstraint(name = "uk_collected_item_source_external", columnNames = {"source", "external_id"}))
+@Data
 public class CollectedItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
