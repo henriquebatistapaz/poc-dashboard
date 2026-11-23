@@ -16,6 +16,38 @@ const render = (token = 'jwt') =>
   mount(MastodonConnection, { props: { token }, global: { plugins: [i18n] } })
 
 describe('Mastodon connection card', () => {
+  it('publishes a post with the chosen visibility and shows its link', async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(json({ connected: true, instance: 'https://mastodon.social' }))
+      .mockResolvedValueOnce(json({ url: 'https://mastodon.social/@me/900' }))
+    vi.stubGlobal('fetch', fetch)
+    const wrapper = render()
+    await flushPromises()
+    await wrapper.get('#mastodon-post-text').setValue('  Olá  ')
+    await wrapper.get('#mastodon-visibility').setValue('public')
+    await wrapper.findAll('form')[1]!.trigger('submit')
+    await flushPromises()
+    expect(fetch.mock.calls[1]![0]).toContain('/v1/integrations/mastodon/post')
+    expect(JSON.parse(fetch.mock.calls[1]![1].body)).toEqual({ text: 'Olá', visibility: 'public' })
+    expect(wrapper.text()).toContain('Post publicado:')
+    expect(wrapper.get('a').attributes('href')).toBe('https://mastodon.social/@me/900')
+    expect((wrapper.get('#mastodon-post-text').element as HTMLTextAreaElement).value).toBe('')
+  })
+
+  it('shows the error when the post is rejected', async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(json({ connected: true, instance: 'https://mastodon.social' }))
+      .mockResolvedValueOnce(json({ status: 502 }, 502))
+    vi.stubGlobal('fetch', fetch)
+    const wrapper = render()
+    await flushPromises()
+    await wrapper.get('#mastodon-post-text').setValue('Olá')
+    await wrapper.findAll('form')[1]!.trigger('submit')
+    await flushPromises()
+    expect(wrapper.find('a').exists()).toBe(false)
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+  })
+
   it('shows the disconnected state and no actions without a token', async () => {
     const fetch = vi.fn()
     vi.stubGlobal('fetch', fetch)
