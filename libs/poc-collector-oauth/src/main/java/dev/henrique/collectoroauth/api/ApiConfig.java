@@ -1,4 +1,4 @@
-package dev.henrique.mastodon.api;
+package dev.henrique.collectoroauth.api;
 
 import java.net.URI;
 import java.time.Duration;
