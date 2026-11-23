@@ -1,9 +1,9 @@
-package dev.henrique.mastodon.api;
+package dev.henrique.collectoroauth.api;
 
 import java.util.concurrent.CountDownLatch;
 
 /**
- * Sobe a API local. Uso: java -cp target/classes dev.henrique.mastodon.api.ApiMain
+ * Sobe a API local. Uso: java -cp target/classes dev.henrique.collectoroauth.api.ApiMain
  * Variáveis: PORT, FRONTEND_URL, OAUTH_REDIRECT_URI, COOKIE_SECURE.
  */
 public final class ApiMain {

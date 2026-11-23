@@ -1,11 +1,11 @@
-package dev.henrique.mastodon.api;
+package dev.henrique.collectoroauth.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dev.henrique.mastodon.MastodonException;
-import dev.henrique.mastodon.MastodonPost;
+import dev.henrique.collectoroauth.MastodonException;
+import dev.henrique.collectoroauth.MastodonPost;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;

@@ -1,4 +1,4 @@
-package dev.henrique.mastodon;
+package dev.henrique.collectoroauth;
 
 import java.net.URI;
 import java.util.Locale;
