@@ -1,8 +1,8 @@
 package com.henrique.dashboard.integration;
 
-import com.example.collectorrunner.integration.CollectedItemInput;
-import com.example.collectorrunner.integration.CollectionGateway;
-import com.example.collectorrunner.integration.CollectionSource;
+import dev.henrique.collectorrunner.integration.CollectedItemInput;
+import dev.henrique.collectorrunner.integration.CollectionGateway;
+import dev.henrique.collectorrunner.integration.CollectionSource;
 import com.henrique.dashboard.repository.ItemRemovalRepository;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
