@@ -1,6 +1,6 @@
 package com.henrique.dashboard;
 
-import com.example.collectorrunner.integration.*;
+import dev.henrique.collectorrunner.integration.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.henrique.collector.source.SourceAccessException;
 import java.sql.SQLException;

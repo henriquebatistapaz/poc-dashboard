@@ -1,6 +1,6 @@
 package com.henrique.dashboard.integration;
 
-import com.example.collectorrunner.integration.*;
+import dev.henrique.collectorrunner.integration.*;
 import com.henrique.dashboard.repository.ItemRemovalRepository;
 import javax.sql.DataSource;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
