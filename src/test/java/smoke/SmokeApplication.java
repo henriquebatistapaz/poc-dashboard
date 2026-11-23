@@ -1,10 +1,10 @@
 package smoke;
 
-import com.example.collectorrunner.integration.CollectionGateway;
-import com.example.collectorrunner.integration.DefaultCollectionGateway;
-import com.example.rsscollector.application.FeedDocumentFetcher;
-import com.example.rsscollector.application.RssFeedLinkValidator;
-import com.example.rsscollector.application.RssFeedParser;
+import dev.henrique.collectorrunner.integration.CollectionGateway;
+import dev.henrique.collectorrunner.integration.DefaultCollectionGateway;
+import dev.henrique.rsscollector.application.FeedDocumentFetcher;
+import dev.henrique.rsscollector.application.RssFeedLinkValidator;
+import dev.henrique.rsscollector.application.RssFeedParser;
 import com.henrique.collector.source.CollectorService;
 import com.henrique.collector.source.GoogleNewsCollector;
 import com.henrique.collector.source.SourceAccessException;
