@@ -1,5 +1,6 @@
 package com.henrique.dashboard.domain;
 
+import lombok.Data;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "collection_run")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Data
 public class CollectionRun {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
