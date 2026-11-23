@@ -1,6 +1,6 @@
 package com.henrique.dashboard;
 
-import com.example.collectorrunner.integration.CollectionRunner;
+import dev.henrique.collectorrunner.integration.CollectionRunner;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;

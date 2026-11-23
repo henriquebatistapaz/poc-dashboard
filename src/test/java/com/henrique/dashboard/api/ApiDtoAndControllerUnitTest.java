@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-import com.example.collectorrunner.integration.CollectionSource;
+import dev.henrique.collectorrunner.integration.CollectionSource;
 import com.henrique.dashboard.domain.CollectionRun;
 import com.henrique.dashboard.domain.UserAccount;
 import com.henrique.dashboard.domain.UserRole;

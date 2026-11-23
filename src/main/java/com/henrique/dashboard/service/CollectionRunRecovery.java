@@ -1,6 +1,6 @@
 package com.henrique.dashboard.service;
 
-import com.example.collectorrunner.integration.CollectionSource;
+import dev.henrique.collectorrunner.integration.CollectionSource;
 import com.henrique.dashboard.domain.CollectionRun;
 import com.henrique.dashboard.domain.RunStatus;
 import com.henrique.dashboard.repository.CollectionRunRepository;
