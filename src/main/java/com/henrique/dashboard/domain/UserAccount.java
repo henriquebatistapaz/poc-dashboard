@@ -9,9 +9,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "user_account")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserAccount {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,8 +32,6 @@ public class UserAccount {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    protected UserAccount() { }
-
     public UserAccount(String email, String passwordHash, UserRole role) {
         this.email = email;
         this.passwordHash = passwordHash;
@@ -37,11 +40,5 @@ public class UserAccount {
         this.createdAt = Instant.now();
     }
 
-    public Long getId() { return id; }
-    public String getEmail() { return email; }
-    public String getPasswordHash() { return passwordHash; }
-    public UserRole getRole() { return role; }
-    public boolean isEnabled() { return enabled; }
-    public Instant getCreatedAt() { return createdAt; }
     public void deactivate() { this.enabled = false; }
 }
