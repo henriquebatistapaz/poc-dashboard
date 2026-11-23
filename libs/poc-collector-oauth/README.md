@@ -49,7 +49,7 @@ Backend em JSON, sem framework (JDK HttpServer), escutando só em `127.0.0.1`.
 
 ```bash
 PORT=8080 FRONTEND_URL=http://localhost:5173/ ./mvnw -q -DskipTests package
-java -cp target/classes com.henrique.mastodon.api.ApiMain
+java -cp target/classes dev.henrique.collectoroauth.api.ApiMain
 ```
 
 Variáveis: `PORT` (8080), `FRONTEND_URL` (`http://localhost:5173/`), `OAUTH_REDIRECT_URI` (padrão `http://127.0.0.1:8080/api/oauth/callback`), `COOKIE_SECURE` (`false`; use `true` com HTTPS).

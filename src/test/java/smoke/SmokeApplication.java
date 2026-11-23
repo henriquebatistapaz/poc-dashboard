@@ -1,18 +1,18 @@
 package smoke;
 
-import com.example.collectorrunner.integration.CollectionGateway;
-import com.example.collectorrunner.integration.DefaultCollectionGateway;
-import com.example.rsscollector.application.FeedDocumentFetcher;
-import com.example.rsscollector.application.RssFeedLinkValidator;
-import com.example.rsscollector.application.RssFeedParser;
+import dev.henrique.collectorrunner.integration.CollectionGateway;
+import dev.henrique.collectorrunner.integration.DefaultCollectionGateway;
+import dev.henrique.rsscollector.application.FeedDocumentFetcher;
+import dev.henrique.rsscollector.application.RssFeedLinkValidator;
+import dev.henrique.rsscollector.application.RssFeedParser;
 import com.henrique.collector.source.CollectorService;
 import com.henrique.collector.source.GoogleNewsCollector;
 import com.henrique.collector.source.SourceAccessException;
 import com.henrique.collector.source.SourceRegistry;
 import com.henrique.collector.source.WordPressFeedCollector;
-import com.henrique.dashboard.DashboardApplication;
-import com.henrique.dashboard.integration.RemovalAwareCollectionGateway;
-import com.henrique.dashboard.repository.ItemRemovalRepository;
+import dev.henrique.dashboard.DashboardApplication;
+import dev.henrique.dashboard.integration.RemovalAwareCollectionGateway;
+import dev.henrique.dashboard.repository.ItemRemovalRepository;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
