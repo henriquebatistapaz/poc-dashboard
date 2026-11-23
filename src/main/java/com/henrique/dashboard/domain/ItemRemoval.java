@@ -1,5 +1,6 @@
 package com.henrique.dashboard.domain;
 
+import lombok.Data;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,6 +14,7 @@ import java.time.Instant;
 @lombok.NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @Entity
 @Table(name = "item_removal")
+@Data
 public class ItemRemoval {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
