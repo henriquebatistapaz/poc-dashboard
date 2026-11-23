@@ -1,7 +1,7 @@
 package com.henrique.dashboard;
 
-import com.example.collectorrunner.integration.*;
-import com.example.rsscollector.application.RssFeedLinkValidator;
+import dev.henrique.collectorrunner.integration.*;
+import dev.henrique.rsscollector.application.RssFeedLinkValidator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.henrique.collector.feed.RssFeedParser;
@@ -266,7 +266,7 @@ class DashboardRunnerPostgresIT {
             var urls = new RssFeedLinkValidator();
             // Only upstream fetching/DNS are fixtures: parsers, runner, SQL, Flyway, security and HTTP API are real.
             var existingSources = new DefaultCollectionGateway(service, url -> atom,
-                    new com.example.rsscollector.application.RssFeedParser(urls), urls);
+                    new dev.henrique.rsscollector.application.RssFeedParser(urls), urls);
             URI base = URI.create("http://127.0.0.1:" + server.server().getAddress().getPort());
             var restSources = DefaultCollectionGateway.fromEnvironment(Map.of(), Map.of(
                     CollectionSource.MASTODON, base.resolve("/mastodon"), CollectionSource.LEMMY, base.resolve("/lemmy"),
