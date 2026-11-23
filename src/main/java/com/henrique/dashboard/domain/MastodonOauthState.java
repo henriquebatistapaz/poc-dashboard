@@ -1,5 +1,6 @@
 package com.henrique.dashboard.domain;
 
+import lombok.Data;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -11,6 +12,7 @@ import java.time.Instant;
 @lombok.NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @Entity
 @Table(name = "mastodon_oauth_state")
+@Data
 public class MastodonOauthState {
     @Id
     @Column(length = 64)
