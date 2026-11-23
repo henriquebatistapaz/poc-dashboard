@@ -83,3 +83,14 @@ Os scripts recusam deploy com árvore suja ou na branch errada, rodam `./mvnw te
 - Web e API usam a mesma origem via proxy nginx; CORS não é necessário. O frontend envia bearer JWT, não cookies; a API é stateless e CSRF fica desativado.
 - Faça login como admin, confirme expiração do JWT de 15 minutos, acesso negado sem token e bloqueio de operações de admin para `OPERATOR`.
 - Revise variáveis e logs nos dois serviços sem revelar os valores. Este checklist não confirma os valores configurados no Railway; a inspeção de production deve ocorrer antes da promoção.
+
+## Regra de nome de subdomínio (domínio h7.app.br)
+
+Se o deploy usar domínio próprio, o subdomínio leva o nome do projeto no formato `<projeto>-<ambiente>`, ex.: `poc-dashboard-develop.h7.app.br`, não só `develop.h7.app.br`. Assim projetos diferentes não colidem nos ambientes develop e production. Regra completa em `multiapp-infra/infra/docs/DEPLOY_RAILWAY.md` (seção 3.4).
+
+## Estado do ambiente develop (22/11/2026)
+
+Detalhes e situação de todos os projetos: `multiapp-infra/infra/docs/DOMINIOS_E_DEPLOY.md`, seção "Estado dos ambientes develop".
+
+- Ambiente `develop` existe, com `poc-dashboard-api`, `poc-dashboard-web` e Postgres. API e web ainda não têm deploy em develop (upload pelo CLI falha com `prefix not found`).
+- Domínios próprios criados no Railway, com DNS pendente: `poc-dashboard-develop.h7.app.br` (web) e `poc-dashboard-api-develop.h7.app.br` (API).

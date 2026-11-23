@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownToLine,
@@ -18,11 +18,13 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Share2,
   ShieldCheck,
   X,
 } from '@lucide/vue'
 import LoginView from './components/LoginView.vue'
 import CollectionPanel from './components/CollectionPanel.vue'
+import MastodonConnection from './components/MastodonConnection.vue'
 import LanguagePicker from './components/LanguagePicker.vue'
 import ThemePicker from './components/ThemePicker.vue'
 import ItemDetails from './components/ItemDetails.vue'
@@ -294,6 +296,21 @@ function retryDetail() {
   if (lastDetailId !== null) void openDetail(lastDetailId)
 }
 
+const mastodonView = ref(false)
+
+function syncView() {
+  const hash = window.location.hash
+  mastodonView.value = hash === '#mastodon'
+  if (!mastodonView.value && hash.length > 1) {
+    void nextTick(() => document.getElementById(hash.slice(1))?.scrollIntoView?.({ block: 'start' }))
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('hashchange', syncView)
+  syncView()
+})
+
 function scrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
 }
@@ -327,6 +344,7 @@ function onDrawerKeydown(event: KeyboardEvent) {
 }
 
 onBeforeUnmount(() => {
+  window.removeEventListener('hashchange', syncView)
   clearTimeout(expiryTimer)
   listController?.abort()
   detailController?.abort()
@@ -356,11 +374,12 @@ onBeforeUnmount(() => {
       </div>
       <span class="nav-label">{{ t('dashboard.workspace') }}</span>
       <nav :aria-label="t('common.workspace')">
-        <a class="nav-item active" href="#library">
+        <a class="nav-item" :class="{ active: !mastodonView }" href="#library">
           <Library :size="18" aria-hidden="true" />{{ t('dashboard.contents') }}<span class="nav-count">{{ n(total) }}</span>
         </a>
         <a class="nav-item" href="#collect"><Plus :size="18" aria-hidden="true" />{{ t('dashboard.newCollection') }}</a>
         <a class="nav-item" href="#activity"><Clock3 :size="18" aria-hidden="true" />{{ t('history.title') }}</a>
+        <a class="nav-item" :class="{ active: mastodonView }" href="#mastodon"><Share2 :size="18" aria-hidden="true" />{{ t('mastodon.title') }}</a>
       </nav>
       <div class="sidebar-bottom">
         <a class="nav-item" href="/swagger-ui.html" target="_blank" rel="noopener noreferrer">
@@ -444,7 +463,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <nav :aria-label="t('nav.menuTitle')">
-            <a class="nav-item active" href="#library" @click.prevent="navigateFromDrawer('library')">
+            <a class="nav-item" :class="{ active: !mastodonView }" href="#library" @click.prevent="navigateFromDrawer('library')">
               <Library :size="18" aria-hidden="true" />{{ t('dashboard.contents') }}<span class="nav-count">{{ n(total) }}</span>
             </a>
             <a class="nav-item" href="#collect" @click.prevent="navigateFromDrawer('collect')">
@@ -452,6 +471,9 @@ onBeforeUnmount(() => {
             </a>
             <a class="nav-item" href="#activity" @click.prevent="navigateFromDrawer('activity')">
               <Clock3 :size="18" aria-hidden="true" />{{ t('history.title') }}
+            </a>
+            <a class="nav-item" :class="{ active: mastodonView }" href="#mastodon" @click="closeMobileMenu(false)">
+              <Share2 :size="18" aria-hidden="true" />{{ t('mastodon.title') }}
             </a>
             <a
               class="nav-item"
@@ -468,234 +490,246 @@ onBeforeUnmount(() => {
       </div>
 
       <main class="page-content">
-        <div class="page-heading">
-          <div>
-            <div class="section-kicker">{{ t('common.private') }}</div>
-            <h1>{{ t('dashboard.title') }}</h1>
-            <p class="muted">{{ t('dashboard.subtitle') }}</p>
-          </div>
-          <button
-            class="button secondary"
-            type="button"
-            :aria-label="t('dashboard.newCollection')"
-            @click="scrollTo('collect')"
-          >
-            <Plus :size="17" aria-hidden="true" /><span>{{ t('dashboard.newCollection') }}</span>
-          </button>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <span class="stat-icon blue"><FileText :size="19" aria-hidden="true" /></span>
-            <span class="stat-label">{{ t('dashboard.items') }}</span>
-            <strong>{{ n(total) }}</strong>
-            <small>{{ t('dashboard.filtered') }}</small>
-          </div>
-          <div class="stat-card">
-            <span class="stat-icon green"><ArrowDownToLine :size="19" aria-hidden="true" /></span>
-            <span class="stat-label">{{ t('dashboard.newItems') }}</span>
-            <strong>{{ result ? n(result.inserted ?? 0) : '—' }}</strong>
-            <small>{{ t(result ? 'dashboard.lastCollection' : 'dashboard.noCollection') }}</small>
-          </div>
-          <div class="stat-card">
-            <span class="stat-icon violet"><Check :size="19" aria-hidden="true" /></span>
-            <span class="stat-label">{{ t('dashboard.duplicates') }}</span>
-            <strong>{{ result ? n(result.duplicates ?? 0) : '—' }}</strong>
-            <small>{{ t(result ? 'dashboard.lastCollection' : 'dashboard.noCollection') }}</small>
-          </div>
-        </div>
-
-        <CollectionPanel
-          :busy="collectionBusy"
-          :result="result"
-          :error="collectionFailure ? errorMessage(collectionFailure) : ''"
-          @collect="collect"
-          @view="scrollTo('library')"
-        />
-
-        <CollectionHistory
-          id="activity"
-          :runs="collectionRuns"
-          :busy="historyBusy"
-          :error="historyFailure ? errorMessage(historyFailure) : ''"
-          :tracking="collectionBusy"
-          @refresh="loadHistory"
-          @resume="resumeRun"
-        />
-
-        <section id="library" class="library-card" aria-labelledby="library-title">
-          <div class="library-heading">
+        <template v-if="mastodonView">
+          <div class="page-heading">
             <div>
-              <h2 id="library-title">
-                {{ t('items.title') }}<span class="pill neutral">{{ t('items.count', { count: n(total) }) }}</span>
-              </h2>
-              <p class="muted">{{ t('items.subtitle') }}</p>
-              <p v-if="latestCollectionContext?.input" class="collection-context">
-                <strong>{{ t('items.lastRun', { source: sourceLabel(latestCollectionContext.source) }) }}</strong>
-                <code :title="latestCollectionContext.input">{{ latestCollectionContext.input }}</code>
-              </p>
+              <div class="section-kicker">{{ t('common.private') }}</div>
+              <h1>{{ t('mastodon.title') }}</h1>
+              <p class="muted">{{ t('mastodon.description') }}</p>
+            </div>
+          </div>
+          <MastodonConnection :token="token" />
+        </template>
+        <template v-else>
+          <div class="page-heading">
+            <div>
+              <div class="section-kicker">{{ t('common.private') }}</div>
+              <h1>{{ t('dashboard.title') }}</h1>
+              <p class="muted">{{ t('dashboard.subtitle') }}</p>
             </div>
             <button
-              class="button quiet"
+              class="button secondary"
               type="button"
-              :disabled="listBusy"
-              :aria-label="t('dashboard.refresh')"
-              @click="loadItems"
+              :aria-label="t('dashboard.newCollection')"
+              @click="scrollTo('collect')"
             >
-              <RefreshCw :size="15" :class="{ spinning: listBusy }" aria-hidden="true" />
-              <span>{{ t('dashboard.refresh') }}</span>
+              <Plus :size="17" aria-hidden="true" /><span>{{ t('dashboard.newCollection') }}</span>
             </button>
           </div>
 
-          <form class="filters" @submit.prevent="applyFilters">
-            <div class="field search-field">
-              <label for="filter-query">{{ t('filters.search') }}</label>
-              <div class="input-with-icon">
-                <Search :size="16" aria-hidden="true" />
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-icon blue"><FileText :size="19" aria-hidden="true" /></span>
+              <span class="stat-label">{{ t('dashboard.items') }}</span>
+              <strong>{{ n(total) }}</strong>
+              <small>{{ t('dashboard.filtered') }}</small>
+            </div>
+            <div class="stat-card">
+              <span class="stat-icon green"><ArrowDownToLine :size="19" aria-hidden="true" /></span>
+              <span class="stat-label">{{ t('dashboard.newItems') }}</span>
+              <strong>{{ result ? n(result.inserted ?? 0) : '—' }}</strong>
+              <small>{{ t(result ? 'dashboard.lastCollection' : 'dashboard.noCollection') }}</small>
+            </div>
+            <div class="stat-card">
+              <span class="stat-icon violet"><Check :size="19" aria-hidden="true" /></span>
+              <span class="stat-label">{{ t('dashboard.duplicates') }}</span>
+              <strong>{{ result ? n(result.duplicates ?? 0) : '—' }}</strong>
+              <small>{{ t(result ? 'dashboard.lastCollection' : 'dashboard.noCollection') }}</small>
+            </div>
+          </div>
+
+          <CollectionPanel
+            :busy="collectionBusy"
+            :result="result"
+            :error="collectionFailure ? errorMessage(collectionFailure) : ''"
+            @collect="collect"
+            @view="scrollTo('library')"
+          />
+
+          <CollectionHistory
+            id="activity"
+            :runs="collectionRuns"
+            :busy="historyBusy"
+            :error="historyFailure ? errorMessage(historyFailure) : ''"
+            :tracking="collectionBusy"
+            @refresh="loadHistory"
+            @resume="resumeRun"
+          />
+
+          <section id="library" class="library-card" aria-labelledby="library-title">
+            <div class="library-heading">
+              <div>
+                <h2 id="library-title">
+                  {{ t('items.title') }}<span class="pill neutral">{{ t('items.count', { count: n(total) }) }}</span>
+                </h2>
+                <p class="muted">{{ t('items.subtitle') }}</p>
+                <p v-if="latestCollectionContext?.input" class="collection-context">
+                  <strong>{{ t('items.lastRun', { source: sourceLabel(latestCollectionContext.source) }) }}</strong>
+                  <code :title="latestCollectionContext.input">{{ latestCollectionContext.input }}</code>
+                </p>
+              </div>
+              <button
+                class="button quiet"
+                type="button"
+                :disabled="listBusy"
+                :aria-label="t('dashboard.refresh')"
+                @click="loadItems"
+              >
+                <RefreshCw :size="15" :class="{ spinning: listBusy }" aria-hidden="true" />
+                <span>{{ t('dashboard.refresh') }}</span>
+              </button>
+            </div>
+
+            <form class="filters" @submit.prevent="applyFilters">
+              <div class="field search-field">
+                <label for="filter-query">{{ t('filters.search') }}</label>
+                <div class="input-with-icon">
+                  <Search :size="16" aria-hidden="true" />
+                  <input
+                    id="filter-query"
+                    v-model="filters.q"
+                    class="with-icon"
+                    :placeholder="t('filters.searchPlaceholder')"
+                    maxlength="500"
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <label for="filter-source">{{ t('filters.source') }}</label>
+                <select id="filter-source" v-model="filters.source">
+                  <option value="">{{ t('filters.allSources') }}</option>
+                  <option v-for="source in sources" :key="source" :value="source">{{ sourceLabel(source) }}</option>
+                </select>
+              </div>
+              <div class="field date-field">
+                <label for="filter-from">{{ t('filters.from') }}</label>
                 <input
-                  id="filter-query"
-                  v-model="filters.q"
-                  class="with-icon"
-                  :placeholder="t('filters.searchPlaceholder')"
-                  maxlength="500"
+                  id="filter-from"
+                  v-model="filters.from"
+                  type="datetime-local"
+                  :aria-invalid="Boolean(filterError)"
+                  :aria-describedby="filterError ? 'filter-error' : undefined"
                 />
               </div>
+              <div class="field date-field">
+                <label for="filter-to">{{ t('filters.to') }}</label>
+                <input
+                  id="filter-to"
+                  v-model="filters.to"
+                  type="datetime-local"
+                  :aria-invalid="Boolean(filterError)"
+                  :aria-describedby="filterError ? 'filter-error' : undefined"
+                />
+              </div>
+              <button class="button secondary filter-submit" type="submit" :disabled="listBusy">{{ t('filters.apply') }}</button>
+              <button
+                class="icon-button clear-filters"
+                type="button"
+                :title="t('filters.clear')"
+                :aria-label="t('filters.clear')"
+                @click="clearFilters"
+              >
+                <X :size="16" aria-hidden="true" />
+              </button>
+              <small class="timezone-note">{{ t('filters.timezone') }}</small>
+            </form>
+
+            <div v-if="filterError" id="filter-error" class="notice error library-notice" role="alert">{{ t(filterError) }}</div>
+            <div v-if="listFailure" class="notice error library-notice" role="alert">
+              <span>{{ errorMessage(listFailure) }}</span>
+              <button class="text-button" type="button" @click="loadItems">{{ t('common.retry') }}</button>
             </div>
-            <div class="field">
-              <label for="filter-source">{{ t('filters.source') }}</label>
-              <select id="filter-source" v-model="filters.source">
-                <option value="">{{ t('filters.allSources') }}</option>
-                <option v-for="source in sources" :key="source" :value="source">{{ sourceLabel(source) }}</option>
-              </select>
+            <div v-if="listBusy" class="list-loading" role="status">
+              <span class="spinner dark" aria-hidden="true"></span>{{ t('common.loading') }}
             </div>
-            <div class="field date-field">
-              <label for="filter-from">{{ t('filters.from') }}</label>
-              <input
-                id="filter-from"
-                v-model="filters.from"
-                type="datetime-local"
-                :aria-invalid="Boolean(filterError)"
-                :aria-describedby="filterError ? 'filter-error' : undefined"
-              />
-            </div>
-            <div class="field date-field">
-              <label for="filter-to">{{ t('filters.to') }}</label>
-              <input
-                id="filter-to"
-                v-model="filters.to"
-                type="datetime-local"
-                :aria-invalid="Boolean(filterError)"
-                :aria-describedby="filterError ? 'filter-error' : undefined"
-              />
-            </div>
-            <button class="button secondary filter-submit" type="submit" :disabled="listBusy">{{ t('filters.apply') }}</button>
-            <button
-              class="icon-button clear-filters"
-              type="button"
-              :title="t('filters.clear')"
-              :aria-label="t('filters.clear')"
-              @click="clearFilters"
+            <div
+              v-else-if="items.length"
+              class="table-scroll"
+              role="region"
+              :aria-label="t('items.tableRegion')"
+              tabindex="0"
             >
-              <X :size="16" aria-hidden="true" />
-            </button>
-            <small class="timezone-note">{{ t('filters.timezone') }}</small>
-          </form>
-
-          <div v-if="filterError" id="filter-error" class="notice error library-notice" role="alert">{{ t(filterError) }}</div>
-          <div v-if="listFailure" class="notice error library-notice" role="alert">
-            <span>{{ errorMessage(listFailure) }}</span>
-            <button class="text-button" type="button" @click="loadItems">{{ t('common.retry') }}</button>
-          </div>
-          <div v-if="listBusy" class="list-loading" role="status">
-            <span class="spinner dark" aria-hidden="true"></span>{{ t('common.loading') }}
-          </div>
-          <div
-            v-else-if="items.length"
-            class="table-scroll"
-            role="region"
-            :aria-label="t('items.tableRegion')"
-            tabindex="0"
-          >
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">{{ t('items.content') }}</th>
-                  <th scope="col">{{ t('items.source') }}</th>
-                  <th scope="col">{{ t('items.collected') }}</th>
-                  <th scope="col" class="actions-column"><span class="sr-only">{{ t('items.actions') }}</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in items" :key="item.id">
-                  <td>
-                    <button class="item-title" type="button" @click="openDetail(item.id, $event)">
-                      {{ item.title || t('items.untitled') }}
-                    </button>
-                    <div class="item-host">{{ hostLabel(item.link) }}</div>
-                  </td>
-                  <td><span class="pill source-pill">{{ sourceLabel(item.source) }}</span></td>
-                  <td class="date-cell">{{ displayDate(item.collectedAt) }}</td>
-                  <td>
-                    <button
-                      class="icon-button"
-                      type="button"
-                      :aria-label="t('items.details')"
-                      @click="openDetail(item.id, $event)"
-                    >
-                      <ChevronRight :size="18" aria-hidden="true" />
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div v-else-if="!listFailure" class="empty-state" role="status">
-            <span class="empty-icon"><Library :size="28" aria-hidden="true" /></span>
-            <h3>{{ t('items.emptyTitle') }}</h3>
-            <p>{{ t('items.emptyText') }}</p>
-            <button class="text-button" type="button" @click="scrollTo('collect')">
-              {{ t('dashboard.newCollection') }}<ArrowRight :size="16" aria-hidden="true" />
-            </button>
-          </div>
-
-          <footer class="table-footer">
-            <div class="page-size">
-              <label for="page-size">{{ t('items.pageSize') }}</label>
-              <select id="page-size" v-model.number="size" :disabled="listBusy" @change="changePage(0)">
-                <option :value="10">10</option>
-                <option :value="20">20</option>
-                <option :value="50">50</option>
-                <option :value="100">100</option>
-              </select>
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ t('items.content') }}</th>
+                    <th scope="col">{{ t('items.source') }}</th>
+                    <th scope="col">{{ t('items.collected') }}</th>
+                    <th scope="col" class="actions-column"><span class="sr-only">{{ t('items.actions') }}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in items" :key="item.id">
+                    <td>
+                      <button class="item-title" type="button" @click="openDetail(item.id, $event)">
+                        {{ item.title || t('items.untitled') }}
+                      </button>
+                      <div class="item-host">{{ hostLabel(item.link) }}</div>
+                    </td>
+                    <td><span class="pill source-pill">{{ sourceLabel(item.source) }}</span></td>
+                    <td class="date-cell">{{ displayDate(item.collectedAt) }}</td>
+                    <td>
+                      <button
+                        class="icon-button"
+                        type="button"
+                        :aria-label="t('items.details')"
+                        @click="openDetail(item.id, $event)"
+                      >
+                        <ChevronRight :size="18" aria-hidden="true" />
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div class="pagination">
-              <span>{{ t('items.page', { page: n(page + 1), pages: n(pages) }) }}</span>
-              <button
-                class="icon-button"
-                type="button"
-                :aria-label="t('items.previous')"
-                :disabled="page === 0 || listBusy"
-                @click="changePage(page - 1)"
-              >
-                <ArrowLeft :size="16" aria-hidden="true" />
-              </button>
-              <button
-                class="icon-button"
-                type="button"
-                :aria-label="t('items.next')"
-                :disabled="page + 1 >= pages || listBusy"
-                @click="changePage(page + 1)"
-              >
-                <ArrowRight :size="16" aria-hidden="true" />
+            <div v-else-if="!listFailure" class="empty-state" role="status">
+              <span class="empty-icon"><Library :size="28" aria-hidden="true" /></span>
+              <h3>{{ t('items.emptyTitle') }}</h3>
+              <p>{{ t('items.emptyText') }}</p>
+              <button class="text-button" type="button" @click="scrollTo('collect')">
+                {{ t('dashboard.newCollection') }}<ArrowRight :size="16" aria-hidden="true" />
               </button>
             </div>
+
+            <footer class="table-footer">
+              <div class="page-size">
+                <label for="page-size">{{ t('items.pageSize') }}</label>
+                <select id="page-size" v-model.number="size" :disabled="listBusy" @change="changePage(0)">
+                  <option :value="10">10</option>
+                  <option :value="20">20</option>
+                  <option :value="50">50</option>
+                  <option :value="100">100</option>
+                </select>
+              </div>
+              <div class="pagination">
+                <span>{{ t('items.page', { page: n(page + 1), pages: n(pages) }) }}</span>
+                <button
+                  class="icon-button"
+                  type="button"
+                  :aria-label="t('items.previous')"
+                  :disabled="page === 0 || listBusy"
+                  @click="changePage(page - 1)"
+                >
+                  <ArrowLeft :size="16" aria-hidden="true" />
+                </button>
+                <button
+                  class="icon-button"
+                  type="button"
+                  :aria-label="t('items.next')"
+                  :disabled="page + 1 >= pages || listBusy"
+                  @click="changePage(page + 1)"
+                >
+                  <ArrowRight :size="16" aria-hidden="true" />
+                </button>
+              </div>
+            </footer>
+          </section>
+
+          <footer class="page-footer">
+            <span>coleta.</span>{{ t('dashboard.footer') }}
+            <span class="private-footer"><ShieldCheck :size="13" aria-hidden="true" />{{ t('common.private') }}</span>
           </footer>
-        </section>
-
-        <footer class="page-footer">
-          <span>coleta.</span>{{ t('dashboard.footer') }}
-          <span class="private-footer"><ShieldCheck :size="13" aria-hidden="true" />{{ t('common.private') }}</span>
-        </footer>
+        </template>
       </main>
     </div>
 
