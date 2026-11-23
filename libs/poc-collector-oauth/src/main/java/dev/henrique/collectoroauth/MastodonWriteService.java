@@ -1,4 +1,4 @@
-package dev.henrique.mastodon;
+package dev.henrique.collectoroauth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,10 +1,10 @@
-package dev.henrique.mastodon.api;
+package dev.henrique.collectoroauth.api;
 
-import dev.henrique.mastodon.MastodonConfig;
-import dev.henrique.mastodon.MastodonOAuthClient;
-import dev.henrique.mastodon.MastodonPost;
-import dev.henrique.mastodon.MastodonSearchService;
-import dev.henrique.mastodon.MastodonWriteService;
+import dev.henrique.collectoroauth.MastodonConfig;
+import dev.henrique.collectoroauth.MastodonOAuthClient;
+import dev.henrique.collectoroauth.MastodonPost;
+import dev.henrique.collectoroauth.MastodonSearchService;
+import dev.henrique.collectoroauth.MastodonWriteService;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;

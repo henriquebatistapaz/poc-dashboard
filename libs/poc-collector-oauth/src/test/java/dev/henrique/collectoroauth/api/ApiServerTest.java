@@ -1,4 +1,4 @@
-package dev.henrique.mastodon.api;
+package dev.henrique.collectoroauth.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

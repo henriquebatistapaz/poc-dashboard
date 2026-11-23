@@ -1,6 +1,6 @@
-package dev.henrique.mastodon.api;
+package dev.henrique.collectoroauth.api;
 
-import dev.henrique.mastodon.MastodonOAuthClient;
+import dev.henrique.collectoroauth.MastodonOAuthClient;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
