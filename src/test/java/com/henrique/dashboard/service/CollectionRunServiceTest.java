@@ -8,8 +8,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.collectorrunner.integration.CollectionRunner;
-import com.example.collectorrunner.integration.CollectionSource;
+import dev.henrique.collectorrunner.integration.CollectionRunner;
+import dev.henrique.collectorrunner.integration.CollectionSource;
 import com.henrique.collector.source.SourceAccessException;
 import com.henrique.dashboard.domain.CollectionRun;
 import com.henrique.dashboard.domain.RunStatus;
