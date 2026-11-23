@@ -100,4 +100,4 @@ Docker API defaults to 1.44 in the integration profile (`-Ddocker.api.version=..
 
 ## Pending
 
-Historical social-row migration and public deployment review. Scheduling is available when `DASHBOARD_SCHEDULE_KEY` is configured with 64 hexadecimal characters; scheduled inputs are encrypted at rest. AI-Init assets and generated `/docs/` are excluded from Git.
+Historical social-row migration and public deployment review. Scheduling is available when `DASHBOARD_SCHEDULE_KEY` is configured with 64 hexadecimal characters; scheduled inputs are encrypted at rest.

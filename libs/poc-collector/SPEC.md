@@ -98,7 +98,6 @@ Define a small OpenAPI contract and persistence model only after collection beha
 - Active in-scope sources appear in the capability matrix with a route assessment and an implementation gate.
 - No credentials or real private feed URL are included.
 - Local JUnit tests cover parsing, URL validation, collector query construction, secret URL redaction, and source gating.
-- The repository remains private; `/docs/` and AI-Init generated files are ignored by Git.
 - A first implementation slice cannot begin until source feasibility and scope are approved.
 
 ## 9. References

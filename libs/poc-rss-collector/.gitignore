@@ -3,8 +3,6 @@ target/
 .env
 .env.*
 /docs/
-/.ai-init/
-/.ai-init.json
 /AGENTS.md
 /CLAUDE.md
 /GEMINI.md

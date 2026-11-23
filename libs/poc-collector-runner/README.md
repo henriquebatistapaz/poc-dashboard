@@ -66,4 +66,4 @@ Defaults: database `social_adapter` on localhost:5432; override `DB_URL`, `DB_US
 
 ## Pending
 
-Historical social-row migration, durable run history and a user interface are future work. The dashboard is the controlled fixture ingestion route; no duplicate fixture-only HTTP route is exposed by the runner. ActiveMQ Classic is the work-queue option if asynchronous execution is approved; Kafka is reserved for replay or multiple independent consumers. No AI-Init assets or generated `/docs/` are committed.
+Historical social-row migration, durable run history and a user interface are future work. The dashboard is the controlled fixture ingestion route; no duplicate fixture-only HTTP route is exposed by the runner. ActiveMQ Classic is the work-queue option if asynchronous execution is approved; Kafka is reserved for replay or multiple independent consumers.
