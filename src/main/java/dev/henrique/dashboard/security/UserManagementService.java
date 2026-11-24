@@ -24,7 +24,7 @@ public class UserManagementService {
         boolean hasHash = passwordHash != null && !passwordHash.isBlank();
         boolean hasPassword = plainPassword != null && !plainPassword.isBlank();
         if (!hasEmail && !hasHash && !hasPassword) return;
-        if (!hasEmail || email.length() > 254 || !email.contains("@") || hasHash == hasPassword) {
+        if (!hasEmail || email.length() > 254 || hasHash == hasPassword) {
             throw new IllegalStateException("Admin bootstrap requires a valid email and exactly one credential");
         }
         if (hasPassword) {
