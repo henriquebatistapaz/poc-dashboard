@@ -34,7 +34,8 @@ public class AdminLoginService {
                 || password.getBytes(StandardCharsets.UTF_8).length > 72) {
             throw unauthorized();
         }
-        UserAccount user = users.findByEmailIgnoreCaseAndEnabledTrue(submittedEmail).orElseThrow(this::unauthorized);
+        String email = submittedEmail.contains("@") ? submittedEmail : submittedEmail + "@localhost.test";
+        UserAccount user = users.findByEmailIgnoreCaseAndEnabledTrue(email).orElseThrow(this::unauthorized);
         if (!passwords.matches(password, user.getPasswordHash())) throw unauthorized();
         Instant now = Instant.now();
         String scopes = user.getRole() == UserRole.ADMIN
